@@ -6,8 +6,8 @@ import (
 	"time"
 	"os/signal"
 	"log"
-	//"github.com/morus12/dht22"
-	"github.com/morus12/dht22"
+	"github.com/d2r2/go-dht"
+	"fmt"
 )
 
 type Time struct {
@@ -51,28 +51,18 @@ func main() {
 	}()
 
 	go func() {
-		sensor := dht22.New("GPIO_17")
-
 		for {
-			log.Println("Reading temp")
-			temperature, errtemp := sensor.Temperature()
-			humidity, errhumid := sensor.Humidity()
-
-			if errtemp != nil {
-				log.Println("Error: Cant Read Temp ", errtemp.Error())
-			} else {
-				log.Println("Temp: ", temperature)
-
+			temperature, humidity, retried, err :=
+				dht.ReadDHTxxWithRetry(dht.DHT22, 17, true, 10)
+			if err != nil {
+				log.Fatal(err)
 			}
-
-			if errhumid != nil {
-				log.Println("Error: Cant Read Humidity ", errhumid.Error())
-			} else {
-				log.Println("Humidity: ", humidity)
-			}
-
+			// Print temperature and humidity
+			fmt.Printf("Temperature = %v*C, Humidity = %v%% (retried %d times)\n",
+				temperature, humidity, retried)
 			time.Sleep(time.Minute)
 		}
+
 
 	}()
 
