@@ -58,7 +58,7 @@ func main() {
 			temperature, humidity, retried, err :=
 				dht.ReadDHTxxWithRetry(dht.DHT22, 17, true, 10)
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("Error: Error with reading dht: %s", err.Error())
 			}
 			log.Printf("Ambient Temperature = %v*C, Humidity = %v%% (retried %d times)\n",
 				temperature, humidity, retried)
