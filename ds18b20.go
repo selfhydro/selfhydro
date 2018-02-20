@@ -5,42 +5,21 @@ import (
 	"io/ioutil"
 	"strings"
 	"strconv"
-	"fmt"
+	"log"
 )
 
 type ds18b20 struct {
-
+	id string
 }
 
 var ErrReadSensor = errors.New("failed to read sensor temperature")
 
-func (self ds18b20) ReadTemperature(){
-	sensors, err := self.sensors()
-	if err != nil {
-		panic(err)
-	}
+func (ds ds18b20) ReadTemperature() {
 
-	fmt.Printf("sensor IDs: %v\n", sensors)
-	for _, sensor := range sensors {
-		t, err := self.getTemp(sensor)
-		if err == nil {
-			fmt.Printf("sensor: %s temperature: %.2f°C\n", sensor, t)
-		}
+	t, err := ds.getTemp(ds.id)
+	if err == nil {
+		log.Printf("Water temperature: %.2f°C\n", t)
 	}
-}
-
-func (ds18b20) sensors() ([]string, error) {
-	data, err := ioutil.ReadFile("/sys/bus/w1/devices/w1_bus_master1/w1_master_slaves")
-	if err != nil {
-		return nil, err
-	}
-
-	sensors := strings.Split(string(data), "\n")
-	if len(sensors) > 0 {
-		sensors = sensors[:len(sensors)-1]
-	}
-
-	return sensors, nil
 }
 
 func (ds18b20) getTemp(sensor string) (float64, error) {

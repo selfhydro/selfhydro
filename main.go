@@ -39,6 +39,7 @@ func main() {
 	sigs := make(chan os.Signal, 1)
 
 	signal.Notify(sigs, os.Interrupt)
+	signal.Notify(sigs, os.Kill)
 
 	go func() {
 		s := <-sigs
@@ -60,7 +61,7 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			fmt.Printf("Ambient Temperature = %v*C, Humidity = %v%% (retried %d times)\n",
+			log.Printf("Ambient Temperature = %v*C, Humidity = %v%% (retried %d times)\n",
 				temperature, humidity, retried)
 			controller.getWaterTemp()
 			time.Sleep(time.Minute)
@@ -108,6 +109,9 @@ func NewController() *RaspberryPi {
 
 	pi.GrowLedPin.Mode(rpio.Output)
 	pi.WaterPumpPin.Mode(rpio.Output)
+
+	pi.WaterTempSensor.id = "28-0316838ca7ff"
+
 	return pi
 }
 
