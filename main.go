@@ -64,7 +64,7 @@ func main() {
 			log.Printf("Ambient Temperature = %v*C, Humidity = %v%% (retried %d times)\n",
 				temperature, humidity, retried)
 			controller.getWaterTemp()
-			time.Sleep(time.Minute)
+			time.Sleep(time.Hour)
 		}
 
 
@@ -89,7 +89,7 @@ func main() {
 			controller.turnOnWaterPump()
 			time.Sleep(time.Second * 5)
 			controller.turnOffWaterPump()
-			time.Sleep(time.Minute * 120)
+			time.Sleep(time.Minute * 150)
 		}
 	}()
 
