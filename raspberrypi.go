@@ -15,6 +15,7 @@ type RaspberryPi struct {
 	GrowLedState bool
 	WaterPumpPin rpio.Pin
 	WaterPumpState bool
+	WaterTempSensor ds18b20
 }
 
 var PinHigh = rpio.Pin.High
@@ -49,6 +50,10 @@ func (pi *RaspberryPi) turnOnWaterPump(){
 	pi.SetPinHigh(pi.WaterPumpPin)
 	pi.WaterPumpState = true
 
+}
+
+func (pi RaspberryPi) getWaterTemp(){
+	pi.WaterTempSensor.ReadTemperature()
 }
 
 

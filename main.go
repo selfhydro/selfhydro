@@ -50,6 +50,9 @@ func main() {
 		os.Exit(0)
 	}()
 
+	turnOnTime, _ := time.Parse("15:04:05", "04:45:00")
+	turnOffTime, _ := time.Parse("15:04:05", "23:45:00")
+
 	go func() {
 		for {
 			temperature, humidity, retried, err :=
@@ -57,22 +60,17 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			// Print temperature and humidity
-			fmt.Printf("Temperature = %v*C, Humidity = %v%% (retried %d times)\n",
+			fmt.Printf("Ambient Temperature = %v*C, Humidity = %v%% (retried %d times)\n",
 				temperature, humidity, retried)
+			controller.getWaterTemp()
 			time.Sleep(time.Minute)
 		}
 
 
 	}()
 
-
-	turnOnTime, _ := time.Parse("15:04:05", "04:45:00")
-	turnOffTime, _ := time.Parse("15:04:05", "23:45:00")
-
 	go func() {
 		for {
-			log.Printf("GrowLED state: %v", controller.GrowLedState)
 			if !controller.GrowLedState && betweenTime(turnOnTime, turnOffTime) {
 				log.Printf("Turning on GROW LEDS")
 				controller.turnOnGrowLed()
@@ -80,22 +78,19 @@ func main() {
 				log.Printf("Turning off GROW LEDS")
 				controller.turnOffGrowLed()
 			}
-			time.Sleep(time.Minute*1)
+			time.Sleep(time.Minute * 1)
 		}
 
-
 	}()
-
 
 	go func() {
 		for {
 			controller.turnOnWaterPump()
-			time.Sleep(time.Second*5)
+			time.Sleep(time.Second * 5)
 			controller.turnOffWaterPump()
-			time.Sleep(time.Minute*120)
+			time.Sleep(time.Minute * 120)
 		}
-
-	} ()
+	}()
 
 	for {
 		time.Sleep(time.Second)
@@ -104,12 +99,12 @@ func main() {
 }
 
 func NewController() *RaspberryPi {
-	pi := &RaspberryPi{
-		GrowLedPin:   rpio.Pin(19),
-		GrowLedState: false,
-		WaterPumpPin: rpio.Pin(20),
-		WaterPumpState: false,
-	}
+	pi := new(RaspberryPi)
+
+	pi.GrowLedPin = rpio.Pin(19)
+	pi.GrowLedState = false
+	pi.WaterPumpPin = rpio.Pin(20)
+	pi.WaterPumpState = false
 
 	pi.GrowLedPin.Mode(rpio.Output)
 	pi.WaterPumpPin.Mode(rpio.Output)
