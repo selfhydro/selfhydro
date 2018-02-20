@@ -7,7 +7,6 @@ import (
 	"os/signal"
 	"log"
 	"github.com/d2r2/go-dht"
-	"fmt"
 )
 
 type Time struct {
@@ -66,7 +65,6 @@ func main() {
 			controller.getWaterTemp()
 			time.Sleep(time.Hour)
 		}
-
 
 	}()
 
