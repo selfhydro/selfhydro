@@ -6,7 +6,6 @@ import (
 	"time"
 	"os/signal"
 	"log"
-	"github.com/d2r2/go-dht"
 )
 
 type Time struct {
@@ -50,46 +49,9 @@ func main() {
 		os.Exit(0)
 	}()
 
-	turnOnTime, _ := time.Parse("15:04:05", "04:45:00")
-	turnOffTime, _ := time.Parse("15:04:05", "23:45:00")
-
-	go func() {
-		for {
-			temperature, humidity, retried, err :=
-				dht.ReadDHTxxWithRetry(dht.DHT22, 17, true, 10)
-			if err != nil {
-				log.Printf("Error: Error with reading dht: %s", err.Error())
-			}
-			log.Printf("Ambient Temperature = %v*C, Humidity = %v%% (retried %d times)\n",
-				temperature, humidity, retried)
-			controller.getWaterTemp()
-			time.Sleep(time.Hour)
-		}
-
-	}()
-
-	go func() {
-		for {
-			if !controller.GrowLedState && betweenTime(turnOnTime, turnOffTime) {
-				log.Printf("Turning on GROW LEDS")
-				controller.turnOnGrowLed()
-			} else if controller.GrowLedState && betweenTime(turnOffTime, turnOnTime.Add(time.Hour*24)) {
-				log.Printf("Turning off GROW LEDS")
-				controller.turnOffGrowLed()
-			}
-			time.Sleep(time.Minute * 1)
-		}
-
-	}()
-
-	go func() {
-		for {
-			controller.turnOnWaterPump()
-			time.Sleep(time.Second * 5)
-			controller.turnOffWaterPump()
-			time.Sleep(time.Minute * 150)
-		}
-	}()
+	controller.StartSensorCycle()
+	controller.StartLightCycle()
+	controller.StartWaterCycle()
 
 	for {
 		time.Sleep(time.Second)
@@ -102,8 +64,12 @@ func NewController() *RaspberryPi {
 
 	pi.GrowLedPin = rpio.Pin(19)
 	pi.GrowLedState = false
+
 	pi.WaterPumpPin = rpio.Pin(20)
 	pi.WaterPumpState = false
+
+	pi.WaterLevelSensor = rpio.Pin(4)
+	pi.WaterLevelSensor.Input()
 
 	pi.GrowLedPin.Mode(rpio.Output)
 	pi.WaterPumpPin.Mode(rpio.Output)
@@ -113,12 +79,3 @@ func NewController() *RaspberryPi {
 	return pi
 }
 
-func betweenTime(startTime time.Time, endTime time.Time) bool {
-	currentTimeString := time.Now().Format("15:04:05")
-	currentTime, _ := time.Parse("15:04:05", currentTimeString)
-	if currentTime.After(startTime) && currentTime.Before(endTime) {
-		return true
-	}
-
-	return false
-}
