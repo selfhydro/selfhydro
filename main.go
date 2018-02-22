@@ -78,6 +78,7 @@ func NewController() *RaspberryPi {
 	pi.WaterTempSensor.id = "28-0316838ca7ff"
 
 	pi.AirPump = rpio.Pin(21)
+	pi.AirPump.Mode(rpio.Output)
 
 	return pi
 }

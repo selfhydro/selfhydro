@@ -111,8 +111,10 @@ func (pi RaspberryPi) StartSensorCycle() {
 func (pi RaspberryPi) StartAirPumpCycle() {
 	go func() {
 		for {
+			log.Printf("Turning on air pump")
 			pi.AirPump.High()
 			time.Sleep(time.Minute*30)
+			log.Printf("Turning off air pump")
 			pi.AirPump.Low()
 			time.Sleep(time.Hour*3)
 		}
