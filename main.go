@@ -52,6 +52,7 @@ func main() {
 	controller.StartSensorCycle()
 	controller.StartLightCycle()
 	controller.StartWaterCycle()
+	controller.StartAirPumpCycle()
 
 	for {
 		time.Sleep(time.Second)
@@ -75,6 +76,8 @@ func NewController() *RaspberryPi {
 	pi.WaterPumpPin.Mode(rpio.Output)
 
 	pi.WaterTempSensor.id = "28-0316838ca7ff"
+
+	pi.AirPump = rpio.Pin(21)
 
 	return pi
 }

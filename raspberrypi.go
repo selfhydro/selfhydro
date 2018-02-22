@@ -19,6 +19,7 @@ type RaspberryPi struct {
 	WaterPumpState bool
 	WaterTempSensor ds18b20
 	WaterLevelSensor rpio.Pin
+	AirPump rpio.Pin
 }
 
 var PinHigh = rpio.Pin.High
@@ -104,6 +105,17 @@ func (pi RaspberryPi) StartSensorCycle() {
 			time.Sleep(time.Hour)
 		}
 
+	}()
+}
+
+func (pi RaspberryPi) StartAirPumpCycle() {
+	go func() {
+		for {
+			pi.AirPump.High()
+			time.Sleep(time.Minute*30)
+			pi.AirPump.Low()
+			time.Sleep(time.Hour*3)
+		}
 	}()
 }
 
