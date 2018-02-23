@@ -32,12 +32,12 @@ func main() {
 	}
 	defer rpio.Close()
 
-	controller := NewController()
-
 	sigs := make(chan os.Signal, 1)
 
 	signal.Notify(sigs, os.Interrupt)
 	signal.Notify(sigs, os.Kill)
+
+	controller := NewRaspberryPi()
 
 	go func() {
 		s := <-sigs
@@ -49,37 +49,10 @@ func main() {
 		os.Exit(0)
 	}()
 
-	controller.StartSensorCycle()
-	controller.StartLightCycle()
-	controller.StartWaterCycle()
-	controller.StartAirPumpCycle()
+	controller.StartHydroponics()
 
 	for {
 		time.Sleep(time.Second)
 	}
 
 }
-
-func NewController() *RaspberryPi {
-	pi := new(RaspberryPi)
-
-	pi.GrowLedPin = rpio.Pin(19)
-	pi.GrowLedState = false
-
-	pi.WaterPumpPin = rpio.Pin(20)
-	pi.WaterPumpState = false
-
-	pi.WaterLevelSensor = rpio.Pin(4)
-	pi.WaterLevelSensor.Input()
-
-	pi.GrowLedPin.Mode(rpio.Output)
-	pi.WaterPumpPin.Mode(rpio.Output)
-
-	pi.WaterTempSensor.id = "28-0316838ca7ff"
-
-	pi.AirPump = rpio.Pin(21)
-	pi.AirPump.Mode(rpio.Output)
-
-	return pi
-}
-

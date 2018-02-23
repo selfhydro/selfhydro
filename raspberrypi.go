@@ -8,8 +8,8 @@ import (
 )
 
 type RaspberryPiGPIO interface {
-	SetPinHigh(pin rpio.Pin)
-	SetPinLow(pin rpio.Pin)
+	setPinHigh(pin rpio.Pin)
+	setPinLow(pin rpio.Pin)
 }
 
 type RaspberryPi struct {
@@ -25,33 +25,64 @@ type RaspberryPi struct {
 var PinHigh = rpio.Pin.High
 var PinLow = rpio.Pin.Low
 
-func (pi RaspberryPi) SetPinHigh(pin rpio.Pin){
+func NewRaspberryPi() *RaspberryPi {
+	pi := new(RaspberryPi)
+
+	pi.GrowLedPin = rpio.Pin(19)
+	pi.GrowLedState = false
+
+	pi.WaterPumpPin = rpio.Pin(20)
+	pi.WaterPumpState = false
+
+	pi.WaterLevelSensor = rpio.Pin(4)
+	pi.WaterLevelSensor.Input()
+
+	pi.GrowLedPin.Mode(rpio.Output)
+	pi.WaterPumpPin.Mode(rpio.Output)
+
+	pi.WaterTempSensor.id = "28-0316838ca7ff"
+
+	pi.AirPump = rpio.Pin(21)
+	pi.AirPump.Mode(rpio.Output)
+
+	return pi
+}
+
+func (pi *RaspberryPi) StartHydroponics() {
+	pi.StartSensorCycle()
+	pi.StartLightCycle()
+	pi.StartWaterCycle()
+	pi.StartAirPumpCycle()
+
+}
+
+func (pi RaspberryPi) setPineHigh(pin rpio.Pin){
 	PinHigh(pin)
 }
 
-func (pi RaspberryPi) SetPinLow(pin rpio.Pin){
+func (pi RaspberryPi) setPinLow(pin rpio.Pin){
 	PinLow(pin)
 }
 
 func (pi *RaspberryPi) turnOnGrowLed(){
-	pi.SetPinHigh(pi.GrowLedPin)
+	pi.setPineHigh(pi.GrowLedPin)
 	pi.GrowLedState = true
 }
 
 func (pi *RaspberryPi) turnOffGrowLed(){
-	pi.SetPinLow(pi.GrowLedPin)
+	pi.setPinLow(pi.GrowLedPin)
 	pi.GrowLedState = false
 
 }
 
 func (pi *RaspberryPi) turnOffWaterPump(){
-	pi.SetPinLow(pi.WaterPumpPin)
+	pi.setPinLow(pi.WaterPumpPin)
 	pi.WaterPumpState = false
 }
 
 func (pi *RaspberryPi) turnOnWaterPump(){
 	log.Printf("Turning on water Pump")
-	pi.SetPinHigh(pi.WaterPumpPin)
+	pi.setPineHigh(pi.WaterPumpPin)
 	pi.WaterPumpState = true
 
 }
