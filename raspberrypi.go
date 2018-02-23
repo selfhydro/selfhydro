@@ -56,7 +56,7 @@ func (pi *RaspberryPi) StartHydroponics() {
 
 }
 
-func (pi RaspberryPi) setPineHigh(pin rpio.Pin){
+func (pi RaspberryPi) setPinHigh(pin rpio.Pin){
 	PinHigh(pin)
 }
 
@@ -65,7 +65,7 @@ func (pi RaspberryPi) setPinLow(pin rpio.Pin){
 }
 
 func (pi *RaspberryPi) turnOnGrowLed(){
-	pi.setPineHigh(pi.GrowLedPin)
+	pi.setPinHigh(pi.GrowLedPin)
 	pi.GrowLedState = true
 }
 
@@ -82,7 +82,7 @@ func (pi *RaspberryPi) turnOffWaterPump(){
 
 func (pi *RaspberryPi) turnOnWaterPump(){
 	log.Printf("Turning on water Pump")
-	pi.setPineHigh(pi.WaterPumpPin)
+	pi.setPinHigh(pi.WaterPumpPin)
 	pi.WaterPumpState = true
 
 }
