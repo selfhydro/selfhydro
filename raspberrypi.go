@@ -4,6 +4,7 @@ import (
 	"github.com/stianeikeland/go-rpio"
 	"log"
 	"time"
+	"github.com/d2r2/go-dht"
 )
 
 type Controller interface {
@@ -134,20 +135,18 @@ func (pi RaspberryPi) startLightCycle() {
 func (pi RaspberryPi) startSensorCycle() {
 
 	go func() {
-		dht22 := NewDHT22(17)
+		//dht22 := NewDHT22(17)
 		for {
-			temperature, tErr := dht22.Temperature()
-			humidity, hErr := dht22.Humidity()
-			//temperature, humidity, retried, err :=
-			//	dht.ReadDHTxxWithRetry(dht.DHT22, 17, true, 10)
-			if tErr != nil {
-				log.Printf("Error: Error with reading dht: %s", tErr.Error())
+			//temperature, tErr := dht22.Temperature()
+			//humidity, hErr := dht22.Humidity()
+			temperature, humidity, retried, err :=
+				dht.ReadDHTxxWithRetry(dht.DHT22, 17, true, 10)
+			if err != nil {
+				log.Printf("Error: Error with reading dht: %s", err.Error())
 			}
-			if hErr != nil {
-				log.Printf("Error: Error with reading dht: %s", tErr.Error())
-			}
-			log.Printf("Ambient Temperature = %v*C, Humidity = %v%% \n",
-				temperature, humidity)
+
+			log.Printf("Ambient Temperature = %v*C, Humidity = %v%% (retired: %s) \n " ,
+				temperature, humidity, retried)
 			pi.getWaterTemp()
 			time.Sleep(time.Second * 5)
 		}
