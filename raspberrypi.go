@@ -4,12 +4,16 @@ import (
 	"github.com/stianeikeland/go-rpio"
 	"log"
 	"time"
-	"github.com/d2r2/go-dht"
 )
 
-type RaspberryPiGPIO interface {
+type Controller interface {
 	setPinHigh(pin rpio.Pin)
 	setPinLow(pin rpio.Pin)
+
+	startSensorCycle()
+	startLightCycle()
+	startWaterCycle()
+	startAirPumpCycle()
 }
 
 type RaspberryPi struct {
@@ -49,10 +53,10 @@ func NewRaspberryPi() *RaspberryPi {
 }
 
 func (pi *RaspberryPi) StartHydroponics() {
-	pi.StartSensorCycle()
-	pi.StartLightCycle()
-	pi.StartWaterCycle()
-	pi.StartAirPumpCycle()
+	pi.startSensorCycle()
+	pi.startLightCycle()
+	pi.startWaterCycle()
+	pi.startAirPumpCycle()
 
 }
 
@@ -91,7 +95,7 @@ func (pi RaspberryPi) getWaterTemp(){
 	pi.WaterTempSensor.ReadTemperature()
 }
 
-func (pi RaspberryPi) StartWaterCycle() {
+func (pi RaspberryPi) startWaterCycle() {
 	go func() {
 		for {
 			if pi.WaterLevelSensor.Read() != rpio.High {
@@ -100,11 +104,11 @@ func (pi RaspberryPi) StartWaterCycle() {
 			pi.turnOnWaterPump()
 			time.Sleep(time.Second * 5)
 			pi.turnOffWaterPump()
-			time.Sleep(time.Minute * 150)
+			time.Sleep(time.Hour * 8)
 		}
 	}()
 }
-func (pi RaspberryPi) StartLightCycle() {
+func (pi RaspberryPi) startLightCycle() {
 	turnOnTime, _ := time.Parse("15:04:05", "04:45:00")
 	turnOffTime, _ := time.Parse("15:04:05", "23:45:00")
 	go func() {
@@ -121,25 +125,31 @@ func (pi RaspberryPi) StartLightCycle() {
 
 	}()
 }
-func (pi RaspberryPi) StartSensorCycle() {
+func (pi RaspberryPi) startSensorCycle() {
 
 	go func() {
+		dht22 := NewDHT22(17)
 		for {
-			temperature, humidity, retried, err :=
-				dht.ReadDHTxxWithRetry(dht.DHT22, 17, true, 10)
-			if err != nil {
-				log.Printf("Error: Error with reading dht: %s", err.Error())
+			temperature, tErr := dht22.Temperature()
+			humidity, hErr := dht22.Humidity()
+			//temperature, humidity, retried, err :=
+			//	dht.ReadDHTxxWithRetry(dht.DHT22, 17, true, 10)
+			if tErr != nil {
+				log.Printf("Error: Error with reading dht: %s", tErr.Error())
 			}
-			log.Printf("Ambient Temperature = %v*C, Humidity = %v%% (retried %d times)\n",
-				temperature, humidity, retried)
+			if hErr != nil {
+				log.Printf("Error: Error with reading dht: %s", tErr.Error())
+			}
+			log.Printf("Ambient Temperature = %v*C, Humidity = %v%% \n",
+				temperature, humidity)
 			pi.getWaterTemp()
-			time.Sleep(time.Hour)
+			time.Sleep(time.Minute * 2)
 		}
 
 	}()
 }
 
-func (pi RaspberryPi) StartAirPumpCycle() {
+func (pi RaspberryPi) startAirPumpCycle() {
 	go func() {
 		for {
 			log.Printf("Turning on air pump")
