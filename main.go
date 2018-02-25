@@ -34,8 +34,8 @@ func main() {
 
 	sigs := make(chan os.Signal, 1)
 
-	signal.Notify(sigs, os.Interrupt)
-	signal.Notify(sigs, os.Kill)
+	signal.Notify(sigs)
+	//signal.Notify(sigs, os.Kill)
 
 	controller := NewRaspberryPi()
 
@@ -44,8 +44,8 @@ func main() {
 		log.Println("Exiting program...")
 		log.Println("RECEIVED SIGNAL: ", s)
 
-		controller.turnOffGrowLed()
-		controller.WaterPumpPin.Low()
+		controller.StopSystem()
+
 		os.Exit(0)
 	}()
 

@@ -17,13 +17,13 @@ type Controller interface {
 }
 
 type RaspberryPi struct {
-	GrowLedPin rpio.Pin
-	GrowLedState bool
-	WaterPumpPin rpio.Pin
-	WaterPumpState bool
-	WaterTempSensor ds18b20
+	GrowLedPin       rpio.Pin
+	GrowLedState     bool
+	WaterPumpPin     rpio.Pin
+	WaterPumpState   bool
+	WaterTempSensor  ds18b20
 	WaterLevelSensor rpio.Pin
-	AirPump rpio.Pin
+	AirPump          rpio.Pin
 }
 
 var PinHigh = rpio.Pin.High
@@ -60,38 +60,44 @@ func (pi *RaspberryPi) StartHydroponics() {
 
 }
 
-func (pi RaspberryPi) setPinHigh(pin rpio.Pin){
+func (pi *RaspberryPi) StopSystem() {
+	pi.turnOffGrowLed()
+	pi.WaterPumpPin.Low()
+	pi.AirPump.Low()
+}
+
+func (pi RaspberryPi) setPinHigh(pin rpio.Pin) {
 	PinHigh(pin)
 }
 
-func (pi RaspberryPi) setPinLow(pin rpio.Pin){
+func (pi RaspberryPi) setPinLow(pin rpio.Pin) {
 	PinLow(pin)
 }
 
-func (pi *RaspberryPi) turnOnGrowLed(){
+func (pi *RaspberryPi) turnOnGrowLed() {
 	pi.setPinHigh(pi.GrowLedPin)
 	pi.GrowLedState = true
 }
 
-func (pi *RaspberryPi) turnOffGrowLed(){
+func (pi *RaspberryPi) turnOffGrowLed() {
 	pi.setPinLow(pi.GrowLedPin)
 	pi.GrowLedState = false
 
 }
 
-func (pi *RaspberryPi) turnOffWaterPump(){
+func (pi *RaspberryPi) turnOffWaterPump() {
 	pi.setPinLow(pi.WaterPumpPin)
 	pi.WaterPumpState = false
 }
 
-func (pi *RaspberryPi) turnOnWaterPump(){
+func (pi *RaspberryPi) turnOnWaterPump() {
 	log.Printf("Turning on water Pump")
 	pi.setPinHigh(pi.WaterPumpPin)
 	pi.WaterPumpState = true
 
 }
 
-func (pi RaspberryPi) getWaterTemp(){
+func (pi RaspberryPi) getWaterTemp() {
 	pi.WaterTempSensor.ReadTemperature()
 }
 
@@ -154,14 +160,13 @@ func (pi RaspberryPi) startAirPumpCycle() {
 		for {
 			log.Printf("Turning on air pump")
 			pi.AirPump.High()
-			time.Sleep(time.Minute*30)
+			time.Sleep(time.Minute * 30)
 			log.Printf("Turning off air pump")
 			pi.AirPump.Low()
-			time.Sleep(time.Hour*3)
+			time.Sleep(time.Hour * 3)
 		}
 	}()
 }
-
 
 func betweenTime(startTime time.Time, endTime time.Time) bool {
 	currentTimeString := time.Now().Format("15:04:05")
@@ -172,4 +177,3 @@ func betweenTime(startTime time.Time, endTime time.Time) bool {
 
 	return false
 }
-
