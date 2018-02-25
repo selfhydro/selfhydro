@@ -63,20 +63,72 @@ func (d *DHT22) read() error {
 	pin := rpio.Pin(d.pin)
 	pin.Mode(rpio.Output)
 
-	pin.High()
+	var (
+		humidity    uint16
+		temperature uint16
+	)
 
+	initSensor(pin)
+
+	for {
+		readData(pin, lengths, iterator)
+
+		bytes := generateBytes(lengths)
+
+		if err := d.checksum(bytes); err != nil {
+			if err != nil {
+				return err
+			}
+		}
+
+		d.calculateHumidity(humidity, bytes)
+
+		// calculate temperature
+		temperature |= uint16(bytes[2])
+		temperature <<= 8
+		temperature |= uint16(bytes[3])
+
+	}
+
+	// check for negative temperature
+	if temperature&0x8000 > 0 {
+		d.temperature = float32(temperature&0x7FFF) / -10
+	} else {
+		d.temperature = float32(temperature) / 10
+	}
+
+	// datasheet operating range
+	if d.temperature < -40 || d.temperature > 80 {
+		return TemperatureError
+	}
+
+	return nil
+}
+
+func generateBytes(lengths []time.Duration) []uint8 {
+	bytes := make([]uint8, 5)
+	for i := range bytes {
+		for j := 0; j < 8; j++ {
+			bytes[i] <<= 1
+			if lengths[i*8+j] > LOGICAL_1_TRESHOLD {
+				bytes[i] |= 0x01
+			}
+		}
+	}
+	return bytes
+}
+
+func initSensor(pin rpio.Pin) {
+	pin.High()
 	time.Sleep(250 * time.Millisecond)
 	pin.Low()
-
 	time.Sleep(5 * time.Millisecond)
-
 	pin.High()
-
 	time.Sleep(20 * time.Microsecond)
-
 	pin.Mode(rpio.Input)
+}
 
-	// read data
+func readData(pin rpio.Pin, lengths []time.Duration, iterator int) {
 	for {
 		for {
 			if pin.Read() == rpio.High {
@@ -98,32 +150,9 @@ func (d *DHT22) read() error {
 			break
 		}
 	}
+}
 
-	// convert to bytes
-	bytes := make([]uint8, 5)
-
-	for i := range bytes {
-		for j := 0; j < 8; j++ {
-			bytes[i] <<= 1
-			if lengths[i*8+j] > LOGICAL_1_TRESHOLD {
-				bytes[i] |= 0x01
-			}
-		}
-	}
-
-	if err := d.checksum(bytes); err != nil {
-		if err != nil {
-			return err
-		}
-	}
-
-	var (
-		humidity    uint16
-		temperature uint16
-	)
-
-	// calculate humidity
-
+func (d *DHT22) calculateHumidity(humidity uint16, bytes []uint8) error {
 	humidity |= uint16(bytes[0])
 	humidity <<= 8
 	humidity |= uint16(bytes[1])
@@ -133,24 +162,6 @@ func (d *DHT22) read() error {
 	}
 
 	d.humidity = float32(humidity) / 10
-
-	// calculate temperature
-	temperature |= uint16(bytes[2])
-	temperature <<= 8
-	temperature |= uint16(bytes[3])
-
-	// check for negative temperature
-	if temperature&0x8000 > 0 {
-		d.temperature = float32(temperature&0x7FFF) / -10
-	} else {
-		d.temperature = float32(temperature) / 10
-	}
-
-	// datasheet operating range
-	if d.temperature < -40 || d.temperature > 80 {
-		return TemperatureError
-	}
-
 	return nil
 }
 
