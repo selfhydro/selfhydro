@@ -104,9 +104,9 @@ func (pi RaspberryPi) getWaterTemp() {
 func (pi RaspberryPi) startWaterCycle() {
 	go func() {
 		for {
-			if pi.WaterLevelSensor.Read() != rpio.High {
-				log.Printf("ALERT: Water level is low")
-			}
+			//if pi.WaterLevelSensor.Read() != rpio.High {
+			//	log.Printf("ALERT: Water level is low")
+			//}
 			pi.turnOnWaterPump()
 			time.Sleep(time.Second * 1)
 			pi.turnOffWaterPump()

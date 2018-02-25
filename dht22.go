@@ -119,7 +119,6 @@ func generateBytes(lengths []time.Duration) []uint8 {
 			}
 		}
 	}
-	log.Printf("")
 	return bytes
 }
 
@@ -153,6 +152,10 @@ func readData(pin rpio.Pin, lengths []time.Duration, iterator int) {
 		if iterator >= 40 {
 			break
 		}
+	}
+
+	for dur := range lengths {
+		log.Printf("%v", dur)
 	}
 }
 
