@@ -68,11 +68,11 @@ func (d *DHT22) read() error {
 		temperature uint16
 	)
 
-	initSensor(pin)
+	initSensor(&pin)
 	pin.Mode(rpio.Input)
 
 	for {
-		d.readData(pin, lengths, iterator)
+		d.readData(&pin, lengths, iterator)
 
 		bytes := generateBytes(lengths)
 
@@ -122,7 +122,7 @@ func generateBytes(lengths []time.Duration) []uint8 {
 	return bytes
 }
 
-func initSensor(pin rpio.Pin) {
+func initSensor(pin *rpio.Pin) {
 	pin.High()
 	time.Sleep(250 * time.Millisecond)
 	pin.Low()
@@ -131,10 +131,10 @@ func initSensor(pin rpio.Pin) {
 	time.Sleep(20 * time.Microsecond)
 }
 
-func (d *DHT22) readData(pin rpio.Pin, lengths []time.Duration, iterator int) {
+func (d *DHT22) readData(pin *rpio.Pin, lengths []time.Duration, iterator int) {
 	for {
 
-		duration := d.TimePulse(pin, rpio.High)
+		duration := d.timePulse(pin, rpio.High)
 
 		lengths[iterator] = duration
 		iterator++
@@ -148,7 +148,7 @@ func (d *DHT22) readData(pin rpio.Pin, lengths []time.Duration, iterator int) {
 	}
 }
 
-func (d *DHT22) TimePulse(pin rpio.Pin, state rpio.State) (time.Duration) {
+func (d *DHT22) timePulse(pin *rpio.Pin, state rpio.State) (time.Duration) {
 
 	aroundState := rpio.Low
 	if state == rpio.Low {
