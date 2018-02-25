@@ -155,7 +155,7 @@ func readData(pin rpio.Pin, lengths []time.Duration, iterator int) {
 	}
 
 	for dur := range lengths {
-		log.Printf("%v", dur)
+		log.Printf("%v", lengths[dur])
 	}
 }
 
