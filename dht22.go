@@ -72,7 +72,7 @@ func (d *DHT22) read() error {
 	pin.Mode(rpio.Input)
 
 	for {
-		readData(pin, lengths, iterator)
+		d.readData(pin, lengths, iterator)
 
 		bytes := generateBytes(lengths)
 
