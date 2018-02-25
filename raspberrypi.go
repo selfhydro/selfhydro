@@ -126,7 +126,7 @@ func (pi RaspberryPi) startLightCycle() {
 				log.Printf("Turning off GROW LEDS")
 				pi.turnOffGrowLed()
 			}
-			time.Sleep(time.Minute * 1)
+			time.Sleep(time.Second * 4)
 		}
 
 	}()
