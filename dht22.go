@@ -165,7 +165,7 @@ func (d *DHT22) timePulse(pin *rpio.Pin, state rpio.State) (time.Duration) {
 
 	for {
 		v := pin.Read()
-
+		log.Printf("State: %s",v)
 		if v == state {
 			break
 		}
@@ -175,7 +175,7 @@ func (d *DHT22) timePulse(pin *rpio.Pin, state rpio.State) (time.Duration) {
 
 	for {
 		v := pin.Read()
-
+		log.Printf("State: %s",v)
 		if v == aroundState {
 			break
 		}
