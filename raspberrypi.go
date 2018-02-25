@@ -109,7 +109,7 @@ func (pi RaspberryPi) startWaterCycle() {
 			//	log.Printf("ALERT: Water level is low")
 			//}
 			pi.turnOnWaterPump()
-			time.Sleep(time.Second * 1)
+			time.Sleep(time.Second * 5)
 			pi.turnOffWaterPump()
 			time.Sleep(time.Hour * 8)
 		}
@@ -148,7 +148,7 @@ func (pi RaspberryPi) startSensorCycle() {
 			log.Printf("Ambient Temperature = %v*C, Humidity = %v%% (retired: %s) \n " ,
 				temperature, humidity, retried)
 			pi.getWaterTemp()
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Hour)
 		}
 
 	}()
