@@ -134,14 +134,14 @@ func initSensor(pin rpio.Pin) {
 func readData(pin rpio.Pin, lengths []time.Duration, iterator int) {
 	for {
 		for {
-			if pin.Read() == rpio.High {
+			if pin.Read() == rpio.Low {
 				break
 			}
 		}
 		startTime := time.Now()
 
 		for {
-			if pin.Read() == rpio.Low {
+			if pin.Read() == rpio.High {
 				break
 			}
 		}
