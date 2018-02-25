@@ -4,6 +4,7 @@ import (
 	"time"
 	"errors"
 	"github.com/stianeikeland/go-rpio"
+	"log"
 )
 
 const (
@@ -56,7 +57,6 @@ func (d *DHT22) read() error {
 
 	d.readAt = time.Now()
 
-	// early allocations before time critical code
 	lengths := make([]time.Duration, 40)
 	iterator := 0
 
@@ -69,6 +69,7 @@ func (d *DHT22) read() error {
 	)
 
 	initSensor(pin)
+	pin.Mode(rpio.Input)
 
 	for {
 		readData(pin, lengths, iterator)
@@ -112,9 +113,13 @@ func generateBytes(lengths []time.Duration) []uint8 {
 			bytes[i] <<= 1
 			if lengths[i*8+j] > LOGICAL_1_TRESHOLD {
 				bytes[i] |= 0x01
+				log.Print("1")
+			} else {
+				log.Print("0")
 			}
 		}
 	}
+	log.Printf("")
 	return bytes
 }
 
@@ -125,7 +130,6 @@ func initSensor(pin rpio.Pin) {
 	time.Sleep(5 * time.Millisecond)
 	pin.High()
 	time.Sleep(20 * time.Microsecond)
-	pin.Mode(rpio.Input)
 }
 
 func readData(pin rpio.Pin, lengths []time.Duration, iterator int) {
