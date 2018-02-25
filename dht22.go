@@ -131,21 +131,10 @@ func initSensor(pin rpio.Pin) {
 	time.Sleep(20 * time.Microsecond)
 }
 
-func readData(pin rpio.Pin, lengths []time.Duration, iterator int) {
+func (d *DHT22) readData(pin rpio.Pin, lengths []time.Duration, iterator int) {
 	for {
-		for {
-			if pin.Read() == rpio.Low {
-				break
-			}
-		}
-		startTime := time.Now()
 
-		for {
-			if pin.Read() == rpio.High {
-				break
-			}
-		}
-		duration := time.Since(startTime)
+		duration := d.TimePulse(pin, rpio.High)
 
 		lengths[iterator] = duration
 		iterator++
@@ -157,6 +146,42 @@ func readData(pin rpio.Pin, lengths []time.Duration, iterator int) {
 	for dur := range lengths {
 		log.Printf("%v", lengths[dur])
 	}
+}
+
+func (d *DHT22) TimePulse(pin rpio.Pin, state rpio.State) (time.Duration) {
+
+	aroundState := rpio.Low
+	if state == rpio.Low {
+		aroundState = rpio.High
+	}
+
+	for {
+		v := pin.Read()
+
+		if v == aroundState {
+			break
+		}
+	}
+
+	for {
+		v := pin.Read()
+
+		if v == state {
+			break
+		}
+	}
+
+	startTime := time.Now()
+
+	for {
+		v := pin.Read()
+
+		if v == aroundState {
+			break
+		}
+	}
+
+	return time.Since(startTime)
 }
 
 func (d *DHT22) calculateHumidity(humidity uint16, bytes []uint8) error {
