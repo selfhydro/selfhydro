@@ -8,13 +8,16 @@ import (
 )
 
 type Controller interface {
-	setPinHigh(pin rpio.Pin)
-	setPinLow(pin rpio.Pin)
+	StopSystem()
+	StartHydroponics()
 
 	startSensorCycle()
 	startLightCycle()
 	startWaterCycle()
 	startAirPumpCycle()
+
+	setPinHigh(pin rpio.Pin)
+	setPinLow(pin rpio.Pin)
 }
 
 type RaspberryPi struct {
@@ -105,9 +108,6 @@ func (pi RaspberryPi) getWaterTemp() {
 func (pi RaspberryPi) startWaterCycle() {
 	go func() {
 		for {
-			//if pi.WaterLevelSensor.Read() != rpio.High {
-			//	log.Printf("ALERT: Water level is low")
-			//}
 			pi.turnOnWaterPump()
 			time.Sleep(time.Second * 5)
 			pi.turnOffWaterPump()
@@ -142,10 +142,10 @@ func (pi RaspberryPi) startSensorCycle() {
 			temperature, humidity, retried, err :=
 				dht.ReadDHTxxWithRetry(dht.DHT22, 17, true, 10)
 			if err != nil {
-				log.Printf("Error: Error with reading dht: %s", err.Error())
+				log.Printf("Error: Error with reading dht: %v", err.Error())
 			}
 
-			log.Printf("Ambient Temperature = %v*C, Humidity = %v%% (retired: %s) \n " ,
+			log.Printf("Ambient Temperature = %v*C, Humidity = %v%% (retired: %v) \n ",
 				temperature, humidity, retried)
 			pi.getWaterTemp()
 			time.Sleep(time.Hour)

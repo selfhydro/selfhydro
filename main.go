@@ -25,6 +25,7 @@ func main() {
 	log.SetOutput(f)
 
 	log.Println("Starting up SelfHydro")
+	controller := NewRaspberryPi()
 
 	error := rpio.Open()
 	if error != nil {
@@ -32,13 +33,19 @@ func main() {
 	}
 	defer rpio.Close()
 
+	handleExit(controller)
+
+	controller.StartHydroponics()
+
+	for {
+		time.Sleep(time.Second)
+	}
+
+}
+
+func handleExit(controller *RaspberryPi) {
 	sigs := make(chan os.Signal, 1)
-
 	signal.Notify(sigs)
-	//signal.Notify(sigs, os.Kill)
-
-	controller := NewRaspberryPi()
-
 	go func() {
 		s := <-sigs
 		log.Println("Exiting program...")
@@ -48,11 +55,4 @@ func main() {
 
 		os.Exit(0)
 	}()
-
-	controller.StartHydroponics()
-
-	for {
-		time.Sleep(time.Second)
-	}
-
 }
