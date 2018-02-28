@@ -5,7 +5,6 @@ import (
 	"log"
 	"time"
 	"github.com/d2r2/go-dht"
-	"net"
 )
 
 type Controller interface {
