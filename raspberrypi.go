@@ -109,7 +109,7 @@ func (pi RaspberryPi) startWaterCycle() {
 	go func() {
 		for {
 			pi.turnOnWaterPump()
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Second * 8)
 			pi.turnOffWaterPump()
 			time.Sleep(time.Hour * 6)
 		}
