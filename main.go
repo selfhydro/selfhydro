@@ -33,8 +33,17 @@ func main() {
 	}
 	defer rpio.Close()
 
-	handleExit(controller)
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs)
+	go func() {
+		s := <-sigs
+		log.Println("Exiting program...")
+		log.Println("RECEIVED SIGNAL: ", s)
 
+		controller.StopSystem()
+
+		os.Exit(0)
+	}()
 	controller.StartHydroponics()
 
 	for {
