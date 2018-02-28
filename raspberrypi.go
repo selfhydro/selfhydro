@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 	"github.com/d2r2/go-dht"
+	"net"
 )
 
 type Controller interface {
@@ -34,6 +35,9 @@ var PinLow = rpio.Pin.Low
 
 func NewRaspberryPi() *RaspberryPi {
 	pi := new(RaspberryPi)
+
+	rpio.Open()
+	//defer rpio.Close()
 
 	pi.GrowLedPin = rpio.Pin(19)
 	pi.GrowLedState = false
