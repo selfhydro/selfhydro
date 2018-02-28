@@ -43,7 +43,7 @@ func NewRaspberryPi() *RaspberryPi {
 	pi.WaterPumpState = false
 
 	pi.WaterLevelSensor = rpio.Pin(4)
-	pi.WaterLevelSensor.Input()
+	pi.WaterLevelSensor.Mode(rpio.Input)
 
 	pi.GrowLedPin.Mode(rpio.Output)
 	pi.WaterPumpPin.Mode(rpio.Output)
