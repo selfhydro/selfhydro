@@ -26,7 +26,6 @@ type RaspberryPi struct {
 	WaterPumpPin     rpio.Pin
 	WaterPumpState   bool
 	WaterTempSensor  ds18b20
-	WaterLevelSensor rpio.Pin
 	AirPump          rpio.Pin
 }
 
@@ -41,9 +40,6 @@ func NewRaspberryPi() *RaspberryPi {
 
 	pi.WaterPumpPin = rpio.Pin(20)
 	pi.WaterPumpState = false
-
-	pi.WaterLevelSensor = rpio.Pin(4)
-	pi.WaterLevelSensor.Mode(rpio.Input)
 
 	pi.GrowLedPin.Mode(rpio.Output)
 	pi.WaterPumpPin.Mode(rpio.Output)
