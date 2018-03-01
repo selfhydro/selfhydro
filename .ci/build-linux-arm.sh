@@ -16,8 +16,8 @@ GO_CROSS_ENV=(
 
 OUTPUT_DIR=$(pwd)/linux-arm-binary
 
-export GOPATH=$(pwd)/gopath:$(pwd)/gopath/src/github.com/selfhydro/Godeps/_workspace
-cd gopath/src/github.com/selfhydro
+export GOPATH=$(pwd)/gopath:$(pwd)/gopath/src/github.com/bchalk101/selfhydro/Godeps/_workspace
+cd gopath/src/github.com/bchalk101/selfhydro
 
 if which arm-linux-gnueabihf-gcc 1> /dev/null 2>&1; then
   env go get ./...
