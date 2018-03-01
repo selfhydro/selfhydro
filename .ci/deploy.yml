@@ -1,0 +1,14 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: kroniak/ssh-client
+    tag: latest
+
+inputs:
+- name: selfhydro-rc
+
+run:
+  path: selfhydro/.ci/deploy.sh

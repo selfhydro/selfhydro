@@ -1,0 +1,29 @@
+---
+resources:
+- name: selfhydro
+  type: git
+  source:
+    uri: https://github.com/bchalk101/selfhydro.git
+
+jobs:
+- name: build-selfhydro
+  plan:
+  - get: selfhydro
+    trigger: true
+  - task: build-linux-arm
+    file: selfhydro/.ci/build-linux-arm.yml
+  - put: selfhydro
+    params:
+      name: release/name
+      body: release/body
+      globs: [release/artifacts/*]
+
+- name: deploy-selfhydro
+  plan:
+  - get: selfhydro
+    trigger: true
+    passed: [build-selfhydro]
+  - task: deploy
+    file: selfhydro/.ci/deploy.yml
+    params:
+      DEPLOY_KEY: ((selfhydro-rpi.private_key))
