@@ -8,7 +8,7 @@ image_resource:
     tag: latest
 
 inputs:
-- name: self-hydro
+- name: selfhydro
   path: gopath/src/github.com/selfhydro
 
 outputs:
