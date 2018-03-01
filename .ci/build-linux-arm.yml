@@ -9,10 +9,10 @@ image_resource:
 
 inputs:
 - name: selfhydro
-  path: gopath/src/github.com/selfhydro
+  path: gopath/src/github.com/bchalk101/selfhydro
 
 outputs:
 - name: linux-arm-binary
 
 run:
-  path: gopath/src/github.com/selfhydro/.ci/build-linux-arm.sh
+  path: gopath/src/github.com/bchalk101/selfhydro/.ci/build-linux-arm.sh
