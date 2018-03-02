@@ -11,7 +11,6 @@ GO_CROSS_ENV=(
 	GOARM=7
 	GOOS=linux
 	CGO_ENABLED=1
-	GOMAXPROCS=1
 )
 
 OUTPUT_DIR=$(pwd)/linux-arm-binary

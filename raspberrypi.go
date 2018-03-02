@@ -16,21 +16,19 @@ type Controller interface {
 	startWaterCycle()
 	startAirPumpCycle()
 
-	setPinHigh(pin rpio.Pin)
-	setPinLow(pin rpio.Pin)
+	setPinHigh(pin RaspberryPiPin)
+	setPinLow(pin RaspberryPiPin)
 }
 
 type RaspberryPi struct {
-	GrowLedPin       rpio.Pin
+	GrowLedPin       RaspberryPiPin
 	GrowLedState     bool
-	WaterPumpPin     rpio.Pin
+	WaterPumpPin     RaspberryPiPin
 	WaterPumpState   bool
 	WaterTempSensor  ds18b20
-	AirPump          rpio.Pin
+	AirPump          RaspberryPiPin
 }
 
-var PinHigh = rpio.Pin.High
-var PinLow = rpio.Pin.Low
 
 func NewRaspberryPi() *RaspberryPi {
 	pi := new(RaspberryPi)
@@ -38,19 +36,19 @@ func NewRaspberryPi() *RaspberryPi {
 	rpio.Open()
 	//defer rpio.Close()
 
-	pi.GrowLedPin = rpio.Pin(19)
+	pi.GrowLedPin = NewRaspberryPiPin(19)
 	pi.GrowLedState = false
 
-	pi.WaterPumpPin = rpio.Pin(20)
+	pi.WaterPumpPin = NewRaspberryPiPin(20)
 	pi.WaterPumpState = false
 
-	pi.GrowLedPin.Mode(rpio.Output)
-	pi.WaterPumpPin.Mode(rpio.Output)
+	pi.GrowLedPin.SetMode(rpio.Output)
+	pi.WaterPumpPin.SetMode(rpio.Output)
 
 	pi.WaterTempSensor.id = "28-0316838ca7ff"
 
-	pi.AirPump = rpio.Pin(21)
-	pi.AirPump.Mode(rpio.Output)
+	pi.AirPump = NewRaspberryPiPin(21)
+	pi.AirPump.SetMode(rpio.Output)
 
 	return pi
 }
@@ -65,37 +63,29 @@ func (pi *RaspberryPi) StartHydroponics() {
 
 func (pi *RaspberryPi) StopSystem() {
 	pi.turnOffGrowLed()
-	pi.WaterPumpPin.Low()
-	pi.AirPump.Low()
-}
-
-func (pi RaspberryPi) setPinHigh(pin rpio.Pin) {
-	PinHigh(pin)
-}
-
-func (pi RaspberryPi) setPinLow(pin rpio.Pin) {
-	PinLow(pin)
+	pi.WaterPumpPin.WriteState(rpio.Low)
+	pi.AirPump.WriteState(rpio.Low)
 }
 
 func (pi *RaspberryPi) turnOnGrowLed() {
-	pi.setPinHigh(pi.GrowLedPin)
+	pi.GrowLedPin.WriteState(rpio.High)
 	pi.GrowLedState = true
 }
 
 func (pi *RaspberryPi) turnOffGrowLed() {
-	pi.setPinLow(pi.GrowLedPin)
+	pi.GrowLedPin.WriteState(rpio.Low)
 	pi.GrowLedState = false
 
 }
 
 func (pi *RaspberryPi) turnOffWaterPump() {
-	pi.setPinLow(pi.WaterPumpPin)
+	pi.WaterPumpPin.WriteState(rpio.Low)
 	pi.WaterPumpState = false
 }
 
 func (pi *RaspberryPi) turnOnWaterPump() {
 	log.Printf("Turning on water Pump")
-	pi.setPinHigh(pi.WaterPumpPin)
+	pi.WaterPumpPin.WriteState(rpio.High)
 	pi.WaterPumpState = true
 
 }
@@ -157,10 +147,10 @@ func (pi RaspberryPi) startAirPumpCycle() {
 	go func() {
 		for {
 			log.Printf("Turning on air pump")
-			pi.AirPump.High()
+			pi.AirPump.WriteState(rpio.High)
 			time.Sleep(time.Minute * 30)
 			log.Printf("Turning off air pump")
-			pi.AirPump.Low()
+			pi.AirPump.WriteState(rpio.Low)
 			time.Sleep(time.Hour * 3)
 		}
 	}()
