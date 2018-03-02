@@ -5,7 +5,7 @@ image_resource:
   type: docker-image
   source:
     repository: bchalk/raspbian-golang
-    tag: 1.8-golang
+    tag: 1.9-golang
 
 inputs:
 - name: selfhydro
