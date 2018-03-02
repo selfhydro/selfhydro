@@ -6,17 +6,26 @@ import (
 
 var ledState bool
 
+func setupMock() *RaspberryPi {
+	mockPi := new(RaspberryPi)
+	mockPi.WaterPumpPin = new(mockRaspberryPiPinImpl)
+	mockPi.AirPump = new(mockRaspberryPiPinImpl)
+	mockPi.GrowLedPin = new(mockRaspberryPiPinImpl)
+	return mockPi
+}
+
 func TestTurnOnGrowLed(t *testing.T) {
 	ledState = false
-	mockPi := new(RaspberryPi)
+	mockPi := setupMock()
 	mockPi.turnOnGrowLed()
 	if !ledState {
 		t.Errorf("Error: GrowLED not turned on")
 	}
 }
+
 func TestTurnOffGrowLed(t *testing.T) {
 	ledState = false
-	mockPi := new(RaspberryPi)
+	mockPi := setupMock()
 	mockPi.turnOnGrowLed()
 	if !ledState {
 		t.Errorf("Error: GrowLED not turned on")
@@ -24,7 +33,7 @@ func TestTurnOffGrowLed(t *testing.T) {
 }
 func TestTurnOnWaterPump(t *testing.T) {
 	ledState = false
-	mockPi := new(RaspberryPi)
+	mockPi := setupMock()
 	mockPi.turnOnGrowLed()
 	if !ledState {
 		t.Errorf("Error: GrowLED not turned on")
@@ -32,7 +41,7 @@ func TestTurnOnWaterPump(t *testing.T) {
 }
 func TestTurnOffWaterPump(t *testing.T) {
 	ledState = false
-	mockPi := new(RaspberryPi)
+	mockPi := setupMock()
 	mockPi.turnOnGrowLed()
 	if !ledState {
 		t.Errorf("Error: GrowLED not turned on")
