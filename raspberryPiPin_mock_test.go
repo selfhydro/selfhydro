@@ -9,7 +9,6 @@ type mockRaspberryPiPinImpl struct {
 }
 
 
-
 func (r *mockRaspberryPiPinImpl) ReadState() rpio.State {
 	return r.stateOfPin
 }
@@ -19,6 +18,6 @@ func (r *mockRaspberryPiPinImpl) WriteState(state rpio.State) {
 	r.writeStateCalled = true
 }
 
-func (r *raspberryPiPinImpl) SetMode(mode rpio.Mode) {
+func (r *mockRaspberryPiPinImpl) SetMode(mode rpio.Mode) {
 
 }
