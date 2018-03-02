@@ -20,4 +20,3 @@ cd gopath/src/github.com/bchalk101/selfhydro
 
 env  go get
 env ${GO_CROSS_ENV[@]} go build -o "$OUTPUT_DIR/selfhydro"
-env ${GO_ENV[@]} go test --cover -v
