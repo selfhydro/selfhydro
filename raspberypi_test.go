@@ -9,7 +9,7 @@ var ledState bool
 func setupMock() *RaspberryPi {
 	mockPi := new(RaspberryPi)
 	mockPi.WaterPumpPin = new(mockRaspberryPiPinImpl)
-	mockPi.AirPump = new(mockRaspberryPiPinImpl)
+	mockPi.AirPumpPin = new(mockRaspberryPiPinImpl)
 	mockPi.GrowLedPin = new(mockRaspberryPiPinImpl)
 	return mockPi
 }
