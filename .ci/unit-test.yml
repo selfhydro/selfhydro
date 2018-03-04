@@ -12,4 +12,4 @@ inputs:
 
 
 run:
-  path: /selfhydro/.ci/unit-test.sh
+  path: selfhydro/.ci/unit-test.sh
