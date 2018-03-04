@@ -1,0 +1,14 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: bchalk/raspbian-golang
+    tag: 1.9-golang
+
+inputs:
+- name: selfhydro
+
+run:
+  path: gopath/src/github.com/bchalk101/selfhydro/.ci/unit-test.sh

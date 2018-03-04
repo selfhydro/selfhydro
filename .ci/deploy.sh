@@ -1,6 +1,6 @@
 #!/bin/bash
 
--e
+set -e
 
 scp selfhydro pi@water.local:/selfhydro/
 

@@ -6,10 +6,19 @@ resources:
     uri: https://github.com/bchalk101/selfhydro.git
 
 jobs:
+- name: tests
+  plan:
+  - get: selfhydro
+    trigger: true
+  - task: unit-test
+    file: selfhydro/.ci/unit-test.yml
+
+
 - name: build-selfhydro
   plan:
   - get: selfhydro
     trigger: true
+    passed: [tests]
   - task: build-linux-arm
     file: selfhydro/.ci/build-linux-arm.yml
   - put: selfhydro
