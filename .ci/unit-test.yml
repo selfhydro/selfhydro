@@ -10,5 +10,6 @@ image_resource:
 inputs:
 - name: selfhydro
 
+
 run:
-  path: gopath/src/github.com/bchalk101/selfhydro/.ci/unit-test.sh
+  path: /selfhydro/.ci/unit-test.sh
