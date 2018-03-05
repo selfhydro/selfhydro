@@ -10,6 +10,8 @@ image_resource:
 inputs:
 - name: selfhydro
 
+outputs:
+- name: coverage-results
 
 run:
   path: selfhydro/.ci/unit-test.sh
