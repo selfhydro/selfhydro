@@ -9,7 +9,7 @@ cp -R ./selfhydro src/github.com/bchalk101/.
 
 cd src/github.com/bchalk101/selfhydro
 go get
-go test -cover ./... | tee test_coverage.txt
+go test -cover ./...
 
 mv test_coverage.txt $GOPATH/coverage-results/.
 

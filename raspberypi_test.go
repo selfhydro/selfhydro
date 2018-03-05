@@ -5,8 +5,6 @@ import (
 	"github.com/stianeikeland/go-rpio"
 )
 
-var ledState bool
-
 func setupMock() *RaspberryPi {
 	mockPi := new(RaspberryPi)
 	mockPi.AirPumpPin = new(mockRaspberryPiPinImpl)
@@ -14,15 +12,20 @@ func setupMock() *RaspberryPi {
 	return mockPi
 }
 
-func TestTurnOnGrowLed(t *testing.T) {
-	ledState = false
+func TestHydroCycle(t *testing.T) {
 	mockPi := setupMock()
-	mockPi.startLightCycle()
-	if mockPi.GrowLedPin.ReadState() != rpio.High {
-		t.Errorf("Error: GrowLED not turned on")
-	}
+	t.Run("Testing Grow LEDS", func(t *testing.T) {
+		mockPi.startLightCycle()
+		if mockPi.GrowLedPin.ReadState() != rpio.High {
+			t.Errorf("Error: GrowLED not turned on")
+		}
+	})
+	
+	t.Run("Test Air Pump cycle", func(t *testing.T) {
+		mockPi.startAirPumpCycle()
+		if mockPi.AirPumpPin.ReadState() != rpio.High {
+			t.Errorf("Error: Airpump was not turned on")
+		}
+	})
 }
-
-
-
 
