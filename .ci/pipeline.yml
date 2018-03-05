@@ -20,7 +20,9 @@ jobs:
     passed: [tests]
   - task: build-linux-arm
     file: selfhydro/.ci/build-linux-arm.yml
-  - put: selfhydro
+  - put: binary/selfhydro
+    params:
+      repository: selfhydro
 
 - name: deploy-selfhydro
   plan:
