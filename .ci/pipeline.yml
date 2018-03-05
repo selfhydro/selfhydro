@@ -21,7 +21,8 @@ jobs:
   - task: build-linux-arm
     file: selfhydro/.ci/build-linux-arm.yml
   - put: project-bin
-    params: file: binary/selfhydro
+    params:
+      file: binary/selfhydro
   - task: deploy
     file: selfhydro/.ci/deploy.yml
     params:
