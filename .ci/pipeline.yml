@@ -21,10 +21,6 @@ jobs:
   - task: build-linux-arm
     file: selfhydro/.ci/build-linux-arm.yml
   - put: selfhydro
-    params:
-      name: release/name
-      body: release/body
-      globs: [release/artifacts/*]
 
 - name: deploy-selfhydro
   plan:

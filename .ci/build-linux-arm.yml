@@ -11,7 +11,7 @@ inputs:
 - name: selfhydro
 
 outputs:
-- name: linux-arm-binary
+- name: binary
 
 run:
   path: selfhydro/.ci/build-linux-arm.sh

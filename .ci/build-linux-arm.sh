@@ -7,9 +7,9 @@ GO_ENV=(
 )
 
 GO_CROSS_ENV=(
+    GOOS=linux
 	GOARCH=arm
 	GOARM=7
-	GOOS=linux
 	CGO_ENABLED=1
 )
 
@@ -20,9 +20,7 @@ mkdir -p src/github.com/bchalk101/
 
 cp -R ./selfhydro src/github.com/bchalk101/.
 
-OUTPUT_DIR=$(pwd)/linux-arm-binary
-
 cd src/github.com/bchalk101/selfhydro
 
 go get
-env ${GO_CROSS_ENV[@]} go build -o "$OUTPUT_DIR/selfhydro"
+env ${GO_ENV[@]} go build -o binary/selfhydro
