@@ -17,6 +17,7 @@ GO_CROSS_ENV=(
 export GOPATH=$PWD
 
 mkdir -p src/github.com/bchalk101/
+
 cp -R ./selfhydro src/github.com/bchalk101/.
 
 OUTPUT_DIR=$(pwd)/linux-arm-binary
