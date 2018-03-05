@@ -74,17 +74,20 @@ func (pi RaspberryPi) startLightCycle() {
 	turnOffTime, _ := time.Parse("15:04:05", "23:45:00")
 	go func() {
 		for {
-			if !pi.GrowLedState && betweenTime(turnOnTime, turnOffTime) {
-				log.Printf("Turning on GROW LEDS")
-				pi.turnOnGrowLed()
-			} else if pi.GrowLedState && betweenTime(turnOffTime, turnOnTime.Add(time.Hour*24)) {
-				log.Printf("Turning off GROW LEDS")
-				pi.turnOffGrowLed()
-			}
+			pi.changeLEDState( turnOnTime, turnOffTime)
 			time.Sleep(time.Second * 4)
 		}
 
 	}()
+}
+func (pi RaspberryPi) changeLEDState(turnOnTime time.Time, turnOffTime time.Time) {
+	if !pi.GrowLedState && betweenTime(turnOnTime, turnOffTime) {
+		log.Printf("Turning on GROW LEDS")
+		pi.turnOnGrowLed()
+	} else if pi.GrowLedState && betweenTime(turnOffTime, turnOnTime.Add(time.Hour*24)) {
+		log.Printf("Turning off GROW LEDS")
+		pi.turnOffGrowLed()
+	}
 }
 func (pi RaspberryPi) startSensorCycle() {
 
@@ -111,14 +114,17 @@ func (pi RaspberryPi) startSensorCycle() {
 func (pi RaspberryPi) startAirPumpCycle() {
 	go func() {
 		for {
-			log.Printf("Turning on air pump")
-			pi.AirPumpPin.WriteState(rpio.High)
-			time.Sleep(time.Minute * 30)
-			log.Printf("Turning off air pump")
-			pi.AirPumpPin.WriteState(rpio.Low)
-			time.Sleep(time.Hour * 2)
+			pi.airPumpCycle(time.Minute * 30,time.Hour * 2 )
 		}
 	}()
+}
+func (pi RaspberryPi) airPumpCycle(airPumpOnDuration time.Duration, airPumpOffDuration time.Duration) {
+	log.Printf("Turning on air pump")
+	pi.AirPumpPin.WriteState(rpio.High)
+	time.Sleep(airPumpOnDuration)
+	log.Printf("Turning off air pump")
+	pi.AirPumpPin.WriteState(rpio.Low)
+	time.Sleep(airPumpOffDuration)
 }
 
 func betweenTime(startTime time.Time, endTime time.Time) bool {
@@ -127,6 +133,5 @@ func betweenTime(startTime time.Time, endTime time.Time) bool {
 	if currentTime.After(startTime) && currentTime.Before(endTime) {
 		return true
 	}
-
 	return false
 }
