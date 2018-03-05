@@ -13,22 +13,15 @@ jobs:
   - task: unit-test
     file: selfhydro/.ci/unit-test.yml
 
-- name: build-selfhydro
+- name: deploy-selfhydro
   plan:
   - get: selfhydro
     trigger: true
     passed: [tests]
   - task: build-linux-arm
     file: selfhydro/.ci/build-linux-arm.yml
-  - put: binary/selfhydro
-    params:
-      repository: selfhydro
-
-- name: deploy-selfhydro
-  plan:
-  - get: selfhydro
-    trigger: true
-    passed: [build-selfhydro]
+  - put: project-bin
+    params: file: binary/selfhydro
   - task: deploy
     file: selfhydro/.ci/deploy.yml
     params:

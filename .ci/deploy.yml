@@ -8,7 +8,7 @@ image_resource:
     tag: latest
 
 inputs:
-- name: selfhydro-rc
+- name: selfhydro
 
 run:
   path: selfhydro/.ci/deploy.sh
