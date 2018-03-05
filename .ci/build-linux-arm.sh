@@ -24,3 +24,12 @@ cd src/github.com/bchalk101/selfhydro
 
 go get
 env ${GO_ENV[@]} go build -o binary/selfhydro
+
+ls -la
+
+cd binary
+
+scp selfhydro pi@water.local:/selfhydro/
+
+ssh pi@water.local 'nohup sudo ./selfhydro/selfhydro &'
+

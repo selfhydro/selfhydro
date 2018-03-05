@@ -18,12 +18,7 @@ jobs:
   - get: selfhydro
     trigger: true
     passed: [tests]
-  - task: build-linux-arm
+  - task: deploy-linux-arm
     file: selfhydro/.ci/build-linux-arm.yml
-  - put: project-bin
-    params:
-      file: binary/selfhydro
-  - task: deploy
-    file: selfhydro/.ci/deploy.yml
     params:
       DEPLOY_KEY: ((selfhydro-rpi.private_key))
