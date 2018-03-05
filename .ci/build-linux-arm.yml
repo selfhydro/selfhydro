@@ -14,4 +14,4 @@ outputs:
 - name: linux-arm-binary
 
 run:
-  path: gopath/src/github.com/bchalk101/selfhydro/.ci/build-linux-arm.sh
+  path: selfhydro/.ci/build-linux-arm.sh
