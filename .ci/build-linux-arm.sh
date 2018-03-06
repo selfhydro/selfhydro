@@ -23,7 +23,7 @@ cp -R ./selfhydro src/github.com/bchalk101/.
 cd src/github.com/bchalk101/selfhydro
 
 go get
-env ${GO_ENV[@]} go build -o binary/selfhydro
+env ${GO_CROSS_ENV[@]} go build -o binary/selfhydro
 
 ls -la
 

@@ -4,8 +4,8 @@ platform: linux
 image_resource:
   type: docker-image
   source:
-    repository: bchalk/raspbian-golang
-    tag: 1.9-golang
+    repository: golang
+    tag: stretch
 
 inputs:
 - name: selfhydro
