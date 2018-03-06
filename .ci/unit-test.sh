@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
-set -e -x
+set -e
 
 export GOPATH=$PWD
 
