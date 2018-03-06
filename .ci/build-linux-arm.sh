@@ -11,6 +11,7 @@ GO_CROSS_ENV=(
 	GOARCH=arm
 	GOARM=7
 	CGO_ENABLED=1
+	CC=arm-linux-gnueabi-gcc
 )
 
 
