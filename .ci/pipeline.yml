@@ -21,4 +21,4 @@ jobs:
   - task: deploy-linux-arm
     file: selfhydro/.ci/build-linux-arm.yml
     params:
-      DEPLOY_KEY: ((selfhydro-rpi.private_key))
+      DEPLOY_KEY: ((selfhydro-rpi-deploy-key.private_key))
