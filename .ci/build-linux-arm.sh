@@ -14,6 +14,7 @@ GO_CROSS_ENV=(
 	CC=arm-linux-gnueabi-gcc
 )
 
+sudo apt-get install binutils-arm-linux-gnueabi
 
 export GOPATH=$PWD
 
