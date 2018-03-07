@@ -11,9 +11,36 @@ resources:
     email: ((docker-hub-email))
     username: ((docker-hub-username))
     password: ((docker-hub-password))
-    repository: ((docker-hub-username))/concourse-tutorial-hello-world
+    repository: ((docker-hub-username))/selfhydro-released
+
+- name: version
+  type: semver
+  source:
+    driver: git
+    uri: git@github.com:bchalk101/selfhydro.git
+    branch: version
+    file: version
+    private_key: ((selfhydro-repo.private-key))
+
+- name: selfhydro-release
+  type: github-release
+  source:
+    owner: bchalk101
+    repository: selfhydro
+    access_token: ((github-access-token))
 
 jobs:
+- name: display-version
+  plan:
+  - get: selfhydro-version
+  - task: display-version
+    config:
+      inputs:
+      - name: version
+      run:
+        path: cat
+        args: [version/number]
+
 - name: tests
   plan:
   - get: selfhydro
@@ -21,12 +48,37 @@ jobs:
   - task: unit-test
     file: selfhydro/.ci/unit-test.yml
 
-- name: deploy-selfhydro
+- name: build
   plan:
+  - get: version
+      params: {bump: patch}
   - get: selfhydro
     trigger: true
     passed: [tests]
+  - task: build-linux-arm
+    file: selfhydro/.ci/build-linux-arm.yml
+  - put: version
+    params: {file: version/version}
+  - put: selfhydro-release
+    params:
+      name: release/name
+      tag: release/tag
+      body: release/body
+      globs:
+      - release/selfhydro
+
+- name: publish
+  - get: selfhydro-release
+  - put: selfhydro-docker-image
+    params:
+      build: selfhydro/.ci/docker
+
+- name: deploy
+  plan:
+  - get:
+    trigger: true
+    passed: [publish]
   - task: deploy-linux-arm
     file: selfhydro/.ci/build-linux-arm.yml
     params:
-      DEPLOY_KEY: ((selfhydro-rpi-deploy-key.private_key))
+          DEPLOY_KEY: ((selfhydro-rpi-deploy-key.private_key))

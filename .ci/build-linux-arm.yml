@@ -9,9 +9,10 @@ image_resource:
 
 inputs:
 - name: selfhydro
+- name: version
 
 outputs:
-- name: binary
+- name: release
 
 run:
   path: selfhydro/.ci/build-linux-arm.sh
