@@ -5,6 +5,14 @@ resources:
   source:
     uri: https://github.com/bchalk101/selfhydro.git
 
+- name: selfhydro-docker-image
+  type: docker-image
+  source:
+    email: ((docker-hub-email))
+    username: ((docker-hub-username))
+    password: ((docker-hub-password))
+    repository: ((docker-hub-username))/concourse-tutorial-hello-world
+
 jobs:
 - name: tests
   plan:

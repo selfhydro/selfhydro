@@ -32,7 +32,10 @@ ls -la
 
 cd binary
 
-scp selfhydro pi@water.local:/selfhydro/
+#docker build .
 
-ssh pi@water.local 'nohup sudo ./selfhydro/selfhydro &'
+scp selfhydro pi@10.1.1.6:/selfhydro/
+
+#ssh pi@10.1.1.6 'docker kill selfhydro'
+#ssh pi@10.1.1.6 'docker run -v /sys:/sys -v /selfhydro:/selfhydro selfhydro'
 

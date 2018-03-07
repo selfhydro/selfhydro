@@ -74,7 +74,7 @@ func (pi RaspberryPi) startLightCycle() {
 	turnOffTime, _ := time.Parse("15:04:05", "23:45:00")
 	go func() {
 		for {
-			pi.changeLEDState( turnOnTime, turnOffTime)
+			pi.changeLEDState(turnOnTime, turnOffTime)
 			time.Sleep(time.Second * 4)
 		}
 
@@ -114,7 +114,7 @@ func (pi RaspberryPi) startSensorCycle() {
 func (pi RaspberryPi) startAirPumpCycle() {
 	go func() {
 		for {
-			pi.airPumpCycle(time.Minute * 30,time.Hour * 2 )
+			pi.airPumpCycle(time.Minute*30, time.Hour*2)
 		}
 	}()
 }
