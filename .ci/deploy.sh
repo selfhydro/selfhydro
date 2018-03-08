@@ -2,6 +2,7 @@
 
 set -e
 
-scp selfhydro pi@water.local:/selfhydro/
+TAG=$(cat version/version)
 
-ssh pi@water.local 'nohup sudo ./selfhydro/selfhydro &'
+
+ssh pi@water.local 'docker run --name selfhydro --restart=always bchalk/selfhydro:${TAG}'

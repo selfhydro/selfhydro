@@ -69,16 +69,20 @@ jobs:
     passed: [build]
   - task: publish-docker-image
     file: selfhydro/.ci/publish-docker-image.yml
-     params:
-           DOCKER_USERNAME: ((docker-hub-username))
-           DOCKER_PASSWORD: ((docker-hub-password))
+    params:
+          DOCKER_USERNAME: ((docker-hub-username))
+          DOCKER_PASSWORD: ((docker-hub-password))
 
 - name: deploy
   plan:
-  - get: selfhydro-docker-image 
+  - get: version
     trigger: true
     passed: [publish]
-  - task: deploy-linux-arm
-    file: selfhydro/.ci/build-linux-arm.yml
+  - get: selfhydro-docker-image 
+    trigger: true
+  - task: deploy
+    file: selfhydro/.ci/deploy.yml
     params:
           DEPLOY_KEY: ((selfhydro-rpi-deploy-key.private_key))
+          DOCKER_USERNAME: ((docker-hub-username))
+          DOCKER_PASSWORD: ((docker-hub-password))
