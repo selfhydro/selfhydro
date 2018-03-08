@@ -19,6 +19,14 @@ apt-get install crossbuild-essential-armhf -y
 
 export GOPATH=$PWD
 
+ls -la
+echo "v$(cat version/version)" > release/name
+echo "v$(cat version/version)" > release/tag
+
+cat > release/body <<EOF
+Selfhydro release
+EOF
+
 mkdir -p src/github.com/bchalk101/
 
 cp -R ./selfhydro src/github.com/bchalk101/.
@@ -28,14 +36,4 @@ cd src/github.com/bchalk101/selfhydro
 go get
 env ${GO_CROSS_ENV[@]} go build -o /release/selfhydro
 
-ls -la
-cd ~
-ls -la
-
-echo "v$(cat version/version)" > release/name
-echo "v$(cat version/version)" > release/tag
-
-cat > release/body <<EOF
-Selfhydro release
-EOF
 
