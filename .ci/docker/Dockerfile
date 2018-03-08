@@ -7,8 +7,8 @@ ARG TAG
 
 RUN wget https://github.com/bchalk101/selfhydro/releases/download/$TAG/selfhydro
 
-COPY selfhydro bin/
+RUN mv selfhydro bin/selfhydro
 
-CMD /bin/selfhydro
+CMD /bin/selfhydro&
 
 ENTRYPOINT ["/selfhydro"]

@@ -13,4 +13,4 @@ outputs:
 - name: version
 
 run:
-  path: selfhydro/.ci/get-version.yml
+  path: selfhydro/.ci/get-version.sh
