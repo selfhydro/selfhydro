@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "Hello"
+
 #TAG=$(cat selfhydro-release/tag)
 #
 #docker build --tag selfhydro-release:${TAG} /selfhydro/.ci/docker/

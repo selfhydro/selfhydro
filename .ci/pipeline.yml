@@ -75,10 +75,10 @@ jobs:
 
 - name: deploy
   plan:
-  - get: version
+  - get: selfhydro-release
     trigger: true
     passed: [publish]
-  - get: selfhydro-docker-image 
+  - get: selfhydro-docker-image
     trigger: true
   - task: deploy
     file: selfhydro/.ci/deploy.yml

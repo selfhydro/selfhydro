@@ -9,7 +9,7 @@ image_resource:
 
 inputs:
 - name: selfhydro-docker-image
-- name: version
+- name: selfhydro-release
 
 run:
   path: selfhydro/.ci/deploy.sh
