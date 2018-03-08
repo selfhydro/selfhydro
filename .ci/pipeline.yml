@@ -60,7 +60,6 @@ jobs:
   public: false
   serial: true
   plan:
-  - get: version
   - get: selfhydro-release
     trigger: true
     passed: [build]

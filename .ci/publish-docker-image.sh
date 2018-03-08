@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TAG=$(cat version/version)
+TAG=$(cat selfhydro-release/tag)
 
 docker build --tag selfhydro-release:${TAG} /selfhydro/.ci/docker/
 

@@ -4,10 +4,9 @@ platform: linux
 image_resource:
   type: docker-image
   source:
-    repository: docker
+    repository: dockercore/docker
 
 inputs:
-- name: version
 - name: selfhydro
 - name: selfhydro-release
 
