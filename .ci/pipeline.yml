@@ -60,12 +60,18 @@ jobs:
   public: false
   serial: true
   plan:
+  - get: version
   - get: selfhydro-release
     trigger: true
     passed: [build]
-  - put: selfhydro-docker-image
-    params:
-      build: selfhydro/.ci/docker
+  - get: selfhydro
+    trigger: true
+    passed: [build]
+  - task: publish-docker-image
+    file: selfhydro/.ci/publish-docker-image.yml
+     params:
+           DOCKER_USERNAME: ((docker-hub-username))
+           DOCKER_PASSWORD: ((docker-hub-password))
 
 - name: deploy
   plan:

@@ -35,8 +35,5 @@ cd src/github.com/bchalk101/selfhydro
 go get
 env ${GO_CROSS_ENV[@]} go build -o $GOPATH/release/selfhydro
 
-cd $GOPATH
-ls -la ./release
-
 
 
