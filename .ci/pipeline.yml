@@ -17,10 +17,10 @@ resources:
   type: semver
   source:
     driver: git
-    uri: git@github.com:bchalk101/selfhydro.git
+    uri: git@github.com:bchalk101/selfhydro-version.git
     branch: master
     file: version
-    private_key: ((selfhydro-repo.private_key))
+    private_key: ((selfhydro-version-repo.private_key))
 
 - name: selfhydro-release
   type: github-release
