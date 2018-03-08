@@ -57,8 +57,6 @@ jobs:
       - release/selfhydro
 
 - name: publish
-  public: false
-  serial: true
   plan:
   - get: selfhydro-release
     trigger: true
@@ -66,10 +64,17 @@ jobs:
   - get: selfhydro
     trigger: true
     passed: [build]
-  - put: selfhydro-docker-image
+  - task:
+    privileged: true
+    file: selfhydro/.ci/build-linux-arm.yml
     params:
-      build: selfhydro/.ci/docker
-      build-args: selfhydro-release/tag
+          DOCKER_USERNAME: ((docker-hub-username))
+          DOCKER_PASSWORD: ((docker-hub-password))
+#  - put: selfhydro-docker-image
+#    params:
+#      build: selfhydro/.ci/docker
+#      build_args:
+#       TAG: selfhydro-release/tag
 
 - name: deploy
   plan:
