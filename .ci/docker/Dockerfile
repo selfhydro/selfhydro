@@ -1,4 +1,4 @@
-FROM arm32v7/debian
+FROM arm32v7/debian:jessie
 
 RUN apt-mark hold initscripts udev plymouth mountall
 
