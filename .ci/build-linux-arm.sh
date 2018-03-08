@@ -28,12 +28,13 @@ cd src/github.com/bchalk101/selfhydro
 go get
 env ${GO_CROSS_ENV[@]} go build -o release/selfhydro
 
+cd /version
 ls -la
 
 echo "v$(cat version/version)" > release/name
 echo "v$(cat version/version)" > release/tag
 
 cat > release/body <<EOF
-Selfhydro compiled to be placed in docker image
+Selfhydro release
 EOF
 

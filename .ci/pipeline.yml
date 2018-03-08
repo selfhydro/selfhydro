@@ -18,9 +18,9 @@ resources:
   source:
     driver: git
     uri: git@github.com:bchalk101/selfhydro.git
-    branch: version
+    branch: master
     file: version
-    private_key: ((selfhydro-repo.private-key))
+    private_key: ((selfhydro-repo.private_key))
 
 - name: selfhydro-release
   type: github-release
@@ -29,18 +29,7 @@ resources:
     repository: selfhydro
     access_token: ((github-access-token))
 
-jobs:
-- name: display-version
-  plan:
-  - get: selfhydro-version
-  - task: display-version
-    config:
-      inputs:
-      - name: version
-      run:
-        path: cat
-        args: [version/number]
-
+jobs:    
 - name: tests
   plan:
   - get: selfhydro
@@ -51,14 +40,14 @@ jobs:
 - name: build
   plan:
   - get: version
-      params: {bump: patch}
+    params: {bump: patch}
   - get: selfhydro
     trigger: true
     passed: [tests]
-  - task: build-linux-arm
-    file: selfhydro/.ci/build-linux-arm.yml
   - put: version
     params: {file: version/version}
+  - task: build-linux-arm
+    file: selfhydro/.ci/build-linux-arm.yml
   - put: selfhydro-release
     params:
       name: release/name
@@ -68,14 +57,19 @@ jobs:
       - release/selfhydro
 
 - name: publish
+  public: false
+  serial: true
+  plan:
   - get: selfhydro-release
+    trigger: true
+    passed: [build]
   - put: selfhydro-docker-image
     params:
       build: selfhydro/.ci/docker
 
 - name: deploy
   plan:
-  - get:
+  - get: selfhydro-docker-image 
     trigger: true
     passed: [publish]
   - task: deploy-linux-arm
