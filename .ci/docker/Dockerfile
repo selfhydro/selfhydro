@@ -1,5 +1,7 @@
 FROM arm32v7/debian
 
+RUN apt-mark hold initscripts udev plymouth mountall
+
 RUN apt-get update
 
 RUN apt-get install -y wget
