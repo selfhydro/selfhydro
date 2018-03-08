@@ -1,4 +1,4 @@
-FROM arm32v7/golang
+FROM arm32v7/golang:1.8
 
 RUN apt-get update
 
