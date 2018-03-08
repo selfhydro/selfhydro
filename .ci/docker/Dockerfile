@@ -1,8 +1,8 @@
 FROM arm32v7/ubuntu
 
-RUN apt-mark hold initscripts udev plymouth mountall
+RUN ["/bin/bash", "-c", "apt-get update -y"]
 
-RUN apt-get update -y
+RUN /bin/bash -c 'apt-get update -y'
 
 RUN apt-get install -y wget
 
