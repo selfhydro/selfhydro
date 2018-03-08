@@ -11,7 +11,7 @@ resources:
     email: ((docker-hub-email))
     username: ((docker-hub-username))
     password: ((docker-hub-password))
-    repository: ((docker-hub-username))/selfhydro-released
+    repository: ((docker-hub-username))/selfhydro-release
 
 - name: version
   type: semver
@@ -66,12 +66,10 @@ jobs:
   - get: selfhydro
     trigger: true
     passed: [build]
-  - task: publish-docker-image
-    privileged: true
-    file: selfhydro/.ci/publish-docker-image.yml
+  - put: selfhydro-docker-image
     params:
-          DOCKER_USERNAME: ((docker-hub-username))
-          DOCKER_PASSWORD: ((docker-hub-password))
+      build: selfhydro/.ci/docker
+      build-args: selfhydro-release/tag
 
 - name: deploy
   plan:
