@@ -12,4 +12,4 @@ inputs:
 - name: selfhydro-release
 
 run:
-- file: selfhydro/.ci/publish-docker-image.sh
+  path: selfhydro/.ci/publish-docker-image.sh
