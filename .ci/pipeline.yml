@@ -54,7 +54,7 @@ jobs:
       tag: release/tag
       body: release/body
       globs:
-      - release/selfhydro
+       [release/selfhydro, release/docker-args]
 
 - name: publish
   plan:
@@ -70,13 +70,10 @@ jobs:
 #    params:
 #          DOCKER_USERNAME: ((docker-hub-username))
 #          DOCKER_PASSWORD: ((docker-hub-password))
-  - task: get-version
-    file: selfhydro/.ci/get-version.yml
   - put: selfhydro-docker-image
     params:
       build: selfhydro/.ci/docker
-      build_args:
-       TAG: version/tag
+      build_args_file: selfhydro-release/docker-args
 
 - name: deploy
   plan:

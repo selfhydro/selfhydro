@@ -21,6 +21,7 @@ export GOPATH=$PWD
 
 echo "v$(cat version/version)" > release/name
 echo "v$(cat version/version)" > release/tag
+echo "{ "TAG": v$(cat version/version)}" > release/docker-args
 
 cat > release/body <<EOF
 Selfhydro release
