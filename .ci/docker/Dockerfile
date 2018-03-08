@@ -1,9 +1,6 @@
-FROM arm32v7/ubuntu
+FROM debian
 
-RUN ["/bin/bash", "-c", "apt-get update -y"]
-
-RUN /bin/bash -c 'apt-get update -y'
-
+RUN apt-get update -y
 RUN apt-get install -y wget
 
 ARG TAG
