@@ -5,10 +5,10 @@ RUN apt-get install -y wget
 
 ARG TAG
 
-RUN wget https://github.com/bchalk101/selfhydro/releases/download/v$TAG/selfhydro
+RUN wget https://github.com/bchalk101/selfhydro/releases/download/$TAG/selfhydro
 
 COPY selfhydro bin/
 
-RUN /bin/selfhydro
+CMD /bin/selfhydro
 
 ENTRYPOINT ["/selfhydro"]
