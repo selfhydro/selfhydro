@@ -1,8 +1,8 @@
-FROM arm32v7/debian:jessie
+FROM arm32v7/ubuntu
 
 RUN apt-mark hold initscripts udev plymouth mountall
 
-RUN apt-get update
+RUN apt-get update -y
 
 RUN apt-get install -y wget
 
