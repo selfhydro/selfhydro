@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/bin/sh
 
 set -e -x
 
-apt-get update
-
-apt-get install -y curl
+#apt-get update
+#
+#apt-get install -y curl
 #
 #apt-get install \
 #     apt-transport-https \
@@ -23,9 +23,9 @@ apt-get install -y curl
 #   stable"
 #
 #apt-get install -y docker-ce
-
-curl -fsSL get.docker.com -o get-docker.sh
-sh get-docker.sh
+#
+#curl -fsSL get.docker.com -o get-docker.sh
+#sh get-docker.sh
 
 docker run hello-world
 
