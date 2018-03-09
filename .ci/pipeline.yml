@@ -82,6 +82,9 @@ jobs:
     passed: [publish]
   - get: selfhydro-docker-image
     trigger: true
+  - get: selfhydro
+    trigger: true
+    passed: [publish]
   - task: deploy
     file: selfhydro/.ci/deploy.yml
     params:

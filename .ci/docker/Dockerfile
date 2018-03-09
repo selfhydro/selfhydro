@@ -6,4 +6,3 @@ ADD  https://github.com/bchalk101/selfhydro/releases/download/$TAG/selfhydro bin
 
 CMD /bin/selfhydro&
 
-ENTRYPOINT ["/selfhydro"]
