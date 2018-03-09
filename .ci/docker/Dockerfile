@@ -1,7 +1,9 @@
-FROM arm32v7/ubuntu
+FROM debian
+
+RUN apt-get -y update
+RUN apt-get -y install crossbuild-essential-armhf
 
 ARG TAG
-RUN echo $TAG
 
 ADD https://github.com/bchalk101/selfhydro/releases/download/$TAG/selfhydro bin/selfhydro
 
