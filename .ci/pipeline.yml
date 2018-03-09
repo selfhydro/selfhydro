@@ -74,6 +74,7 @@ jobs:
     params:
       build: selfhydro/.ci/docker
       build_args_file: selfhydro-release/docker-args
+      tag: selfhydro-release/tag
 
 - name: deploy
   plan:
