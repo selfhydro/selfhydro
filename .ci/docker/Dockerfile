@@ -1,4 +1,4 @@
-FROM debian
+FROM arm32v7/ubuntu
 
 ARG TAG
 RUN echo $TAG
