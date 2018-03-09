@@ -64,12 +64,6 @@ jobs:
   - get: selfhydro
     trigger: true
     passed: [build]
-#  - task: publish-docker-image
-#    file: selfhydro/.ci/publish-docker-image.yml
-#    privileged: true
-#    params:
-#          DOCKER_USERNAME: ((docker-hub-username))
-#          DOCKER_PASSWORD: ((docker-hub-password))
   - put: selfhydro-docker-image
     params:
       build: selfhydro/.ci/docker
@@ -83,6 +77,7 @@ jobs:
     passed: [publish]
   - get: selfhydro-docker-image
     trigger: true
+    passed: [publish]
   - get: selfhydro
     trigger: true
     passed: [publish]
