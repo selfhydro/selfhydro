@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 	"github.com/d2r2/go-dht"
+	"fmt"
 )
 
 type Controller interface {
@@ -22,6 +23,7 @@ type RaspberryPi struct {
 	WaterPumpState  bool
 	WaterTempSensor ds18b20
 	AirPumpPin      RaspberryPiPin
+	MQTTClient *MQTTComms
 }
 
 func NewRaspberryPi() *RaspberryPi {
@@ -38,6 +40,9 @@ func NewRaspberryPi() *RaspberryPi {
 
 	pi.AirPumpPin = NewRaspberryPiPin(21)
 	pi.AirPumpPin.SetMode(rpio.Output)
+
+	pi.MQTTClient = new(MQTTComms)
+	pi.MQTTClient.authenticateDevice()
 
 	return pi
 }
@@ -101,9 +106,10 @@ func (pi RaspberryPi) startSensorCycle() {
 			if err != nil {
 				log.Printf("Error: Error with reading dht: %v", err.Error())
 			}
-
-			log.Printf("Ambient Temperature = %v*C, Humidity = %v%% (retired: %v) \n ",
+			sensorReading := fmt.Sprint("Ambient Temperature = %v*C, Humidity = %v%% (retired: %v) \n ",
 				temperature, humidity, retried)
+			pi.MQTTClient.publishMessage("projects/selfhydro-197504/topics/hydro-events", sensorReading)
+			log.Printf(sensorReading)
 			pi.getWaterTemp()
 			time.Sleep(time.Hour)
 		}

@@ -1,7 +1,4 @@
-FROM debian
-
-RUN apt-get -y update
-RUN apt-get -y install crossbuild-essential-armhf
+FROM armhf/debian
 
 ARG TAG
 

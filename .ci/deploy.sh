@@ -14,5 +14,7 @@ chmod 600 deploy_key
 
 TAG=$(cat selfhydro-release/tag)
 
-ssh -o StrictHostKeyChecking=no -i deploy_key pi@10.1.1.6 'docker rm -f selfhydro || true'
-ssh -o StrictHostKeyChecking=no -i deploy_key pi@10.1.1.6 'docker run --name selfhydro --restart=always -v /sys:/sys -v /selfhydro:/selfhydro bchalk/selfhydro:${TAG}'
+
+ssh -o StrictHostKeyChecking=no  pi@10.1.1.2 'docker rm -f selfhydro || true '
+ssh -o StrictHostKeyChecking=no  pi@10.1.1.2  "docker run --name selfhydro --restart=always -v /sys:/sys -v /selfhydro:/selfhydro bchalk/selfhydro-release:$TAG"
+
