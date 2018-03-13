@@ -7,13 +7,14 @@ import (
 	"fmt"
 	"os"
 	"log"
+	"io/ioutil"
 )
 
 const (
 	location = "asia-east1"
 	project  = "selfhydro-197504"
 	registry = "raspberry-pis"
-	device   = ""
+	device   = "original-hydro"
 )
 
 type MQTTComms struct {
@@ -27,7 +28,7 @@ var f MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
 
 func (mqtt *MQTTComms) authenticateDevice() {
 
-	tokenString, _ := createJWTToken("selfhydro-197504")
+	tokenString, _ := createJWTToken(project)
 
 	opts := MQTT.NewClientOptions().AddBroker("ssl://mqtt.googleapis.com:8883")
 
@@ -51,7 +52,6 @@ func (mqtt *MQTTComms) subscribeToTopic(topic string) {
 	}
 }
 func (mqtt *MQTTComms) unsubscribeFromTopic(topic string) {
-	//unsubscribe from /go-mqtt/sample
 	if token := mqtt.client.Unsubscribe(topic); token.Wait() && token.Error() != nil {
 		fmt.Println(token.Error())
 		os.Exit(1)
@@ -66,7 +66,7 @@ func (mqtt *MQTTComms) publishMessage(topic string, message string) {
 }
 
 func createJWTToken(projectId string) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
 		"iat": time.Now().Unix(),
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
 		"aud": projectId,
@@ -77,7 +77,13 @@ func createJWTToken(projectId string) (string, error) {
 		log.Fatal(err)
 	}
 
-	tokenString, err := token.SignedString(file)
+
+	key, _ := ioutil.ReadFile(file.Name())
+
+	rsaPrivateKey, _ := jwt.ParseRSAPrivateKeyFromPEM(key)
+
+
+	tokenString, err := token.SignedString(rsaPrivateKey)
 
 	fmt.Println(tokenString, err)
 	return tokenString, err
