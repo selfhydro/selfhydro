@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"math/rand"
+	"bytes"
 )
 
 type SensorMessage struct {
@@ -71,8 +72,8 @@ func (mqtt *MQTTComms) unsubscribeFromTopic(topic string) {
 	mqtt.client.Disconnect(250)
 }
 func (mqtt *MQTTComms) publishMessage(topic string, message []byte) {
-	log.Printf("Sending: %v", message)
-	token := mqtt.client.Publish(topic, 0, false, message)
+	log.Printf("Sending: %v", bytes.NewBuffer(message))
+	token := mqtt.client.Publish(topic, 0, false, bytes.NewBuffer(message))
 	response := token.Wait()
 	log.Printf("Response: %v",response)
 }
