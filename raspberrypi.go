@@ -119,7 +119,7 @@ func (pi RaspberryPi) startSensorCycle() {
 
 			log.Printf(sensorReading)
 			pi.getWaterTemp()
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Hour * 2)
 		}
 
 	}()
