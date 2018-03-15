@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"log"
 	"github.com/stianeikeland/go-rpio"
+	"syscall"
 )
 
 type Time struct {
@@ -28,18 +29,19 @@ func main() {
 
 	controller := NewRaspberryPi()
 
-	defer rpio.Close()
-
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs)
 	go func() {
 		s := <-sigs
-		log.Println("Exiting program...")
-		log.Println("RECEIVED SIGNAL: ", s)
+		if s != syscall.SIGPIPE {
+			log.Println("Exiting program...")
+			log.Println("RECEIVED SIGNAL: ", s)
 
-		controller.StopSystem()
+			controller.StopSystem()
 
-		os.Exit(0)
+			os.Exit(0)
+		}
+
 	}()
 	controller.StartHydroponics()
 

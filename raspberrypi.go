@@ -62,6 +62,7 @@ func (pi *RaspberryPi) StartHydroponics() {
 func (pi *RaspberryPi) StopSystem() {
 	pi.turnOffGrowLed()
 	pi.AirPumpPin.WriteState(rpio.Low)
+	rpio.Close()
 }
 
 func (pi *RaspberryPi) turnOnGrowLed() {
