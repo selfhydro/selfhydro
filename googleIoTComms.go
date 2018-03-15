@@ -73,7 +73,8 @@ func (mqtt *MQTTComms) unsubscribeFromTopic(topic string) {
 func (mqtt *MQTTComms) publishMessage(topic string, message []byte) {
 	log.Printf("Sending: %v", message)
 	token := mqtt.client.Publish(topic, 0, false, message)
-	token.Wait()
+	response := token.Wait()
+	log.Printf("Response: %v",response)
 }
 
 func createJWTToken(projectId string) (string, error) {

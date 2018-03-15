@@ -94,10 +94,10 @@ func (pi RaspberryPi) startLightCycle() {
 	}()
 }
 func (pi RaspberryPi) changeLEDState(turnOnTime time.Time, turnOffTime time.Time) {
-	if !pi.GrowLedState && betweenTime(turnOnTime, turnOffTime) {
+	if pi.GrowLedPin.ReadState() != rpio.High && betweenTime(turnOnTime, turnOffTime) {
 		log.Printf("Turning on GROW LEDS")
 		pi.turnOnGrowLed()
-	} else if pi.GrowLedState && betweenTime(turnOffTime, turnOnTime.Add(time.Hour*24)) {
+	} else if pi.GrowLedPin.ReadState() == rpio.High && betweenTime(turnOffTime, turnOnTime.Add(time.Hour*24)) {
 		log.Printf("Turning off GROW LEDS")
 		pi.turnOffGrowLed()
 	}
