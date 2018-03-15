@@ -28,7 +28,7 @@ type MQTTComms struct {
 }
 
 const (
-	HYDRO_EVENTS_TOPIC = "devices/"+device+"/hydro-events"
+	HYDRO_EVENTS_TOPIC = "devices/"+device+"/events"
 )
 
 var f MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
