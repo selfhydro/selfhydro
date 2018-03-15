@@ -14,7 +14,7 @@ chmod 600 deploy_key
 
 TAG=$(cat selfhydro-release/tag)
 
-ls -la /selfhydro-release/selfhydro
+ls -la /selfhydro-release/
 
 scp -o StrictHostKeyChecking=no -i deploy_key  selfhydro-release/selfhydro pi@10.1.1.2:/selfhydro/
 ssh -o StrictHostKeyChecking=no -i deploy_key  pi@10.1.1.2 'sudo pkill -f -o selfhydro'
