@@ -9,11 +9,13 @@ import (
 	"log"
 	"io/ioutil"
 	"encoding/json"
+	"math/rand"
 )
 
 type SensorMessage struct {
-	Temp int
-	Time int64
+	deviceId int
+	unitOneWaterTemp float32
+	time string
 }
 
 const (
@@ -69,7 +71,7 @@ func (mqtt *MQTTComms) unsubscribeFromTopic(topic string) {
 	mqtt.client.Disconnect(250)
 }
 func (mqtt *MQTTComms) publishMessage(topic string, message []byte) {
-
+	log.Printf("Sending: %v", message)
 	token := mqtt.client.Publish(topic, 0, false, message)
 	token.Wait()
 }
@@ -98,7 +100,7 @@ func createJWTToken(projectId string) (string, error) {
 	return tokenString, err
 }
 
-func CreateSensorMessage(temp int) ([]byte, error) {
-	m := SensorMessage{temp, time.Now().Unix()}
+func CreateSensorMessage(temp float32) ([]byte, error) {
+	m := SensorMessage{rand.Int(),temp, time.Now().Format("20060102150405")}
 	return json.Marshal(m)
 }

@@ -78,7 +78,7 @@ func (pi *RaspberryPi) turnOffGrowLed() {
 
 func (pi RaspberryPi) getWaterTemp() {
 	temp := pi.WaterTempSensor.ReadTemperature()
-	message, _ := CreateSensorMessage(int(temp))
+	message, _ := CreateSensorMessage(float32(temp))
 	pi.MQTTClient.publishMessage(HYDRO_EVENTS_TOPIC, message)
 }
 
@@ -114,12 +114,12 @@ func (pi RaspberryPi) startSensorCycle() {
 			if err != nil {
 				log.Printf("Error: Error with reading dht: %v", err.Error())
 			}
-			sensorReading := fmt.Sprint("Ambient Temperature = %v*C, Humidity = %v%% (retired: %v) \n ",
+			sensorReading := fmt.Sprintf("Ambient Temperature = %v*C, Humidity = %v%% (retired: %v)",
 				temperature, humidity, retried)
 
 			log.Printf(sensorReading)
 			pi.getWaterTemp()
-			time.Sleep(time.Hour * 4)
+			time.Sleep(time.Second * 5)
 		}
 
 	}()
