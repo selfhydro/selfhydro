@@ -14,9 +14,9 @@ import (
 )
 
 type SensorMessage struct {
-	deviceId int
-	unitOneWaterTemp float32
-	time string
+	DeviceId int `json:"deviceId"`
+	UnitOneWaterTemp float32 `json:"unitOneWaterTemp"`
+	Time string `json:"time"`
 }
 
 const (
