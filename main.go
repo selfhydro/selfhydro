@@ -5,7 +5,6 @@ import (
 	"time"
 	"os/signal"
 	"log"
-	"github.com/stianeikeland/go-rpio"
 	"syscall"
 )
 
