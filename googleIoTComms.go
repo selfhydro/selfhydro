@@ -90,5 +90,5 @@ func createJWTToken(projectId string) (string, error) {
 }
 
 func CreateSensorMessage(temp float32) []byte {
-
+	return nil
 }
