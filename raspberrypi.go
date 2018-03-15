@@ -6,6 +6,7 @@ import (
 	"time"
 	"github.com/d2r2/go-dht"
 	"fmt"
+	"os"
 )
 
 type Controller interface {
@@ -29,7 +30,11 @@ type RaspberryPi struct {
 func NewRaspberryPi() *RaspberryPi {
 	pi := new(RaspberryPi)
 
-	rpio.Open()
+	error := rpio.Open()
+	if error != nil {
+		log.Fatalf("Could not open rpio pins %v", error.Error())
+		os.Exit(1)
+	}
 	//defer rpio.Close()
 
 	pi.GrowLedPin = NewRaspberryPiPin(19)

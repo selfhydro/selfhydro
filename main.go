@@ -25,13 +25,10 @@ func main() {
 	log.SetOutput(f)
 
 	log.Println("Starting up SelfHydro")
+
 	controller := NewRaspberryPi()
 
-	error := rpio.Open()
-	if error != nil {
-		os.Exit(1)
-	}
-	defer rpio.Close()
+
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs)
