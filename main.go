@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/stianeikeland/go-rpio"
 	"os"
 	"time"
 	"os/signal"
 	"log"
+	"github.com/stianeikeland/go-rpio"
 )
 
 type Time struct {
@@ -28,7 +28,7 @@ func main() {
 
 	controller := NewRaspberryPi()
 
-
+	defer rpio.Close()
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs)
