@@ -14,12 +14,14 @@ type ds18b20 struct {
 
 var ErrReadSensor = errors.New("failed to read sensor temperature")
 
-func (ds ds18b20) ReadTemperature() {
+func (ds ds18b20) ReadTemperature() float64{
 
-	t, err := ds.getTemp(ds.id)
+	temp, err := ds.getTemp(ds.id)
+
 	if err == nil {
 		log.Printf("Water temperature: %.2f°C\n", t)
 	}
+	return temp
 }
 
 func (ds18b20) getTemp(sensor string) (float64, error) {

@@ -8,7 +8,13 @@ import (
 	"os"
 	"log"
 	"io/ioutil"
+	"encoding/json"
 )
+
+type SensorMessage struct {
+	Temp int
+	Time int64
+}
 
 const (
 	location  = "asia-east1"
@@ -20,6 +26,10 @@ const (
 type MQTTComms struct {
 	client MQTT.Client
 }
+
+const (
+	HYDRO_EVENTS_TOPIC = "devices/"+device+"/hydro-events"
+)
 
 var f MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
 	fmt.Printf("TOPIC: %s\n", msg.Topic())
@@ -58,10 +68,9 @@ func (mqtt *MQTTComms) unsubscribeFromTopic(topic string) {
 	}
 	mqtt.client.Disconnect(250)
 }
-func (mqtt *MQTTComms) publishMessage(topic string, message string) {
+func (mqtt *MQTTComms) publishMessage(topic string, message []byte) {
 
-	text := fmt.Sprintf("%v", message)
-	token := mqtt.client.Publish(topic, 0, false, text)
+	token := mqtt.client.Publish(topic, 0, false, message)
 	token.Wait()
 }
 
@@ -89,6 +98,7 @@ func createJWTToken(projectId string) (string, error) {
 	return tokenString, err
 }
 
-func CreateSensorMessage(temp float32) []byte {
-	return nil
+func CreateSensorMessage(temp int) ([]byte, error) {
+	m := SensorMessage{temp, time.Now().Unix()}
+	return json.Marshal(m)
 }
