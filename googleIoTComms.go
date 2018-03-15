@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	location = "asia-east1"
-	project  = "selfhydro-197504"
-	registry = "raspberry-pis"
-	device   = "original-hydro"
+	location  = "asia-east1"
+	projectId = "selfhydro-197504"
+	registry  = "raspberry-pis"
+	device    = "original-hydro"
 )
 
 type MQTTComms struct {
@@ -28,11 +28,11 @@ var f MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
 
 func (mqtt *MQTTComms) authenticateDevice() {
 
-	tokenString, _ := createJWTToken(project)
+	tokenString, _ := createJWTToken(projectId)
 
 	opts := MQTT.NewClientOptions().AddBroker("ssl://mqtt.googleapis.com:8883")
 
-	clientId := "projects/" + project + "/locations/" + location + "/registries/" + registry + "/devices/" + device
+	clientId := "projects/" + projectId + "/locations/" + location + "/registries/" + registry + "/devices/" + device
 
 	opts.SetClientID(clientId)
 	opts.SetDefaultPublishHandler(f)

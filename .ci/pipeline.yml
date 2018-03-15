@@ -4,14 +4,14 @@ resources:
   type: git
   source:
     uri: https://github.com/bchalk101/selfhydro.git
-
-- name: selfhydro-docker-image
-  type: docker-image
-  source:
-    email: ((docker-hub-email))
-    username: ((docker-hub-username))
-    password: ((docker-hub-password))
-    repository: ((docker-hub-username))/selfhydro-release
+#
+#- name: selfhydro-docker-image
+#  type: docker-image
+#  source:
+#    email: ((docker-hub-email))
+#    username: ((docker-hub-username))
+#    password: ((docker-hub-password))
+#    repository: ((docker-hub-username))/selfhydro-release
 
 - name: version
   type: semver
@@ -55,32 +55,29 @@ jobs:
       body: release/body
       globs:
        [release/selfhydro, release/docker-args]
-
-- name: publish
-  plan:
-  - get: selfhydro-release
-    trigger: true
-    passed: [build]
-  - get: selfhydro
-    trigger: true
-    passed: [build]
-  - put: selfhydro-docker-image
-    params:
-      build: selfhydro/.ci/docker
-      build_args_file: selfhydro-release/docker-args
-      tag: selfhydro-release/tag
+#
+#- name: create-docker-image
+#  plan:
+#  - get: selfhydro-release
+#    trigger: true
+#    passed: [build]
+#  - get: selfhydro
+#    trigger: true
+#    passed: [build]
+#  - put: selfhydro-docker-image
+#    params:
+#      build: selfhydro/.ci/docker
+#      build_args_file: selfhydro-release/docker-args
+#      tag: selfhydro-release/tag
 
 - name: deploy
   plan:
   - get: selfhydro-release
     trigger: true
-    passed: [publish]
-  - get: selfhydro-docker-image
-    trigger: true
-    passed: [publish]
+    passed: [build]
   - get: selfhydro
     trigger: true
-    passed: [publish]
+    passed: [build]
   - task: deploy
     file: selfhydro/.ci/deploy.yml
     params:

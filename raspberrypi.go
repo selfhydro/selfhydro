@@ -108,7 +108,7 @@ func (pi RaspberryPi) startSensorCycle() {
 			}
 			sensorReading := fmt.Sprint("Ambient Temperature = %v*C, Humidity = %v%% (retired: %v) \n ",
 				temperature, humidity, retried)
-			pi.MQTTClient.publishMessage("projects/selfhydro-197504/topics/hydro-events", sensorReading)
+			//pi.MQTTClient.publishMessage("devices/"+device+"/events", sensorReading)
 			log.Printf(sensorReading)
 			pi.getWaterTemp()
 			time.Sleep(time.Hour)

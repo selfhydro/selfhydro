@@ -8,7 +8,6 @@ image_resource:
     tag: latest
 
 inputs:
-- name: selfhydro-docker-image
 - name: selfhydro-release
 - name: selfhydro
 
