@@ -88,3 +88,7 @@ func createJWTToken(projectId string) (string, error) {
 	fmt.Println(tokenString, err)
 	return tokenString, err
 }
+
+func CreateSensorMessage(temp float32) []byte {
+
+}
