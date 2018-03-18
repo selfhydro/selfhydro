@@ -16,6 +16,9 @@ import (
 type SensorMessage struct {
 	DeviceId int `json:"deviceId"`
 	UnitOneWaterTemp float32 `json:"unitOneWaterTemp"`
+	UnitTwoWaterTemp float32 `json:"unitTwoWaterTemp"`
+	PiCPUTemp float32 `json:"piCPUTemp"`
+	LEDState bool
 	Time string `json:"time"`
 }
 
@@ -102,7 +105,7 @@ func createJWTToken(projectId string) (string, error) {
 	return tokenString, err
 }
 
-func CreateSensorMessage(temp float32) ([]byte, error) {
-	m := SensorMessage{rand.Int(),temp, time.Now().Format("20060102150405")}
+func CreateSensorMessage(tempUnitOne float32, tempUnitTwo float32, piCPUTemp float32, LEDState bool ) ([]byte, error) {
+	m := SensorMessage{rand.Int(),tempUnitOne, tempUnitTwo, piCPUTemp, LEDState,time.Now().Format("20060102150405")}
 	return json.Marshal(m)
 }
