@@ -14,11 +14,14 @@ chmod 600 deploy_key
 
 TAG=$(cat selfhydro-release/tag)
 
+ssh -o StrictHostKeyChecking=no -i deploy_key pi@10.1.1.2 << EOF
+sudo pkill -f -o selfhydro &\
+EOF
 scp -o StrictHostKeyChecking=no -i deploy_key selfhydro-release/selfhydro pi@10.1.1.2:/selfhydro/
 ssh -o StrictHostKeyChecking=no -i deploy_key pi@10.1.1.2 << EOF
 chmod +x /selfhydro/selfhydro &\
 sudo pkill -f -o selfhydro &\
-nohup sudo /selfhydro/selfhydro > /dev/null 2>&1 &
+nohup sudo /selfhydro/selfhydro > /selfhydro/logs 2>&1 &
 EOF
 
 #ssh -o StrictHostKeyChecking=no  pi@10.1.1.2 'docker rm -f selfhydro || true '
