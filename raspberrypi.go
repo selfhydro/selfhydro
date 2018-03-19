@@ -7,8 +7,6 @@ import (
 	"github.com/d2r2/go-dht"
 	"fmt"
 	"os"
-	"io/ioutil"
-	"math"
 	"encoding/binary"
 )
 
