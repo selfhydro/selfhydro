@@ -8,6 +8,9 @@ import (
 	"fmt"
 	"os"
 	"encoding/binary"
+	"io/ioutil"
+	"math"
+	"strconv"
 )
 
 type Controller interface {
@@ -128,21 +131,17 @@ func (pi RaspberryPi) startSensorCycle() {
 }
 
 func (pi RaspberryPi) getCPUTemp() float64 {
-	fd, err := os.Open("/sys/class/thermal/thermal_zone0/temp")
+
+	var temp float64
+	data, err := ioutil.ReadFile("/sys/class/thermal/thermal_zone0/temp")
 	if err != nil {
 		log.Printf("Error: Can't read Raspberry Pi CPU Temp")
 		return 0.0
 	}
-	defer fd.Close()
-	var temp float64
-	err = binary.Read(fd, binary.BigEndian, &temp)
-	fmt.Println(err, temp)
-	//dat, err := ioutil.ReadFile("/sys/class/thermal/thermal_zone0/temp")
-	//if err != nil {
-	//	log.Printf("Error: Can't read Raspberry Pi CPU Temp")
-	//	return 0.0
-	//}
-	//temp := math.Float64frombits(binary.LittleEndian.Uint64(dat))
+	temp, err = strconv.ParseFloat(string(data), 64)
+	if err != nil {
+		panic(err)
+	}
 	log.Printf("CPU Temp: %v", temp/1000)
 	return temp / 1000
 
