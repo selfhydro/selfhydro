@@ -9,6 +9,7 @@ import (
 	"os"
 	"io/ioutil"
 	"strconv"
+	"strings"
 )
 
 type Controller interface {
@@ -136,7 +137,9 @@ func (pi RaspberryPi) getCPUTemp() float64 {
 		log.Printf("Error: Can't read Raspberry Pi CPU Temp")
 		return 0.0
 	}
-	temp, err = strconv.ParseFloat(string(data), 64)
+	tempData := strings.TrimSuffix(string(data), "\n")
+
+	temp, err = strconv.ParseFloat(string(tempData), 64)
 	if err != nil {
 		panic(err)
 	}
