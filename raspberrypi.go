@@ -7,6 +7,9 @@ import (
 	"github.com/d2r2/go-dht"
 	"fmt"
 	"os"
+	"io/ioutil"
+	"math"
+	"encoding/binary"
 )
 
 type Controller interface {
@@ -19,12 +22,13 @@ type Controller interface {
 }
 
 type RaspberryPi struct {
-	GrowLedPin      RaspberryPiPin
-	GrowLedState    bool
-	WaterPumpState  bool
-	WaterTempSensor ds18b20
-	AirPumpPin      RaspberryPiPin
-	MQTTClient *MQTTComms
+	GrowLedPin             RaspberryPiPin
+	GrowLedState           bool
+	WaterPumpState         bool
+	TankOneWaterTempSensor ds18b20
+	TankTwoWaterTempSensor ds18b20
+	AirPumpPin             RaspberryPiPin
+	MQTTClient             *MQTTComms
 }
 
 func NewRaspberryPi() *RaspberryPi {
@@ -41,13 +45,13 @@ func NewRaspberryPi() *RaspberryPi {
 	pi.GrowLedState = false
 	pi.GrowLedPin.SetMode(rpio.Output)
 
-	pi.WaterTempSensor.id = "28-0316838ca7ff"
+	pi.TankOneWaterTempSensor.id = "28-0316838ca7ff"
 
 	pi.AirPumpPin = NewRaspberryPiPin(21)
 	pi.AirPumpPin.SetMode(rpio.Output)
 
 	pi.MQTTClient = new(MQTTComms)
-	pi.MQTTClient.authenticateDevice()
+	pi.MQTTClient.connectDevice()
 
 	return pi
 }
@@ -56,13 +60,17 @@ func (pi *RaspberryPi) StartHydroponics() {
 	pi.startSensorCycle()
 	pi.startLightCycle()
 	pi.startAirPumpCycle()
-
 }
 
 func (pi *RaspberryPi) StopSystem() {
 	pi.turnOffGrowLed()
 	pi.AirPumpPin.WriteState(rpio.Low)
 	rpio.Close()
+}
+
+func (pi *RaspberryPi) publishState(tankOneTemp float64, tankTwoTemp float64, CPUTemp float64) {
+	message, _ := CreateSensorMessage(tankOneTemp, tankTwoTemp, CPUTemp)
+	pi.MQTTClient.publishMessage(EVENTSTOPIC, message)
 }
 
 func (pi *RaspberryPi) turnOnGrowLed() {
@@ -74,12 +82,6 @@ func (pi *RaspberryPi) turnOffGrowLed() {
 	pi.GrowLedPin.WriteState(rpio.Low)
 	pi.GrowLedState = false
 
-}
-
-func (pi RaspberryPi) getWaterTemp() {
-	temp := pi.WaterTempSensor.ReadTemperature()
-	message, _ := CreateSensorMessage(float32(temp), 0.0, 0.0, true)
-	pi.MQTTClient.publishMessage(EVENTSTOPIC, message)
 }
 
 func (pi RaspberryPi) startLightCycle() {
@@ -118,11 +120,26 @@ func (pi RaspberryPi) startSensorCycle() {
 				temperature, humidity, retried)
 
 			log.Printf(sensorReading)
-			pi.getWaterTemp()
-			time.Sleep(time.Hour * 2)
+			tankOneTemp := pi.TankOneWaterTempSensor.ReadTemperature()
+			tankTwoTemp := pi.TankTwoWaterTempSensor.ReadTemperature()
+			CPUTemp := pi.getCPUTemp()
+			pi.publishState(tankOneTemp, tankTwoTemp, CPUTemp)
+			time.Sleep(time.Hour * 4)
 		}
 
 	}()
+}
+
+func (pi RaspberryPi) getCPUTemp() float64 {
+	dat, err := ioutil.ReadFile("/sys/class/thermal/thermal_zone0/temp")
+	if err != nil {
+		log.Printf("Error: Can't read Raspberry Pi CPU Temp")
+		return 0.0
+	}
+	log.Printf("CPU Temp: %v", string(dat))
+	temp := math.Float64frombits(binary.LittleEndian.Uint64(dat))
+	return temp / 1000
+
 }
 
 func (pi RaspberryPi) startAirPumpCycle() {

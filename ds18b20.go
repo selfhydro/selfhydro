@@ -18,9 +18,12 @@ func (ds ds18b20) ReadTemperature() float64{
 
 	temp, err := ds.getTemp(ds.id)
 
-	if err == nil {
-		log.Printf("Water temperature: %.2f°C\n", temp)
+	if err != nil {
+		log.Printf("Error: Cant read temp of water tank")
+		return 0.0
 	}
+	log.Printf("Water temperature: %.2f°C\n", temp)
+
 	return temp
 }
 
