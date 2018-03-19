@@ -39,7 +39,7 @@ var f MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
 	fmt.Printf("MSG: %s\n", msg.Payload())
 }
 
-func (mqtt *MQTTComms) connectDevice() {
+func (mqtt *MQTTComms) ConnectDevice() {
 	mqtt.authenticateDevice()
 	timerTillRefresh := time.NewTimer(JWTEXPIRYINHOURS * time.Hour)
 	go func() {

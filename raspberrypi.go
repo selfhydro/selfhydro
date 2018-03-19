@@ -46,12 +46,13 @@ func NewRaspberryPi() *RaspberryPi {
 	pi.GrowLedPin.SetMode(rpio.Output)
 
 	pi.TankOneWaterTempSensor.id = "28-0316838ca7ff"
+	pi.TankTwoWaterTempSensor.id = ""
 
 	pi.AirPumpPin = NewRaspberryPiPin(21)
 	pi.AirPumpPin.SetMode(rpio.Output)
 
 	pi.MQTTClient = new(MQTTComms)
-	pi.MQTTClient.connectDevice()
+	pi.MQTTClient.ConnectDevice()
 
 	return pi
 }
@@ -107,10 +108,7 @@ func (pi RaspberryPi) changeLEDState(turnOnTime time.Time, turnOffTime time.Time
 func (pi RaspberryPi) startSensorCycle() {
 
 	go func() {
-		//dht22 := NewDHT22(17)
 		for {
-			//temperature, tErr := dht22.Temperature()
-			//humidity, hErr := dht22.Humidity()
 			temperature, humidity, retried, err :=
 				dht.ReadDHTxxWithRetry(dht.DHT22, 17, true, 10)
 			if err != nil {
@@ -121,9 +119,10 @@ func (pi RaspberryPi) startSensorCycle() {
 
 			log.Printf(sensorReading)
 			tankOneTemp := pi.TankOneWaterTempSensor.ReadTemperature()
-			tankTwoTemp := pi.TankTwoWaterTempSensor.ReadTemperature()
+			//tankTwoTemp := pi.TankTwoWaterTempSensor.ReadTemperature()
 			CPUTemp := pi.getCPUTemp()
-			pi.publishState(tankOneTemp, tankTwoTemp, CPUTemp)
+			fmt.Println("Sending sensor readings....")
+			pi.publishState(tankOneTemp, 0.0, CPUTemp)
 			time.Sleep(time.Hour * 4)
 		}
 
@@ -131,13 +130,22 @@ func (pi RaspberryPi) startSensorCycle() {
 }
 
 func (pi RaspberryPi) getCPUTemp() float64 {
-	dat, err := ioutil.ReadFile("/sys/class/thermal/thermal_zone0/temp")
+	fd, err := os.Open("/sys/class/thermal/thermal_zone0/temp")
 	if err != nil {
 		log.Printf("Error: Can't read Raspberry Pi CPU Temp")
 		return 0.0
 	}
-	log.Printf("CPU Temp: %v", string(dat))
-	temp := math.Float64frombits(binary.LittleEndian.Uint64(dat))
+	defer fd.Close()
+	var temp float64
+	err = binary.Read(fd, binary.BigEndian, &temp)
+	fmt.Println(err, temp)
+	//dat, err := ioutil.ReadFile("/sys/class/thermal/thermal_zone0/temp")
+	//if err != nil {
+	//	log.Printf("Error: Can't read Raspberry Pi CPU Temp")
+	//	return 0.0
+	//}
+	//temp := math.Float64frombits(binary.LittleEndian.Uint64(dat))
+	log.Printf("CPU Temp: %v", temp/1000)
 	return temp / 1000
 
 }
