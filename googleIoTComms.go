@@ -10,23 +10,22 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"math/rand"
-	"bytes"
 )
 
 type SensorMessage struct {
-	DeviceId int `json:"deviceId"`
+	DeviceId         int     `json:"deviceId"`
 	UnitOneWaterTemp float32 `json:"unitOneWaterTemp"`
 	UnitTwoWaterTemp float32 `json:"unitTwoWaterTemp"`
-	PiCPUTemp float32 `json:"piCPUTemp"`
-	LEDState bool
-	Time string `json:"time"`
+	PiCPUTemp        float32 `json:"piCPUTemp"`
+	LEDState         bool
+	Time             string  `json:"time"`
 }
 
 const (
-	location  = "asia-east1"
-	projectId = "selfhydro-197504"
-	registry  = "raspberry-pis"
-	device    = "original-hydro"
+	location   = "asia-east1"
+	projectId  = "selfhydro-197504"
+	registryId = "raspberry-pis"
+	deviceId   = "original-hydro"
 )
 
 type MQTTComms struct {
@@ -34,12 +33,24 @@ type MQTTComms struct {
 }
 
 const (
-	HYDRO_EVENTS_TOPIC = "/devices/"+device+"/events"
+	EVENTSTOPIC = "/devices/" + deviceId + "/events"
+	JWTEXPIRYINHOURS = 6
 )
 
 var f MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
 	fmt.Printf("TOPIC: %s\n", msg.Topic())
 	fmt.Printf("MSG: %s\n", msg.Payload())
+}
+
+func (mqtt *MQTTComms) connectDevice() {
+	mqtt.authenticateDevice()
+	timerTillRefresh := time.NewTimer(JWTEXPIRYINHOURS * time.Hour)
+	go func() {
+		<-timerTillRefresh.C
+		fmt.Println("Refreshing JWT Token and reconneting")
+		mqtt.client.Disconnect(200)
+		mqtt.authenticateDevice()
+	}()
 }
 
 func (mqtt *MQTTComms) authenticateDevice() {
@@ -48,7 +59,7 @@ func (mqtt *MQTTComms) authenticateDevice() {
 
 	opts := MQTT.NewClientOptions().AddBroker("ssl://mqtt.googleapis.com:8883")
 
-	clientId := "projects/" + projectId + "/locations/" + location + "/registries/" + registry + "/devices/" + device
+	clientId := "projects/" + projectId + "/locations/" + location + "/registries/" + registryId + "/devices/" + deviceId
 
 	opts.SetClientID(clientId)
 	opts.SetDefaultPublishHandler(f)
@@ -60,6 +71,7 @@ func (mqtt *MQTTComms) authenticateDevice() {
 	if token := mqtt.client.Connect(); token.Wait() && token.Error() != nil {
 		panic(token.Error())
 	}
+
 }
 func (mqtt *MQTTComms) subscribeToTopic(topic string) {
 	if token := mqtt.client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
@@ -74,17 +86,22 @@ func (mqtt *MQTTComms) unsubscribeFromTopic(topic string) {
 	}
 	mqtt.client.Disconnect(250)
 }
-func (mqtt *MQTTComms) publishMessage(topic string, message []byte) {
-	log.Printf("Sending: %v", bytes.NewBuffer(message))
-	token := mqtt.client.Publish(topic, 0, false, bytes.NewBuffer(message))
-	response := token.Wait()
-	log.Printf("Response: %v",response)
+func (mqtt *MQTTComms) publishMessage(topic string, message string) {
+	if mqtt.client.IsConnected() {
+
+		log.Printf("Sending: %v", message)
+		token := mqtt.client.Publish(topic, 0, false, message)
+		response := token.Wait()
+		log.Printf("Response: %v", response)
+	} else {
+		log.Printf("Disconnected from google cloud")
+	}
 }
 
 func createJWTToken(projectId string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
 		"iat": time.Now().Unix(),
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
+		"exp": time.Now().Add(time.Hour * JWTEXPIRYINHOURS).Unix(),
 		"aud": projectId,
 	})
 
@@ -93,11 +110,9 @@ func createJWTToken(projectId string) (string, error) {
 		log.Fatal(err)
 	}
 
-
 	key, _ := ioutil.ReadFile(file.Name())
 
 	rsaPrivateKey, _ := jwt.ParseRSAPrivateKeyFromPEM(key)
-
 
 	tokenString, err := token.SignedString(rsaPrivateKey)
 
@@ -105,7 +120,8 @@ func createJWTToken(projectId string) (string, error) {
 	return tokenString, err
 }
 
-func CreateSensorMessage(tempUnitOne float32, tempUnitTwo float32, piCPUTemp float32, LEDState bool ) ([]byte, error) {
-	m := SensorMessage{rand.Int(),tempUnitOne, tempUnitTwo, piCPUTemp, LEDState,time.Now().Format("20060102150405")}
-	return json.Marshal(m)
+func CreateSensorMessage(tempUnitOne float32, tempUnitTwo float32, piCPUTemp float32, LEDState bool) (string, error) {
+	m := SensorMessage{rand.Int(), tempUnitOne, tempUnitTwo, piCPUTemp, LEDState, time.Now().Format("20060102150405")}
+	jsonMsg, err := json.Marshal(m)
+	return string(jsonMsg), err
 }

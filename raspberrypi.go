@@ -79,7 +79,7 @@ func (pi *RaspberryPi) turnOffGrowLed() {
 func (pi RaspberryPi) getWaterTemp() {
 	temp := pi.WaterTempSensor.ReadTemperature()
 	message, _ := CreateSensorMessage(float32(temp), 0.0, 0.0, true)
-	pi.MQTTClient.publishMessage(HYDRO_EVENTS_TOPIC, message)
+	pi.MQTTClient.publishMessage(EVENTSTOPIC, message)
 }
 
 func (pi RaspberryPi) startLightCycle() {

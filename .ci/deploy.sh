@@ -21,7 +21,6 @@ EOF
 scp -o StrictHostKeyChecking=no -i deploy_key selfhydro-release/selfhydro pi@10.1.1.2:/selfhydro/
 ssh -o StrictHostKeyChecking=no -i deploy_key pi@10.1.1.2 << EOF
 chmod +x /selfhydro/selfhydro &\
-sudo pkill -f -o selfhydro &\
 nohup sudo /selfhydro/selfhydro > /selfhydro/logs 2>&1 &
 EOF
 
