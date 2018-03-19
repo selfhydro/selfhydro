@@ -9,7 +9,6 @@ import (
 	"log"
 	"io/ioutil"
 	"encoding/json"
-	"math/rand"
 )
 
 type SensorMessage struct {
