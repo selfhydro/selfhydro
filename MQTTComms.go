@@ -30,7 +30,7 @@ type MQTTComms struct {
 }
 
 const (
-	EVENTSTOPIC = "/devices/" + deviceId + "/events"
+	EVENTSTOPIC      = "/devices/" + deviceId + "/events"
 	JWTEXPIRYINHOURS = 6
 )
 
@@ -39,14 +39,23 @@ var f MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
 	fmt.Printf("MSG: %s\n", msg.Payload())
 }
 
+func NewMQTTComms(client MQTT.Client) *MQTTComms {
+	mqttComms := new(MQTTComms)
+	mqttComms.client = new(&client)
+	return mqttComms
+}
+
 func (mqtt *MQTTComms) ConnectDevice() {
 	mqtt.authenticateDevice()
 	timerTillRefresh := time.NewTimer(JWTEXPIRYINHOURS * time.Hour)
 	go func() {
-		<-timerTillRefresh.C
-		fmt.Println("Refreshing JWT Token and reconneting")
-		mqtt.client.Disconnect(200)
-		mqtt.authenticateDevice()
+		for {
+			<-timerTillRefresh.C
+			fmt.Println("Refreshing JWT Token and reconneting")
+			mqtt.client.Disconnect(200)
+			mqtt.authenticateDevice()
+			timerTillRefresh = time.NewTimer(JWTEXPIRYINHOURS * time.Hour)
+		}
 	}()
 }
 
