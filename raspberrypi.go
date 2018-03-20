@@ -4,7 +4,7 @@ import (
 	"github.com/stianeikeland/go-rpio"
 	"log"
 	"time"
-	"github.com/d2r2/go-dht"
+	//"github.com/d2r2/go-dht"
 	"fmt"
 	"os"
 	"io/ioutil"
@@ -109,15 +109,15 @@ func (pi RaspberryPi) startSensorCycle() {
 
 	go func() {
 		for {
-			temperature, humidity, retried, err :=
-				dht.ReadDHTxxWithRetry(dht.DHT22, 17, true, 10)
-			if err != nil {
-				log.Printf("Error: Error with reading dht: %v", err.Error())
-			}
-			sensorReading := fmt.Sprintf("Ambient Temperature = %v*C, Humidity = %v%% (retired: %v)",
-				temperature, humidity, retried)
-
-			log.Printf(sensorReading)
+			//temperature, humidity, retried, err :=
+			//	dht.ReadDHTxxWithRetry(dht.DHT22, 17, true, 10)
+			//if err != nil {
+			//	log.Printf("Error: Error with reading dht: %v", err.Error())
+			//}
+			//sensorReading := fmt.Sprintf("Ambient Temperature = %v*C, Humidity = %v%% (retired: %v)",
+			//	temperature, humidity, retried)
+			//
+			//log.Printf(sensorReading)
 			tankOneTemp := pi.TankOneWaterTempSensor.ReadTemperature()
 			//tankTwoTemp := pi.TankTwoWaterTempSensor.ReadTemperature()
 			CPUTemp := pi.getCPUTemp()

@@ -19,7 +19,7 @@ func (c *mockClient) IsConnected() bool {
 func (c *mockClient) Connect() MQTT.Token {
 	token := new(MQTT.Token)
 
-	return token
+	return *token
 }
 
 func (c *mockClient) Disconnect(quiesce uint) {
@@ -29,25 +29,25 @@ func (c *mockClient) Disconnect(quiesce uint) {
 func (c *mockClient) Publish(topic string, qos byte, retained bool, payload interface{}) MQTT.Token {
 	c.publishCalled = true
 	token := new(MQTT.Token)
-	return token
+	return *token
 }
 
 func (c *mockClient) Subscribe(topic string, qos byte, callback MQTT.MessageHandler) MQTT.Token {
 	token := new(MQTT.Token)
 
-	return token
+	return *token
 }
 
 func (c *mockClient) SubscribeMultiple(filters map[string]byte, callback MQTT.MessageHandler) MQTT.Token {
 	token := new(MQTT.Token)
 
-	return token
+	return *token
 }
 
 func (c *mockClient) Unsubscribe(topics ...string) MQTT.Token {
 	token := new(MQTT.Token)
 
-	return token
+	return *token
 }
 
 func (c *mockClient) OptionsReader() MQTT.ClientOptionsReader {

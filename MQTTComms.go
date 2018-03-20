@@ -39,11 +39,11 @@ var f MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
 	fmt.Printf("MSG: %s\n", msg.Payload())
 }
 
-func NewMQTTComms(client MQTT.Client) *MQTTComms {
-	mqttComms := new(MQTTComms)
-	mqttComms.client = new(&client)
-	return mqttComms
-}
+//func NewMQTTComms(client MQTT.Client) *MQTTComms {
+//	mqttComms := new(MQTTComms)
+//	mqttComms.client = reflect.New(reflect.TypeOf(client))
+//	return mqttComms
+//}
 
 func (mqtt *MQTTComms) ConnectDevice() {
 	mqtt.authenticateDevice()
