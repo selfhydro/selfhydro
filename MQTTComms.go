@@ -17,10 +17,10 @@ type MQTTComms interface {
 }
 
 type SensorMessage struct {
-	UnitOneWaterTemp float64 `json:"unitOneWaterTemp"`
-	UnitTwoWaterTemp float64 `json:"unitTwoWaterTemp"`
-	PiCPUTemp        float64 `json:"piCPUTemp"`
-	Time             string  `json:"time"`
+	UnitOneWaterTemp   float64 `json:"unitOneWaterTemp"`
+	UnitTwoAmbientTemp float64 `json:"unitTwoAmbientTemp"`
+	PiCPUTemp          float64 `json:"piCPUTemp"`
+	Time               string  `json:"time"`
 }
 
 const (

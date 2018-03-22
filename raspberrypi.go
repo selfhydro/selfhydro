@@ -14,7 +14,6 @@ import (
 type Controller interface {
 	StopSystem()
 	StartHydroponics()
-
 	startSensorCycle()
 	startLightCycle()
 	startAirPumpCycle()
@@ -27,7 +26,7 @@ const (
 type RaspberryPi struct {
 	GrowLedPin              RaspberryPiPin
 	TankOneWaterTempSensor  ds18b20
-	TankTwoWaterTempSensor  ds18b20
+	unitTwoAmbientTemp      ds18b20
 	tankOneWaterLevelSensor Sensor
 	AirPumpPin              RaspberryPiPin
 	MQTTClient              MQTTComms
@@ -47,7 +46,7 @@ func NewRaspberryPi() *RaspberryPi {
 	pi.GrowLedPin.SetMode(rpio.Output)
 
 	pi.TankOneWaterTempSensor.id = "28-0316838ca7ff"
-	pi.TankTwoWaterTempSensor.id = "28-0316838b3aff"
+	pi.unitTwoAmbientTemp.id = "28-0316838b3aff"
 
 	pi.tankOneWaterLevelSensor = NewSensor(5)
 
@@ -118,7 +117,7 @@ func (pi RaspberryPi) startSensorCycle() {
 		for {
 			fmt.Println("Sending sensor readings....")
 			tankOneTemp := pi.TankOneWaterTempSensor.ReadTemperature()
-			tankTwoTemp := pi.TankTwoWaterTempSensor.ReadTemperature()
+			tankTwoTemp := pi.unitTwoAmbientTemp.ReadTemperature()
 			CPUTemp := pi.getCPUTemp()
 			pi.checkWaterLevels()
 			pi.publishState(tankOneTemp, tankTwoTemp, CPUTemp)
