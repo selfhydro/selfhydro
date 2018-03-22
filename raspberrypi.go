@@ -54,6 +54,8 @@ func NewRaspberryPi() *RaspberryPi {
 	pi.TankOneWaterTempSensor.id = "28-0316838ca7ff"
 	pi.TankTwoWaterTempSensor.id = ""
 
+	pi.tankOneWaterLevelSensor = NewSensor(5)
+
 	pi.AirPumpPin = NewRaspberryPiPin(21)
 	pi.AirPumpPin.SetMode(rpio.Output)
 
