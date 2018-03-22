@@ -13,6 +13,7 @@ type sensor struct {
 func NewSensor(pin int) *sensor {
 	sensor := new(sensor)
 	sensor.pin = NewRaspberryPiPin(pin)
+	sensor.pin.SetMode(rpio.Input)
 	return sensor
 }
 
