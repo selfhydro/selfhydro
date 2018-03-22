@@ -82,5 +82,5 @@ jobs:
     file: selfhydro/.ci/deploy.yml
     params:
           DEPLOY_KEY: ((selfhydro-rpi-deploy-key.private_key))
-          DOCKER_USERNAME: ((docker-hub-username))
-          DOCKER_PASSWORD: ((docker-hub-password))
+#          DOCKER_USERNAME: ((docker-hub-username))
+#          DOCKER_PASSWORD: ((docker-hub-password))

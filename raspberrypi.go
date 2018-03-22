@@ -4,7 +4,6 @@ import (
 	"github.com/stianeikeland/go-rpio"
 	"log"
 	"time"
-	//"github.com/d2r2/go-dht"
 	"fmt"
 	"os"
 	"io/ioutil"
@@ -26,15 +25,13 @@ const (
 )
 
 type RaspberryPi struct {
-	GrowLedPin             RaspberryPiPin
-	GrowLedState           bool
-	WaterPumpState         bool
-	TankOneWaterTempSensor ds18b20
-	TankTwoWaterTempSensor ds18b20
+	GrowLedPin              RaspberryPiPin
+	TankOneWaterTempSensor  ds18b20
+	TankTwoWaterTempSensor  ds18b20
 	tankOneWaterLevelSensor Sensor
-	AirPumpPin             RaspberryPiPin
-	MQTTClient             MQTTComms
-	alertChannel chan string
+	AirPumpPin              RaspberryPiPin
+	MQTTClient              MQTTComms
+	alertChannel            chan string
 }
 
 func NewRaspberryPi() *RaspberryPi {
@@ -45,14 +42,12 @@ func NewRaspberryPi() *RaspberryPi {
 		log.Fatalf("Could not open rpio pins %v", error.Error())
 		os.Exit(1)
 	}
-	//defer rpio.Close()
 
 	pi.GrowLedPin = NewRaspberryPiPin(19)
-	pi.GrowLedState = false
 	pi.GrowLedPin.SetMode(rpio.Output)
 
 	pi.TankOneWaterTempSensor.id = "28-0316838ca7ff"
-	pi.TankTwoWaterTempSensor.id = ""
+	pi.TankTwoWaterTempSensor.id = "28-0316838b3aff"
 
 	pi.tankOneWaterLevelSensor = NewSensor(5)
 
@@ -74,18 +69,20 @@ func (pi *RaspberryPi) StartHydroponics() {
 	pi.monitorAlerts()
 }
 
-func (pi *RaspberryPi) monitorAlerts(){
+func (pi *RaspberryPi) monitorAlerts() {
 	go func() {
-		alert := <- pi.alertChannel
-		switch alert {
-		case LowWaterLevel:
-			log.Print("Water Level is Low")
+		for {
+			alert := <-pi.alertChannel
+			switch alert {
+			case LowWaterLevel:
+				log.Print("Water Level is Low")
+			}
 		}
 	}()
 }
 
 func (pi *RaspberryPi) StopSystem() {
-	pi.turnOffGrowLed()
+	pi.GrowLedPin.WriteState(rpio.Low)
 	pi.AirPumpPin.WriteState(rpio.Low)
 	rpio.Close()
 }
@@ -93,17 +90,6 @@ func (pi *RaspberryPi) StopSystem() {
 func (pi *RaspberryPi) publishState(tankOneTemp float64, tankTwoTemp float64, CPUTemp float64) {
 	message, _ := CreateSensorMessage(tankOneTemp, tankTwoTemp, CPUTemp)
 	pi.MQTTClient.publishMessage(EVENTSTOPIC, message)
-}
-
-func (pi *RaspberryPi) turnOnGrowLed() {
-	pi.GrowLedPin.WriteState(rpio.High)
-	pi.GrowLedState = true
-}
-
-func (pi *RaspberryPi) turnOffGrowLed() {
-	pi.GrowLedPin.WriteState(rpio.Low)
-	pi.GrowLedState = false
-
 }
 
 func (pi RaspberryPi) startLightCycle() {
@@ -120,10 +106,10 @@ func (pi RaspberryPi) startLightCycle() {
 func (pi RaspberryPi) changeLEDState(turnOnTime time.Time, turnOffTime time.Time) {
 	if pi.GrowLedPin.ReadState() != rpio.High && betweenTime(turnOnTime, turnOffTime) {
 		log.Printf("Turning on GROW LEDS")
-		pi.turnOnGrowLed()
+		pi.GrowLedPin.WriteState(rpio.High)
 	} else if pi.GrowLedPin.ReadState() == rpio.High && betweenTime(turnOffTime, turnOnTime.Add(time.Hour*24)) {
 		log.Printf("Turning off GROW LEDS")
-		pi.turnOffGrowLed()
+		pi.GrowLedPin.WriteState(rpio.Low)
 	}
 }
 func (pi RaspberryPi) startSensorCycle() {
@@ -131,20 +117,11 @@ func (pi RaspberryPi) startSensorCycle() {
 	go func() {
 		for {
 			fmt.Println("Sending sensor readings....")
-			//temperature, humidity, retried, err :=
-			//	dht.ReadDHTxxWithRetry(dht.DHT22, 17, true, 10)
-			//if err != nil {
-			//	log.Printf("Error: Error with reading dht: %v", err.Error())
-			//}
-			//sensorReading := fmt.Sprintf("Ambient Temperature = %v*C, Humidity = %v%% (retired: %v)",
-			//	temperature, humidity, retried)
-			//
-			//log.Printf(sensorReading)
 			tankOneTemp := pi.TankOneWaterTempSensor.ReadTemperature()
-			//tankTwoTemp := pi.TankTwoWaterTempSensor.ReadTemperature()
+			tankTwoTemp := pi.TankTwoWaterTempSensor.ReadTemperature()
 			CPUTemp := pi.getCPUTemp()
 			pi.checkWaterLevels()
-			pi.publishState(tankOneTemp, 0.0, CPUTemp)
+			pi.publishState(tankOneTemp, tankTwoTemp, CPUTemp)
 			time.Sleep(time.Hour * 4)
 		}
 

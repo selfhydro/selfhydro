@@ -18,7 +18,7 @@ func setupMock() *RaspberryPi {
 	mockPi.AirPumpPin = new(mockRaspberryPiPinImpl)
 	mockPi.GrowLedPin = new(mockRaspberryPiPinImpl)
 	mockPi.tankOneWaterLevelSensor = new(mockSensor)
-	mockPi.alertChannel = make(chan string, 5)
+	mockPi.alertChannel = make(chan string)
 	return mockPi
 }
 
@@ -53,6 +53,22 @@ func TestHydroCycle(t *testing.T) {
 
 	})
 
+	t.Run("Test when there are no alerts coming in", func(t *testing.T) {
+		mockPi.tankOneWaterLevelSensor.(*mockSensor).sensorState = rpio.Low
+		var buf bytes.Buffer
+		log.SetOutput(&buf)
+		defer log.SetOutput(os.Stdout)
+		mockPi.monitorAlerts()
+		mockPi.startSensorCycle()
+		time.Sleep(time.Millisecond)
+		out := buf.String()
+
+		if strings.Contains(out, "Water Level is Low")   {
+			t.Error("Water Level alert not received")
+		}
+
+	})
+
 	t.Run("Alerts should be logged when ever they come in", func(t *testing.T){
 		mockPi.tankOneWaterLevelSensor.(*mockSensor).sensorState = rpio.High
 		var buf bytes.Buffer
@@ -60,7 +76,7 @@ func TestHydroCycle(t *testing.T) {
 		defer log.SetOutput(os.Stdout)
 		mockPi.monitorAlerts()
 		mockPi.startSensorCycle()
-		time.Sleep(time.Second)
+		time.Sleep(time.Millisecond)
 		out := buf.String()
 
 		if !strings.Contains(out, "Water Level is Low")   {
