@@ -4,12 +4,21 @@ import (
 	"testing"
 	"github.com/stianeikeland/go-rpio"
 	"time"
+	"bytes"
+	"log"
+	"strings"
+	"os"
 )
+
 
 func setupMock() *RaspberryPi {
 	mockPi := new(RaspberryPi)
+	mockPi.MQTTClient = new(mockMQTTComms)
+
 	mockPi.AirPumpPin = new(mockRaspberryPiPinImpl)
 	mockPi.GrowLedPin = new(mockRaspberryPiPinImpl)
+	mockPi.tankOneWaterLevelSensor = new(mockSensor)
+	mockPi.alertChannel = make(chan string, 5)
 	return mockPi
 }
 
@@ -34,5 +43,30 @@ func TestHydroCycle(t *testing.T) {
 			t.Errorf("Error: Airpump was not turned on")
 		}
 	})
+
+	t.Run("Test Water Level sensor", func(t *testing.T) {
+		mockPi.tankOneWaterLevelSensor.(*mockSensor).sensorState = rpio.High
+		mockPi.startSensorCycle()
+		if <-mockPi.alertChannel != LowWaterLevel {
+			t.Error("Channel should have low level alert")
+		}
+
+	})
+
+	t.Run("Alerts should be logged when ever they come in", func(t *testing.T){
+		mockPi.tankOneWaterLevelSensor.(*mockSensor).sensorState = rpio.High
+		var buf bytes.Buffer
+		log.SetOutput(&buf)
+		defer log.SetOutput(os.Stdout)
+		mockPi.monitorAlerts()
+		mockPi.startSensorCycle()
+		time.Sleep(time.Second)
+		out := buf.String()
+
+		if !strings.Contains(out, "Water Level is Low")   {
+			t.Error("Water Level alert not received")
+		}
+	})
 }
+
 

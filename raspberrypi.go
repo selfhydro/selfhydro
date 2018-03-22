@@ -21,14 +21,20 @@ type Controller interface {
 	startAirPumpCycle()
 }
 
+const (
+	LowWaterLevel = "LOW_WATER"
+)
+
 type RaspberryPi struct {
 	GrowLedPin             RaspberryPiPin
 	GrowLedState           bool
 	WaterPumpState         bool
 	TankOneWaterTempSensor ds18b20
 	TankTwoWaterTempSensor ds18b20
+	tankOneWaterLevelSensor Sensor
 	AirPumpPin             RaspberryPiPin
-	MQTTClient             *MQTTComms
+	MQTTClient             MQTTComms
+	alertChannel chan string
 }
 
 func NewRaspberryPi() *RaspberryPi {
@@ -51,8 +57,10 @@ func NewRaspberryPi() *RaspberryPi {
 	pi.AirPumpPin = NewRaspberryPiPin(21)
 	pi.AirPumpPin.SetMode(rpio.Output)
 
-	pi.MQTTClient = new(MQTTComms)
+	pi.MQTTClient = new(mqttComms)
 	pi.MQTTClient.ConnectDevice()
+
+	pi.alertChannel = make(chan string, 5)
 
 	return pi
 }
@@ -61,6 +69,17 @@ func (pi *RaspberryPi) StartHydroponics() {
 	pi.startSensorCycle()
 	pi.startLightCycle()
 	pi.startAirPumpCycle()
+	pi.monitorAlerts()
+}
+
+func (pi *RaspberryPi) monitorAlerts(){
+	go func() {
+		alert := <- pi.alertChannel
+		switch alert {
+		case LowWaterLevel:
+			log.Print("Water Level is Low")
+		}
+	}()
 }
 
 func (pi *RaspberryPi) StopSystem() {
@@ -109,6 +128,7 @@ func (pi RaspberryPi) startSensorCycle() {
 
 	go func() {
 		for {
+			fmt.Println("Sending sensor readings....")
 			//temperature, humidity, retried, err :=
 			//	dht.ReadDHTxxWithRetry(dht.DHT22, 17, true, 10)
 			//if err != nil {
@@ -121,12 +141,19 @@ func (pi RaspberryPi) startSensorCycle() {
 			tankOneTemp := pi.TankOneWaterTempSensor.ReadTemperature()
 			//tankTwoTemp := pi.TankTwoWaterTempSensor.ReadTemperature()
 			CPUTemp := pi.getCPUTemp()
-			fmt.Println("Sending sensor readings....")
+			pi.checkWaterLevels()
 			pi.publishState(tankOneTemp, 0.0, CPUTemp)
 			time.Sleep(time.Hour * 4)
 		}
 
 	}()
+}
+
+func (pi RaspberryPi) checkWaterLevels() {
+	tankOneState := pi.tankOneWaterLevelSensor.getState()
+	if tankOneState == rpio.High {
+		pi.alertChannel <- LowWaterLevel
+	}
 }
 
 func (pi RaspberryPi) getCPUTemp() float64 {

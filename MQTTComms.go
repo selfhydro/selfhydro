@@ -11,6 +11,11 @@ import (
 	"encoding/json"
 )
 
+type MQTTComms interface {
+	ConnectDevice()
+	publishMessage(topic string, message string)
+}
+
 type SensorMessage struct {
 	UnitOneWaterTemp float64 `json:"unitOneWaterTemp"`
 	UnitTwoWaterTemp float64 `json:"unitTwoWaterTemp"`
@@ -25,7 +30,7 @@ const (
 	deviceId   = "original-hydro"
 )
 
-type MQTTComms struct {
+type mqttComms struct {
 	client MQTT.Client
 }
 
@@ -39,13 +44,8 @@ var f MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
 	fmt.Printf("MSG: %s\n", msg.Payload())
 }
 
-//func NewMQTTComms(client MQTT.Client) *MQTTComms {
-//	mqttComms := new(MQTTComms)
-//	mqttComms.client = reflect.New(reflect.TypeOf(client))
-//	return mqttComms
-//}
 
-func (mqtt *MQTTComms) ConnectDevice() {
+func (mqtt *mqttComms) ConnectDevice() {
 	mqtt.authenticateDevice()
 	timerTillRefresh := time.NewTimer(JWTEXPIRYINHOURS * time.Hour)
 	go func() {
@@ -59,7 +59,7 @@ func (mqtt *MQTTComms) ConnectDevice() {
 	}()
 }
 
-func (mqtt *MQTTComms) authenticateDevice() {
+func (mqtt *mqttComms) authenticateDevice() {
 
 	tokenString, _ := createJWTToken(projectId)
 
@@ -79,20 +79,20 @@ func (mqtt *MQTTComms) authenticateDevice() {
 	}
 
 }
-func (mqtt *MQTTComms) subscribeToTopic(topic string) {
+func (mqtt *mqttComms) subscribeToTopic(topic string) {
 	if token := mqtt.client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
 		fmt.Println(token.Error())
 		os.Exit(1)
 	}
 }
-func (mqtt *MQTTComms) unsubscribeFromTopic(topic string) {
+func (mqtt *mqttComms) unsubscribeFromTopic(topic string) {
 	if token := mqtt.client.Unsubscribe(topic); token.Wait() && token.Error() != nil {
 		fmt.Println(token.Error())
 		os.Exit(1)
 	}
 	mqtt.client.Disconnect(250)
 }
-func (mqtt *MQTTComms) publishMessage(topic string, message string) {
+func (mqtt *mqttComms) publishMessage(topic string, message string) {
 	if mqtt.client.IsConnected() {
 
 		log.Printf("Sending: %v", message)
