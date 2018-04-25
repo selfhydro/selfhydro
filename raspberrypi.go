@@ -28,6 +28,7 @@ type RaspberryPi struct {
 	TankOneWaterTempSensor  ds18b20
 	unitTwoAmbientTemp      ds18b20
 	tankOneWaterLevelSensor Sensor
+	ambientTempSensor		*mcp9808Sensor
 	AirPumpPin              RaspberryPiPin
 	MQTTClient              MQTTComms
 	alertChannel            chan string
@@ -56,7 +57,11 @@ func NewRaspberryPi() *RaspberryPi {
 	pi.MQTTClient = new(mqttComms)
 	pi.MQTTClient.ConnectDevice()
 
+	pi.ambientTempSensor, _ = Newmcp9808Sensor()
+
+
 	pi.alertChannel = make(chan string, 5)
+
 
 	return pi
 }
@@ -86,8 +91,8 @@ func (pi *RaspberryPi) StopSystem() {
 	rpio.Close()
 }
 
-func (pi *RaspberryPi) publishState(tankOneTemp float64, tankTwoTemp float64, CPUTemp float64) {
-	message, _ := CreateSensorMessage(tankOneTemp, tankTwoTemp, CPUTemp)
+func (pi *RaspberryPi) publishState(tankOneTemp float64, tankTwoTemp float64, ambientTemp float32, CPUTemp float64) {
+	message, _ := CreateSensorMessage(tankOneTemp, tankTwoTemp, ambientTemp, CPUTemp)
 	pi.MQTTClient.publishMessage(EVENTSTOPIC, message)
 }
 
@@ -120,7 +125,8 @@ func (pi RaspberryPi) startSensorCycle() {
 			tankTwoTemp := pi.unitTwoAmbientTemp.ReadTemperature()
 			CPUTemp := pi.getCPUTemp()
 			pi.checkWaterLevels()
-			pi.publishState(tankOneTemp, tankTwoTemp, CPUTemp)
+			ambientTemp := pi.ambientTempSensor.GetTemp()
+			pi.publishState(tankOneTemp, tankTwoTemp, ambientTemp, CPUTemp)
 			time.Sleep(time.Hour * 4)
 		}
 
