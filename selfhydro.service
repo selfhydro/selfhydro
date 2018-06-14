@@ -1,0 +1,13 @@
+[Unit]
+Description=Selfhydro service
+Requires=network.target
+
+[Service]
+ExecStart=/selfhydro/selfhydro
+WorkingDirectory=/selfhydro
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=root
+
+[Install]
