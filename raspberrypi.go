@@ -9,6 +9,8 @@ import (
 	"io/ioutil"
 	"strconv"
 	"strings"
+	"os/exec"
+	"syscall"
 )
 
 type Controller interface {
@@ -25,6 +27,7 @@ const (
 
 type RaspberryPi struct {
 	GrowLedPin              RaspberryPiPin
+	WiFiConnectButton		RaspberryPiPin
 	TankOneWaterTempSensor  ds18b20
 	unitTwoAmbientTemp      ds18b20
 	tankOneWaterLevelSensor Sensor
@@ -42,6 +45,9 @@ func NewRaspberryPi() *RaspberryPi {
 		log.Fatalf("Could not open rpio pins %v", error.Error())
 		os.Exit(1)
 	}
+
+	pi.WiFiConnectButton = NewRaspberryPiPin(40)
+	pi.WiFiConnectButton.SetMode(rpio.Input)
 
 	pi.GrowLedPin = NewRaspberryPiPin(19)
 	pi.GrowLedPin.SetMode(rpio.Output)
@@ -70,6 +76,7 @@ func (pi *RaspberryPi) StartHydroponics() {
 	pi.startSensorCycle()
 	pi.startLightCycle()
 	pi.startAirPumpCycle()
+	pi.startWifiConnectCycle()
 	pi.monitorAlerts()
 }
 
@@ -173,6 +180,38 @@ func (pi RaspberryPi) airPumpCycle(airPumpOnDuration time.Duration, airPumpOffDu
 	log.Printf("Turning off air pump")
 	pi.AirPumpPin.WriteState(rpio.Low)
 	time.Sleep(airPumpOffDuration)
+}
+func (pi *RaspberryPi) startWifiConnectCycle() {
+	go func() {
+		for {
+			pi.checkIfWifiButtonIsPressed()
+		}
+	}()
+}
+func (pi *RaspberryPi)checkIfWifiButtonIsPressed() {
+	if pi.WiFiConnectButton.ReadState() == rpio.High {
+		startTime := time.Now()
+		for {
+			if pi.WiFiConnectButton.ReadState() == rpio.Low {
+				break
+			}
+		}
+		if time.Since(startTime) >= time.Second*2 {
+			binary, lookErr := exec.LookPath("wifi-connect")
+			if lookErr != nil {
+				log.Printf("Error: Could not find wifi-connect")
+			}
+
+			args := []string{"wifi-connect", "-s=Selfhydro Connect"}
+
+			env := os.Environ()
+
+			execErr := syscall.Exec(binary, args, env)
+			if execErr != nil {
+				log.Printf("Error: Could not start wifi-connect")
+			}
+		}
+	}
 }
 
 func betweenTime(startTime time.Time, endTime time.Time) bool {

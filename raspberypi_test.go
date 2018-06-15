@@ -15,6 +15,7 @@ func setupMock() *RaspberryPi {
 	mockPi := new(RaspberryPi)
 	mockPi.MQTTClient = new(mockMQTTComms)
 
+	mockPi.WiFiConnectButton = new(mockRaspberryPiPinImpl)
 	mockPi.AirPumpPin = new(mockRaspberryPiPinImpl)
 	mockPi.GrowLedPin = new(mockRaspberryPiPinImpl)
 	mockPi.tankOneWaterLevelSensor = new(mockSensor)
@@ -50,6 +51,16 @@ func TestHydroCycle(t *testing.T) {
 		if <-mockPi.alertChannel != LowWaterLevel {
 			t.Error("Channel should have low level alert")
 		}
+
+	})
+	
+	t.Run("Test that button activates wifi-connect ap", func(t *testing.T) {
+		mockPi.WiFiConnectButton.(*mockRaspberryPiPinImpl).stateOfPin = rpio.High
+		mockPi.startWifiConnectCycle()
+		time.Sleep(time.Second*2)
+		mockPi.WiFiConnectButton.(*mockRaspberryPiPinImpl).stateOfPin = rpio.Low
+		time.Sleep(time.Second)
+
 
 	})
 
