@@ -15,3 +15,7 @@ bash <(curl -L https://github.com/resin-io/resin-wifi-connect/raw/master/scripts
 []
 
 
+### Setting Selfhydro up as a service
+
+1. ``cp selfhydro.serivce /etc/systemd/system/selfhydro.service``
+2. ``sudo systemctl enable selfhydro.service``
