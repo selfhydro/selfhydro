@@ -1,0 +1,22 @@
+---
+- name: GROUP | Add groups to the system
+  group: >
+    name={{ item.name }}
+    system={{ item.system | default('no') }}
+  with_items:
+    - "{{ dbs_groups }}"
+  when: item.state is not defined or item.state == 'present'
+
+- name: AUTHORIZED_KEY | Install SSH public key to pi user
+  authorized_key: user=pi key="{{ dbs_ssh_pubkey }}"
+  when: dbs_ssh_pubkey is defined
+
+- name: USER | Add users to the system
+  user: >
+    name=pi
+    shell=/bin/bash
+    groups={{ dbs_user_groups | default('') }}
+    home=/home/pi
+    createhome=yes
+    password={{ password | password_hash('sha512') }}
+  register: u
