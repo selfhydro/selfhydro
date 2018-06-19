@@ -23,11 +23,13 @@ type Controller interface {
 
 const (
 	LowWaterLevel = "LOW_WATER"
+	LowWaterDefault = 1
 )
 
 type RaspberryPi struct {
 	GrowLedPin              RaspberryPiPin
 	WiFiConnectButton		RaspberryPiPin
+	WaterLevelSensor		HCSR04
 	TankOneWaterTempSensor  ds18b20
 	unitTwoAmbientTemp      ds18b20
 	ambientTempSensor		*mcp9808Sensor
@@ -45,6 +47,8 @@ func NewRaspberryPi() *RaspberryPi {
 		os.Exit(1)
 	}
 
+	pi.WaterLevelSensor = NewHCSR04Sensor(36,38)
+
 	pi.WiFiConnectButton = NewRaspberryPiPin(40)
 	pi.WiFiConnectButton.SetMode(rpio.Input)
 
@@ -61,7 +65,6 @@ func NewRaspberryPi() *RaspberryPi {
 	pi.MQTTClient.ConnectDevice()
 
 	pi.ambientTempSensor, _ = Newmcp9808Sensor()
-
 
 	pi.alertChannel = make(chan string, 5)
 
@@ -138,10 +141,11 @@ func (pi RaspberryPi) startSensorCycle() {
 }
 
 func (pi RaspberryPi) checkWaterLevels() {
-	//tankOneState := pi.tankOneWaterLevelSensor.getState()
-	//if tankOneState == rpio.High {
-	//	pi.alertChannel <- LowWaterLevel
-	//}
+	waterLevel := pi.WaterLevelSensor.MeasureDistance()
+	if waterLevel <= LowWaterDefault {
+		pi.alertChannel <- LowWaterLevel
+	}
+	log.Printf("Water level is %f", waterLevel)
 }
 
 func (pi RaspberryPi) getCPUTemp() float64 {

@@ -11,13 +11,13 @@ type HCSR04 struct {
 	pingPin RaspberryPiPin
 }
 
-func NewHCSR04Sensor(pingPin int,echoPin int) *HCSR04 {
+func NewHCSR04Sensor(pingPin int,echoPin int) HCSR04 {
 
 	hcsr04 := new(HCSR04)
 	hcsr04.pingPin = NewRaspberryPiPin(pingPin)
 	hcsr04.echoPin = NewRaspberryPiPin(echoPin)
 
-	return hcsr04
+	return *hcsr04
 }
 
 func (hcsr04 *HCSR04) MeasureDistance() (cm float32) {
