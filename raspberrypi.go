@@ -30,7 +30,6 @@ type RaspberryPi struct {
 	WiFiConnectButton		RaspberryPiPin
 	TankOneWaterTempSensor  ds18b20
 	unitTwoAmbientTemp      ds18b20
-	tankOneWaterLevelSensor Sensor
 	ambientTempSensor		*mcp9808Sensor
 	AirPumpPin              RaspberryPiPin
 	MQTTClient              MQTTComms
@@ -54,8 +53,6 @@ func NewRaspberryPi() *RaspberryPi {
 
 	pi.TankOneWaterTempSensor.id = "28-0316838ca7ff"
 	pi.unitTwoAmbientTemp.id = "28-0316838b3aff"
-
-	pi.tankOneWaterLevelSensor = NewSensor(5)
 
 	pi.AirPumpPin = NewRaspberryPiPin(21)
 	pi.AirPumpPin.SetMode(rpio.Output)
@@ -141,10 +138,10 @@ func (pi RaspberryPi) startSensorCycle() {
 }
 
 func (pi RaspberryPi) checkWaterLevels() {
-	tankOneState := pi.tankOneWaterLevelSensor.getState()
-	if tankOneState == rpio.High {
-		pi.alertChannel <- LowWaterLevel
-	}
+	//tankOneState := pi.tankOneWaterLevelSensor.getState()
+	//if tankOneState == rpio.High {
+	//	pi.alertChannel <- LowWaterLevel
+	//}
 }
 
 func (pi RaspberryPi) getCPUTemp() float64 {
