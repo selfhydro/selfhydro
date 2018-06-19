@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func TestReadDistance(t *testing.T){
+func TestReadDistance(t *testing.T) {
 	t.Run("Should get distance of object", func(t *testing.T) {
 		hc := new(HCSR04)
 		hc.echoPin = new(mockRaspberryPiPinImpl)
@@ -14,20 +14,20 @@ func TestReadDistance(t *testing.T){
 		hc.pingPin.(*mockRaspberryPiPinImpl).stateOfPin = rpio.Low
 
 		go func() {
-			for i := 0; i < 10000 && hc.pingPin.ReadState() == rpio.Low; i++{
+			for i := 0; i < 10000 && hc.pingPin.ReadState() == rpio.Low; i++ {
 
 			}
-			for ;hc.pingPin.ReadState() == rpio.High; {
+			for ; hc.pingPin.ReadState() == rpio.High; {
 
 			}
-			time.Sleep(time.Microsecond*2)
+			time.Sleep(time.Microsecond * 2)
 			hc.echoPin.(*mockRaspberryPiPinImpl).stateOfPin = rpio.High
-			time.Sleep(time.Microsecond*58)
+			time.Sleep(time.Microsecond * 58)
 			hc.echoPin.(*mockRaspberryPiPinImpl).stateOfPin = rpio.Low
 		}()
 		distance := hc.MeasureDistance()
 
-		if distance > 1.1 || distance < 0.9{
+		if distance > 1.1 || distance < 0.9 {
 			t.Errorf("Distance not measured as expected, was %f but expected 1", distance)
 		}
 	})

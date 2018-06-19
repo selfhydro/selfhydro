@@ -18,6 +18,8 @@ func setupMock() *RaspberryPi {
 	mockPi.WiFiConnectButton = new(mockRaspberryPiPinImpl)
 	mockPi.AirPumpPin = new(mockRaspberryPiPinImpl)
 	mockPi.GrowLedPin = new(mockRaspberryPiPinImpl)
+	mockPi.WaterLevelSensor = new(mockUltrasonicSensor)
+	mockPi.ambientTempSensor = new(mockAmbientTemp)
 	mockPi.alertChannel = make(chan string)
 	return mockPi
 }
@@ -49,7 +51,6 @@ func TestHydroCycle(t *testing.T) {
 		if <-mockPi.alertChannel != LowWaterLevel {
 			t.Error("Channel should have low level alert")
 		}
-
 	})
 	
 	t.Run("Test that button activates wifi-connect ap", func(t *testing.T) {

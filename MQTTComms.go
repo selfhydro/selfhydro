@@ -18,9 +18,9 @@ type MQTTComms interface {
 
 type SensorMessage struct {
 	UnitOneWaterTemp   float64 `json:"unitOneWaterTemp"`
-	UnitTwoAmbientTemp float64 `json:"unitTwoAmbientTemp"`
 	AmbientTemp		   float32 `json:"ambientTemp"`
 	PiCPUTemp          float64 `json:"piCPUTemp"`
+	WaterLevel		   float32 `json:"waterLevel"`
 	Time               string  `json:"time"`
 }
 
@@ -127,8 +127,8 @@ func createJWTToken(projectId string) (string, error) {
 	return tokenString, err
 }
 
-func CreateSensorMessage(tempUnitOne float64, tempUnitTwo float64, ambientTemp float32, piCPUTemp float64) (string, error) {
-	m := SensorMessage{tempUnitOne, tempUnitTwo, ambientTemp, piCPUTemp, time.Now().Format("20060102150405")}
+func CreateSensorMessage(tempUnitOne float64, ambientTemp float32, piCPUTemp float64, waterLevel float32) (string, error) {
+	m := SensorMessage{tempUnitOne,  ambientTemp, piCPUTemp, waterLevel,time.Now().Format("20060102150405")}
 	jsonMsg, err := json.Marshal(m)
 	return string(jsonMsg), err
 }

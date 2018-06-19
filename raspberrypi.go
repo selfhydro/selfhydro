@@ -29,10 +29,10 @@ const (
 type RaspberryPi struct {
 	GrowLedPin              RaspberryPiPin
 	WiFiConnectButton		RaspberryPiPin
-	WaterLevelSensor		HCSR04
+	WaterLevelSensor		UltrasonicSensor
 	TankOneWaterTempSensor  ds18b20
 	unitTwoAmbientTemp      ds18b20
-	ambientTempSensor		*mcp9808Sensor
+	ambientTempSensor		AmbientTempSensor
 	AirPumpPin              RaspberryPiPin
 	MQTTClient              MQTTComms
 	alertChannel            chan string
@@ -64,7 +64,7 @@ func NewRaspberryPi() *RaspberryPi {
 	pi.MQTTClient = new(mqttComms)
 	pi.MQTTClient.ConnectDevice()
 
-	pi.ambientTempSensor, _ = Newmcp9808Sensor()
+	pi.ambientTempSensor, _ = NewMCP9808Sensor()
 
 	pi.alertChannel = make(chan string, 5)
 
@@ -98,8 +98,8 @@ func (pi *RaspberryPi) StopSystem() {
 	rpio.Close()
 }
 
-func (pi *RaspberryPi) publishState(tankOneTemp float64, tankTwoTemp float64, ambientTemp float32, CPUTemp float64) {
-	message, _ := CreateSensorMessage(tankOneTemp, tankTwoTemp, ambientTemp, CPUTemp)
+func (pi *RaspberryPi) publishState(waterTemp float64, ambientTemp float32, CPUTemp float64, waterLevel float32) {
+	message, _ := CreateSensorMessage(waterTemp, ambientTemp, CPUTemp, waterLevel)
 	pi.MQTTClient.publishMessage(EVENTSTOPIC, message)
 }
 
@@ -111,7 +111,6 @@ func (pi RaspberryPi) startLightCycle() {
 			pi.changeLEDState(turnOnTime, turnOffTime)
 			time.Sleep(time.Second * 4)
 		}
-
 	}()
 }
 func (pi RaspberryPi) changeLEDState(turnOnTime time.Time, turnOffTime time.Time) {
@@ -129,23 +128,23 @@ func (pi RaspberryPi) startSensorCycle() {
 		for {
 			fmt.Println("Sending sensor readings....")
 			tankOneTemp := pi.TankOneWaterTempSensor.ReadTemperature()
-			tankTwoTemp := pi.unitTwoAmbientTemp.ReadTemperature()
 			CPUTemp := pi.getCPUTemp()
-			pi.checkWaterLevels()
+			waterLevel := pi.checkWaterLevels()
 			ambientTemp := pi.ambientTempSensor.GetTemp()
-			pi.publishState(tankOneTemp, tankTwoTemp, ambientTemp, CPUTemp)
-			time.Sleep(time.Hour * 4)
+			pi.publishState(tankOneTemp, ambientTemp, CPUTemp, waterLevel)
+			time.Sleep(time.Hour * 3)
 		}
 
 	}()
 }
 
-func (pi RaspberryPi) checkWaterLevels() {
+func (pi RaspberryPi) checkWaterLevels() (level float32) {
 	waterLevel := pi.WaterLevelSensor.MeasureDistance()
 	if waterLevel <= LowWaterDefault {
 		pi.alertChannel <- LowWaterLevel
 	}
 	log.Printf("Water level is %f", waterLevel)
+	return waterLevel
 }
 
 func (pi RaspberryPi) getCPUTemp() float64 {

@@ -6,13 +6,16 @@ import (
 	"errors"
 )
 
+type AmbientTempSensor interface {
+	GetTemp() float32
+}
 
 type mcp9808Sensor struct {
 	address []uint8
-	temp float32
+	temp    float32
 }
 
-func Newmcp9808Sensor() (*mcp9808Sensor, error)  {
+func NewMCP9808Sensor() (AmbientTempSensor, error) {
 
 	sensor := mcp9808Sensor{}
 	sensor.address = mcp9808.Find()
@@ -35,5 +38,3 @@ func (sensor *mcp9808Sensor) GetTemp() float32 {
 
 	return sensor.temp
 }
-
-
