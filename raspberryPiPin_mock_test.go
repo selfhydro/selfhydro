@@ -21,3 +21,13 @@ func (r *mockRaspberryPiPinImpl) WriteState(state rpio.State) {
 func (r *mockRaspberryPiPinImpl) SetMode(mode rpio.Mode) {
 
 }
+
+func (r *mockRaspberryPiPinImpl) Frequency(freq int){
+}
+
+func (r *mockRaspberryPiPinImpl) DutyCycle(dutyLen, cycleLen uint32) {
+}
+
+func (r *mockRaspberryPiPinImpl) Toggle() {
+}
+

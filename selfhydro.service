@@ -8,7 +8,6 @@ WorkingDirectory=/selfhydro
 StandardOutput=inherit
 StandardError=inherit
 Restart=always
-User=root
 
 [Install]
 WantedBy=default.target

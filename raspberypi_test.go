@@ -8,20 +8,21 @@ import (
 	"log"
 	"strings"
 	"os"
+	"fmt"
 )
 
 
 func setupMock() *RaspberryPi {
-	mockPi := new(RaspberryPi)
-	mockPi.MQTTClient = new(mockMQTTComms)
+	testPi := new(RaspberryPi)
+	testPi.MQTTClient = new(mockMQTTComms)
 
-	mockPi.WiFiConnectButton = new(mockRaspberryPiPinImpl)
-	mockPi.AirPumpPin = new(mockRaspberryPiPinImpl)
-	mockPi.GrowLedPin = new(mockRaspberryPiPinImpl)
-	mockPi.WaterLevelSensor = new(mockUltrasonicSensor)
-	mockPi.ambientTempSensor = new(mockAmbientTemp)
-	mockPi.alertChannel = make(chan string)
-	return mockPi
+	testPi.WiFiConnectButton = new(mockRaspberryPiPinImpl)
+	testPi.AirPumpPin = new(mockRaspberryPiPinImpl)
+	testPi.GrowLedPin = new(mockRaspberryPiPinImpl)
+	testPi.WaterLevelSensor = new(mockUltrasonicSensor)
+	testPi.ambientTempSensor = new(mockAmbientTemp)
+	testPi.alertChannel = make(chan string)
+	return testPi
 }
 
 func TestHydroCycle(t *testing.T) {
@@ -48,9 +49,18 @@ func TestHydroCycle(t *testing.T) {
 
 	t.Run("Test Water Level sensor", func(t *testing.T) {
 		mockPi.startSensorCycle()
-		if <-mockPi.alertChannel != LowWaterLevel {
-			t.Error("Channel should have low level alert")
+		select {
+		case x, ok := <- mockPi.alertChannel:
+			if ok {
+				fmt.Printf("Value %d was read.\n", x)
+			} else {
+				fmt.Println("Channel closed!")
+				t.Error("Channel should have low level alert")
+			}
+		default:
+				t.Error("Channel should have low level alert")
 		}
+
 	})
 	
 	t.Run("Test that button activates wifi-connect ap", func(t *testing.T) {

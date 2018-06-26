@@ -29,9 +29,9 @@ const (
 type RaspberryPi struct {
 	GrowLedPin              RaspberryPiPin
 	WiFiConnectButton		RaspberryPiPin
+	WiFiConnectButtonLED	RaspberryPiPin
 	WaterLevelSensor		UltrasonicSensor
-	TankOneWaterTempSensor  ds18b20
-	unitTwoAmbientTemp      ds18b20
+	WaterTempSensor  		ds18b20
 	ambientTempSensor		AmbientTempSensor
 	AirPumpPin              RaspberryPiPin
 	MQTTClient              MQTTComms
@@ -47,29 +47,42 @@ func NewRaspberryPi() *RaspberryPi {
 		os.Exit(1)
 	}
 
-	pi.WaterLevelSensor = NewHCSR04Sensor(36,38)
+	pi.WaterLevelSensor = NewHCSR04Sensor(16,17)
 
-	pi.WiFiConnectButton = NewRaspberryPiPin(40)
+	pi.WiFiConnectButton = NewRaspberryPiPin(13)
 	pi.WiFiConnectButton.SetMode(rpio.Input)
+	pi.WiFiConnectButtonLED = NewRaspberryPiPin(14)
+	pi.WiFiConnectButtonLED.SetMode(rpio.Output)
 
 	pi.GrowLedPin = NewRaspberryPiPin(19)
 	pi.GrowLedPin.SetMode(rpio.Output)
 
-	pi.TankOneWaterTempSensor.id = "28-0316838ca7ff"
-	pi.unitTwoAmbientTemp.id = "28-0316838b3aff"
+	pi.WaterTempSensor.id = "28-0316838ca7ff"
 
 	pi.AirPumpPin = NewRaspberryPiPin(21)
 	pi.AirPumpPin.SetMode(rpio.Output)
 
 	pi.MQTTClient = new(mqttComms)
-	pi.MQTTClient.ConnectDevice()
+
+	if err := pi.MQTTClient.ConnectDevice(); err != nil {
+		pi.handleConnectionError()
+	}
 
 	pi.ambientTempSensor, _ = NewMCP9808Sensor()
 
 	pi.alertChannel = make(chan string, 5)
 
-
 	return pi
+}
+func (pi *RaspberryPi) handleConnectionError() {
+	log.Print("Could not connect device to IoT platform\n Are you connected to the web?")
+	for {
+		pi.WiFiConnectButtonLED.Toggle()
+		time.Sleep(time.Second)
+		if pi.WiFiConnectButton.ReadState() == rpio.High {
+			break
+		}
+	}
 }
 
 func (pi *RaspberryPi) StartHydroponics() {
@@ -99,8 +112,12 @@ func (pi *RaspberryPi) StopSystem() {
 }
 
 func (pi *RaspberryPi) publishState(waterTemp float64, ambientTemp float32, CPUTemp float64, waterLevel float32) {
-	message, _ := CreateSensorMessage(waterTemp, ambientTemp, CPUTemp, waterLevel)
-	pi.MQTTClient.publishMessage(EVENTSTOPIC, message)
+	message, err := CreateSensorMessage(waterTemp, ambientTemp, CPUTemp, waterLevel)
+	if err != nil {
+		log.Printf("Error creating sensor message: %s", err)
+	}
+	fmt.Print(message)
+	pi.MQTTClient.publishMessage("/devices/" + pi.MQTTClient.GetDeviceID() +"/events", message)
 }
 
 func (pi RaspberryPi) startLightCycle() {
@@ -127,11 +144,11 @@ func (pi RaspberryPi) startSensorCycle() {
 	go func() {
 		for {
 			fmt.Println("Sending sensor readings....")
-			tankOneTemp := pi.TankOneWaterTempSensor.ReadTemperature()
+			tankOneTemp := pi.WaterTempSensor.ReadTemperature()
 			CPUTemp := pi.getCPUTemp()
-			waterLevel := pi.checkWaterLevels()
+			//waterLevel := pi.checkWaterLevels()
 			ambientTemp := pi.ambientTempSensor.GetTemp()
-			pi.publishState(tankOneTemp, ambientTemp, CPUTemp, waterLevel)
+			pi.publishState(tankOneTemp, ambientTemp, CPUTemp, 0)
 			time.Sleep(time.Hour * 3)
 		}
 

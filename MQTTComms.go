@@ -12,31 +12,33 @@ import (
 )
 
 type MQTTComms interface {
-	ConnectDevice()
+	ConnectDevice() error
 	publishMessage(topic string, message string)
+	GetDeviceID() string
 }
 
 type SensorMessage struct {
-	UnitOneWaterTemp   float64 `json:"unitOneWaterTemp"`
+	WaterTemp   float64 `json:"waterTemp"`
 	AmbientTemp		   float32 `json:"ambientTemp"`
 	PiCPUTemp          float64 `json:"piCPUTemp"`
 	WaterLevel		   float32 `json:"waterLevel"`
 	Time               string  `json:"time"`
 }
 
-const (
-	location   = "asia-east1"
-	projectId  = "selfhydro-197504"
-	registryId = "raspberry-pis"
-	deviceId   = "original-hydro"
-)
+type MQTTDetail struct {
+	Location   string `json:"location"`
+	ProjectID  string `json:"projectID"`
+	RegistryID string `json:"registryID"`
+	DeviceID   string `json:"deviceID"`
+}
 
 type mqttComms struct {
 	client MQTT.Client
+	mqttDetails MQTTDetail
 }
 
 const (
-	EVENTSTOPIC      = "/devices/" + deviceId + "/events"
+	//EVENTSTOPIC      = "/devices/" + %s + "/events"
 	JWTEXPIRYINHOURS = 6
 )
 
@@ -46,8 +48,11 @@ var f MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
 }
 
 
-func (mqtt *mqttComms) ConnectDevice() {
-	mqtt.authenticateDevice()
+func (mqtt *mqttComms) ConnectDevice() error {
+	mqtt.loadMQTTConfig()
+	if err := mqtt.authenticateDevice(); err != nil {
+		return err
+	}
 	timerTillRefresh := time.NewTimer(JWTEXPIRYINHOURS * time.Hour)
 	go func() {
 		for {
@@ -58,16 +63,35 @@ func (mqtt *mqttComms) ConnectDevice() {
 			timerTillRefresh = time.NewTimer(JWTEXPIRYINHOURS * time.Hour)
 		}
 	}()
+
+	return nil
 }
 
-func (mqtt *mqttComms) authenticateDevice() {
+func (mqtt *mqttComms) GetDeviceID() string {
+	return mqtt.mqttDetails.DeviceID
+}
 
-	tokenString, _ := createJWTToken(projectId)
+func (mqtt *mqttComms) loadMQTTConfig(){
+	file, err := ioutil.ReadFile("/selfhydro/config/googleCloudIoTConfig.json")
+	if err != nil {
+		log.Printf("Could not find config file for Google Core IoT connection")
+		log.Print(err)
+	}
+
+	err = json.Unmarshal(file, &mqtt.mqttDetails)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (mqtt *mqttComms) authenticateDevice() error {
+
+	tokenString, _ := createJWTToken(mqtt.mqttDetails.ProjectID)
 
 	opts := MQTT.NewClientOptions().AddBroker("ssl://mqtt.googleapis.com:8883")
 
-	clientId := "projects/" + projectId + "/locations/" + location + "/registries/" + registryId + "/devices/" + deviceId
-
+	clientId := "projects/" + mqtt.mqttDetails.ProjectID + "/locations/" + mqtt.mqttDetails.Location + "/registries/" + mqtt.mqttDetails.RegistryID + "/devices/" + mqtt.mqttDetails.DeviceID
+	fmt.Print(clientId)
 	opts.SetClientID(clientId)
 	opts.SetDefaultPublishHandler(f)
 	opts.SetPassword(tokenString)
@@ -76,9 +100,16 @@ func (mqtt *mqttComms) authenticateDevice() {
 
 	mqtt.client = MQTT.NewClient(opts)
 	if token := mqtt.client.Connect(); token.Wait() && token.Error() != nil {
-		panic(token.Error())
+		if token.Error().Error() == "" {
+
+		} else {
+
+			log.Print(token.Error())
+			return token.Error()
+		}
 	}
 
+	return nil
 }
 func (mqtt *mqttComms) subscribeToTopic(topic string) {
 	if token := mqtt.client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
@@ -122,13 +153,11 @@ func createJWTToken(projectId string) (string, error) {
 	rsaPrivateKey, _ := jwt.ParseRSAPrivateKeyFromPEM(key)
 
 	tokenString, err := token.SignedString(rsaPrivateKey)
-
-	fmt.Println(tokenString, err)
 	return tokenString, err
 }
 
-func CreateSensorMessage(tempUnitOne float64, ambientTemp float32, piCPUTemp float64, waterLevel float32) (string, error) {
-	m := SensorMessage{tempUnitOne,  ambientTemp, piCPUTemp, waterLevel,time.Now().Format("20060102150405")}
+func CreateSensorMessage(waterTemp float64, ambientTemp float32, piCPUTemp float64, waterLevel float32) (string, error) {
+	m := SensorMessage{waterTemp,  ambientTemp, piCPUTemp, waterLevel,time.Now().Format("20060102150405")}
 	jsonMsg, err := json.Marshal(m)
 	return string(jsonMsg), err
 }

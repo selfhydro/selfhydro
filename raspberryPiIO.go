@@ -6,6 +6,9 @@ type RaspberryPiPin interface {
 	ReadState() rpio.State
 	WriteState(state rpio.State)
 	SetMode(mode rpio.Mode)
+	Frequency(freq int)
+	DutyCycle(dutyLen, cycleLen uint32)
+	Toggle()
 }
 
 type raspberryPiPinImpl struct {
@@ -30,3 +33,14 @@ func (r *raspberryPiPinImpl) SetMode(mode rpio.Mode) {
 	r.rpioPin.Mode(mode)
 }
 
+func (r *raspberryPiPinImpl) Frequency(freq int){
+	r.rpioPin.Freq(freq)
+}
+
+func (r *raspberryPiPinImpl) DutyCycle(dutyLen, cycleLen uint32) {
+	r.rpioPin.DutyCycle(dutyLen, cycleLen)
+}
+
+func (r *raspberryPiPinImpl) Toggle() {
+	r.rpioPin.Toggle()
+}
