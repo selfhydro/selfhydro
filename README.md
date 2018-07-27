@@ -1,6 +1,6 @@
 # SelfHydro - Automated Hydroponics
 
-This is an automated open-source hydroponic system. 
+This is an automated hydroponic system. 
 
 The system currently consists of the following:
 - Lights on a timed cycle 
@@ -23,6 +23,15 @@ Install using:
 ``` 
 bash <(curl -L https://github.com/resin-io/resin-wifi-connect/raw/master/scripts/raspbian-install.sh)
 ```
+
+### Setting up RaspberryPi for the first time
+
+- Enable 1-wire:
+   + `sudo nano /boot/config.txt`
+   + `sudo reboot`
+   + `sudo modprobe w1-gpio`
+   + `sudo modprobe w1-therm`
+   
 
 
 ### Setting Selfhydro up as a service

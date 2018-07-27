@@ -11,6 +11,7 @@ import (
 	"strings"
 	"os/exec"
 	"syscall"
+	"encoding/json"
 )
 
 type Controller interface {
@@ -24,7 +25,18 @@ type Controller interface {
 const (
 	LowWaterLevel = "LOW_WATER"
 	LowWaterDefault = 1
+	Stop = "STOP"
+	StartSlow = "START-SLOW"
+	StartFast = "START-FAST"
 )
+
+type configData struct {
+	WaterTempSensorId string `json:"waterTempSensorId"`
+	LedOnTime string `json:"ledOnTime"`
+	LedOffTime string `json:"ledOffTime"`
+}
+
+
 
 type RaspberryPi struct {
 	GrowLedPin              RaspberryPiPin
@@ -36,6 +48,9 @@ type RaspberryPi struct {
 	AirPumpPin              RaspberryPiPin
 	MQTTClient              MQTTComms
 	alertChannel            chan string
+	ledChannel 				chan string
+	ledStartTime			string
+	ledOffTime				string
 }
 
 func NewRaspberryPi() *RaspberryPi {
@@ -57,12 +72,12 @@ func NewRaspberryPi() *RaspberryPi {
 	pi.GrowLedPin = NewRaspberryPiPin(19)
 	pi.GrowLedPin.SetMode(rpio.Output)
 
-	pi.WaterTempSensor.id = "28-0316838ca7ff"
-
 	pi.AirPumpPin = NewRaspberryPiPin(21)
 	pi.AirPumpPin.SetMode(rpio.Output)
 
 	pi.MQTTClient = new(mqttComms)
+
+	pi.loadConfig()
 
 	if err := pi.MQTTClient.ConnectDevice(); err != nil {
 		pi.handleConnectionError()
@@ -74,8 +89,29 @@ func NewRaspberryPi() *RaspberryPi {
 
 	return pi
 }
+
+func (pi *RaspberryPi) loadConfig() {
+	data, err := ioutil.ReadFile("./config/configData.json")
+	if err != nil {
+		log.Print("error loading config data for raspberry pi")
+		log.Print(err.Error())
+		return
+	}
+
+	var configData = new(configData)
+	err = json.Unmarshal(data, &configData)
+	if err != nil {
+		log.Print("error parsing config data")
+		log.Print(err.Error())
+	}
+	pi.ledStartTime = configData.LedOnTime
+	pi.ledOffTime = configData.LedOffTime
+	pi.WaterTempSensor.id = configData.WaterTempSensorId
+}
+
 func (pi *RaspberryPi) handleConnectionError() {
 	log.Print("Could not connect device to IoT platform\n Are you connected to the web?")
+	pi.startWifiConnect()
 	for {
 		pi.WiFiConnectButtonLED.Toggle()
 		time.Sleep(time.Second)
@@ -121,8 +157,8 @@ func (pi *RaspberryPi) publishState(waterTemp float64, ambientTemp float32, CPUT
 }
 
 func (pi RaspberryPi) startLightCycle() {
-	turnOnTime, _ := time.Parse("15:04:05", "04:45:00")
-	turnOffTime, _ := time.Parse("15:04:05", "23:45:00")
+	turnOnTime, _ := time.Parse("15:04:05", pi.ledStartTime)
+	turnOffTime, _ := time.Parse("15:04:05", pi.ledOffTime)
 	go func() {
 		for {
 			pi.changeLEDState(turnOnTime, turnOffTime)
@@ -214,21 +250,33 @@ func (pi *RaspberryPi)checkIfWifiButtonIsPressed() {
 			}
 		}
 		if time.Since(startTime) >= time.Second*2 {
-			binary, lookErr := exec.LookPath("wifi-connect")
-			if lookErr != nil {
-				log.Printf("Error: Could not find wifi-connect")
-			}
 
-			args := []string{"wifi-connect", "-s=Selfhydro Connect"}
-
-			env := os.Environ()
-
-			execErr := syscall.Exec(binary, args, env)
-			if execErr != nil {
-				log.Printf("Error: Could not start wifi-connect")
-			}
+			pi.startWifiConnect()
 		}
 	}
+}
+func (pi RaspberryPi) startWifiConnect() {
+	binary, lookErr := exec.LookPath("wifi-connect")
+	if lookErr != nil {
+		log.Printf("Error: Could not find wifi-connect")
+	}
+	args := []string{"wifi-connect", "-s=Selfhydro Connect"}
+	env := os.Environ()
+	execErr := syscall.Exec(binary, args, env)
+	if execErr != nil {
+		log.Printf("Error: Could not start wifi-connect")
+	}
+}
+
+func (pi *RaspberryPi)flashLED() {
+	go func() {
+		for {
+			pi.WiFiConnectButtonLED.Toggle()
+			time.Sleep(time.Millisecond * 50)
+
+		}
+
+	}()
 }
 
 func betweenTime(startTime time.Time, endTime time.Time) bool {

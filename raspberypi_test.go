@@ -8,7 +8,6 @@ import (
 	"log"
 	"strings"
 	"os"
-	"fmt"
 )
 
 
@@ -27,6 +26,16 @@ func setupMock() *RaspberryPi {
 
 func TestHydroCycle(t *testing.T) {
 	mockPi := setupMock()
+	t.Run("Load config for device from file", func(t *testing.T) {
+		mockPi.loadConfig()
+		if mockPi.ledStartTime != "6:00" {
+			t.Errorf("Did not load led start time from file, %s", mockPi.ledStartTime)
+		}
+		if mockPi.ledOffTime != "23:00" {
+			t.Errorf("Did not load end time from file")
+		}
+	})
+
 	t.Run("Testing Grow LEDS", func(t *testing.T) {
 		startTimeString := time.Now().Add(-time.Minute).Format("15:04:05")
 		startTime, _ := time.Parse("15:04:05", startTimeString)
@@ -47,21 +56,20 @@ func TestHydroCycle(t *testing.T) {
 		}
 	})
 
-	t.Run("Test Water Level sensor", func(t *testing.T) {
-		mockPi.startSensorCycle()
-		select {
-		case x, ok := <- mockPi.alertChannel:
-			if ok {
-				fmt.Printf("Value %d was read.\n", x)
-			} else {
-				fmt.Println("Channel closed!")
-				t.Error("Channel should have low level alert")
-			}
-		default:
-				t.Error("Channel should have low level alert")
-		}
-
-	})
+	//t.Run("Test Water Level sensor", func(t *testing.T) {
+	//	mockPi.startSensorCycle()
+	//	select {
+	//	case x, ok := <- mockPi.alertChannel:
+	//		if ok {
+	//			fmt.Printf("Value %d was read.\n", x)
+	//		} else {
+	//			fmt.Println("Channel closed!")
+	//			t.Error("Channel should have low level alert")
+	//		}
+	//	default:
+	//			t.Error("Channel should have low level alert")
+	//	}
+	//})
 	
 	t.Run("Test that button activates wifi-connect ap", func(t *testing.T) {
 		mockPi.WiFiConnectButton.(*mockRaspberryPiPinImpl).stateOfPin = rpio.High
@@ -69,8 +77,6 @@ func TestHydroCycle(t *testing.T) {
 		time.Sleep(time.Second*2)
 		mockPi.WiFiConnectButton.(*mockRaspberryPiPinImpl).stateOfPin = rpio.Low
 		time.Sleep(time.Second)
-
-
 	})
 
 	t.Run("Test when there are no alerts coming in", func(t *testing.T) {
