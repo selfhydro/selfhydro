@@ -136,6 +136,8 @@ func (pi *RaspberryPi) monitorAlerts() {
 			switch alert {
 			case LowWaterLevel:
 				log.Print("Water Level is Low")
+			default:
+				log.Print("WARNING CHECK SYSTEM")
 			}
 		}
 	}()

@@ -2,7 +2,6 @@ package main
 
 import (
 	"testing"
-	"fmt"
 )
 
 
@@ -10,7 +9,6 @@ func TestGetID(t *testing.T) {
 	tempSensor := new(ds18b20)
 	dataDirectory = "testdata"
 	tempSensor.GetID()
-	fmt.Print(tempSensor.id)
 	if tempSensor.id != "testSensor" {
 		t.Error("Error: Did not find correct ID for sensor")
 	}

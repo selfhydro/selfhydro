@@ -99,11 +99,11 @@ func TestHydroCycle(t *testing.T) {
 		log.SetOutput(&buf)
 		defer log.SetOutput(os.Stdout)
 		mockPi.monitorAlerts()
-		mockPi.startSensorCycle()
+		mockPi.alertChannel <- "warning"
 		time.Sleep(time.Millisecond)
 		out := buf.String()
 
-		if !strings.Contains(out, "Water Level is Low")   {
+		if !strings.Contains(out, "WARNING CHECK SYSTEM")   {
 			t.Error("Water Level alert not received")
 		}
 	})

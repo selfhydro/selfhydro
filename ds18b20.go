@@ -18,7 +18,7 @@ var dataDirectory = "sys/bus/w1/devices"
 var ErrReadSensor = errors.New("failed to read sensor temperature")
 
 //Assumes that there is only one 1-wire device connected
-func (ds ds18b20) GetID() {
+func (ds *ds18b20) GetID() {
 	files, err := ioutil.ReadDir(dataDirectory)
 	if err != nil {
 		log.Printf("error reading directory: %v", err)
@@ -28,7 +28,6 @@ func (ds ds18b20) GetID() {
 		if !strings.Contains(file.Name(), "w1") {
 			ds.id = file.Name()
 			log.Print(ds.id)
-
 		}
 	}
 }
