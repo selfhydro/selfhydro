@@ -30,6 +30,8 @@ const (
 	StartFast = "START-FAST"
 )
 
+var configLocation = "/selfhydro/config/configData.json"
+
 type configData struct {
 	WaterTempSensorId string `json:"waterTempSensorId"`
 	LedOnTime string `json:"ledOnTime"`
@@ -91,7 +93,7 @@ func NewRaspberryPi() *RaspberryPi {
 }
 
 func (pi *RaspberryPi) loadConfig() {
-	data, err := ioutil.ReadFile("./config/configData.json")
+	data, err := ioutil.ReadFile(configLocation)
 	if err != nil {
 		log.Print("error loading config data for raspberry pi")
 		log.Print(err.Error())

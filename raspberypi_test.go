@@ -26,7 +26,9 @@ func setupMock() *RaspberryPi {
 
 func TestHydroCycle(t *testing.T) {
 	mockPi := setupMock()
+
 	t.Run("Load config for device from file", func(t *testing.T) {
+		configLocation = "./config/configData.json"
 		mockPi.loadConfig()
 		if mockPi.ledStartTime != "6:00" {
 			t.Errorf("Did not load led start time from file, %s", mockPi.ledStartTime)

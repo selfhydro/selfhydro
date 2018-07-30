@@ -63,7 +63,6 @@ func (mqtt *mqttComms) ConnectDevice() error {
 			timerTillRefresh = time.NewTimer(JWTEXPIRYINHOURS * time.Hour)
 		}
 	}()
-
 	return nil
 }
 
