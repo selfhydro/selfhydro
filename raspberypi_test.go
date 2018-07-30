@@ -30,10 +30,14 @@ func TestHydroCycle(t *testing.T) {
 	t.Run("Load config for device from file", func(t *testing.T) {
 		configLocation = "./config/configData.json"
 		mockPi.loadConfig()
-		if mockPi.ledStartTime != "6:00" {
+		ledStartTime, _ := time.Parse("15:04:05", "6:00:00")
+
+		if mockPi.ledStartTime != ledStartTime {
 			t.Errorf("Did not load led start time from file, %s", mockPi.ledStartTime)
 		}
-		if mockPi.ledOffTime != "23:00" {
+		ledOffTime, _ := time.Parse("15:04:05", "23:00:00")
+
+		if mockPi.ledOffTime != ledOffTime {
 			t.Errorf("Did not load end time from file")
 		}
 	})

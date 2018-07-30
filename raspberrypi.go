@@ -51,8 +51,8 @@ type RaspberryPi struct {
 	MQTTClient              MQTTComms
 	alertChannel            chan string
 	ledChannel 				chan string
-	ledStartTime			string
-	ledOffTime				string
+	ledStartTime			time.Time
+	ledOffTime				time.Time
 }
 
 func NewRaspberryPi() *RaspberryPi {
@@ -106,8 +106,16 @@ func (pi *RaspberryPi) loadConfig() {
 		log.Print("error parsing config data")
 		log.Print(err.Error())
 	}
-	pi.ledStartTime = configData.LedOnTime
-	pi.ledOffTime = configData.LedOffTime
+	startTimeString := configData.LedOnTime
+	pi.ledStartTime, err = time.Parse("15:04:05", startTimeString)
+	if err != nil {
+		log.Printf("error could not parse turn on time, %s", err.Error())
+	}
+	endTimeString := configData.LedOffTime
+	pi.ledOffTime, err = time.Parse("15:04:05", endTimeString)
+	if err != nil {
+		log.Printf("error could not parse turn off time, %s", err.Error())
+	}
 	pi.WaterTempSensor.id = configData.WaterTempSensorId
 }
 
@@ -161,11 +169,10 @@ func (pi *RaspberryPi) publishState(waterTemp float64, ambientTemp float32, CPUT
 }
 
 func (pi RaspberryPi) startLightCycle() {
-	turnOnTime, _ := time.Parse("15:04:05", pi.ledStartTime)
-	turnOffTime, _ := time.Parse("15:04:05", pi.ledOffTime)
+	log.Printf("starting led cycle with on time at %s and off time at %s", pi.ledStartTime, pi.ledStartTime)
 	go func() {
 		for {
-			pi.changeLEDState(turnOnTime, turnOffTime)
+			pi.changeLEDState(pi.ledStartTime, pi.ledOffTime)
 			time.Sleep(time.Second * 4)
 		}
 	}()
