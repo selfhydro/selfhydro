@@ -32,12 +32,14 @@ func (ds *ds18b20) GetID() {
 	}
 }
 
-func (ds ds18b20) ReadTemperature() float64 {
+func (ds *ds18b20) ReadTemperature() float64 {
 
+	ds.GetID()
 	temp, err := ds.getTemp(ds.id)
 
 	if err != nil {
 		log.Printf("Error: Cant read temp of water tank")
+		log.Print(err.Error())
 		return 0.0
 	}
 	log.Printf("Water temperature: %.2f°C\n", temp)
