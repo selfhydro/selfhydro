@@ -13,7 +13,7 @@ type ds18b20 struct {
 	id string
 }
 
-var dataDirectory = "sys/bus/w1/devices"
+var dataDirectory = "/sys/bus/w1/devices/"
 
 var ErrReadSensor = errors.New("failed to read sensor temperature")
 
