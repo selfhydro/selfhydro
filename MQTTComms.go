@@ -47,6 +47,10 @@ var f MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
 	fmt.Printf("MSG: %s\n", msg.Payload())
 }
 
+var subscribeHandler MQTT.MessageHandler = func(client MQTT.Client, message MQTT.Message) {
+	fmt.Printf("MSG: %s\n", message.Payload())
+}
+
 
 func (mqtt *mqttComms) ConnectDevice() error {
 	mqtt.loadMQTTConfig()
@@ -110,8 +114,8 @@ func (mqtt *mqttComms) authenticateDevice() error {
 
 	return nil
 }
-func (mqtt *mqttComms) subscribeToTopic(topic string) {
-	if token := mqtt.client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
+func (mqtt *mqttComms) subscribeToTopic(topic string, callback MQTT.MessageHandler) {
+	if token := mqtt.client.Subscribe(topic, 0, callback); token.Wait() && token.Error() != nil {
 		fmt.Println(token.Error())
 		os.Exit(1)
 	}

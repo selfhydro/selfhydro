@@ -1,17 +1,18 @@
 package main
 
 import (
-	"github.com/stianeikeland/go-rpio"
-	"log"
-	"time"
+	"encoding/json"
 	"fmt"
-	"os"
 	"io/ioutil"
+	"log"
+	"os"
+	"os/exec"
 	"strconv"
 	"strings"
-	"os/exec"
 	"syscall"
-	"encoding/json"
+	"time"
+
+	"github.com/stianeikeland/go-rpio"
 )
 
 type Controller interface {
@@ -23,36 +24,34 @@ type Controller interface {
 }
 
 const (
-	LowWaterLevel = "LOW_WATER"
+	LowWaterLevel   = "LOW_WATER"
 	LowWaterDefault = 1
-	Stop = "STOP"
-	StartSlow = "START-SLOW"
-	StartFast = "START-FAST"
+	Stop            = "STOP"
+	StartSlow       = "START-SLOW"
+	StartFast       = "START-FAST"
 )
 
 var configLocation = "/selfhydro/config/configData.json"
 
 type configData struct {
 	WaterTempSensorId string `json:"waterTempSensorId"`
-	LedOnTime string `json:"ledOnTime"`
-	LedOffTime string `json:"ledOffTime"`
+	LedOnTime         string `json:"ledOnTime"`
+	LedOffTime        string `json:"ledOffTime"`
 }
 
-
-
 type RaspberryPi struct {
-	GrowLedPin              RaspberryPiPin
-	WiFiConnectButton		RaspberryPiPin
-	WiFiConnectButtonLED	RaspberryPiPin
-	WaterLevelSensor		UltrasonicSensor
-	WaterTempSensor  		ds18b20
-	ambientTempSensor		AmbientTempSensor
-	AirPumpPin              RaspberryPiPin
-	MQTTClient              MQTTComms
-	alertChannel            chan string
-	ledChannel 				chan string
-	ledStartTime			time.Time
-	ledOffTime				time.Time
+	GrowLedPin           RaspberryPiPin
+	WiFiConnectButton    RaspberryPiPin
+	WiFiConnectButtonLED RaspberryPiPin
+	WaterLevelSensor     UltrasonicSensor
+	WaterTempSensor      ds18b20
+	ambientTempSensor    AmbientTempSensor
+	AirPumpPin           RaspberryPiPin
+	MQTTClient           MQTTComms
+	alertChannel         chan string
+	ledChannel           chan string
+	ledStartTime         time.Time
+	ledOffTime           time.Time
 }
 
 func NewRaspberryPi() *RaspberryPi {
@@ -64,7 +63,7 @@ func NewRaspberryPi() *RaspberryPi {
 		os.Exit(1)
 	}
 
-	pi.WaterLevelSensor = NewHCSR04Sensor(16,17)
+	pi.WaterLevelSensor = NewHCSR04Sensor(16, 17)
 
 	pi.WiFiConnectButton = NewRaspberryPiPin(13)
 	pi.WiFiConnectButton.SetMode(rpio.Input)
@@ -165,7 +164,11 @@ func (pi *RaspberryPi) publishState(waterTemp float64, ambientTemp float32, CPUT
 		log.Printf("Error creating sensor message: %s", err)
 	}
 	fmt.Print(message)
-	pi.MQTTClient.publishMessage("/devices/" + pi.MQTTClient.GetDeviceID() +"/events", message)
+	pi.MQTTClient.publishMessage("/devices/"+pi.MQTTClient.GetDeviceID()+"/events", message)
+}
+
+func (pi *RaspberryPi) updateConfig() {
+	// pi.MQTTClient.
 }
 
 func (pi RaspberryPi) startLightCycle() {
@@ -193,9 +196,9 @@ func (pi RaspberryPi) startSensorCycle() {
 			fmt.Println("Sending sensor readings....")
 			tankOneTemp := pi.WaterTempSensor.ReadTemperature()
 			CPUTemp := pi.getCPUTemp()
-			//waterLevel := pi.checkWaterLevels()
+			waterLevel := pi.checkWaterLevels()
 			ambientTemp := pi.ambientTempSensor.GetTemp()
-			pi.publishState(tankOneTemp, ambientTemp, CPUTemp, 0)
+			pi.publishState(tankOneTemp, ambientTemp, CPUTemp, waterLevel)
 			time.Sleep(time.Hour * 3)
 		}
 
@@ -252,7 +255,7 @@ func (pi *RaspberryPi) startWifiConnectCycle() {
 		}
 	}()
 }
-func (pi *RaspberryPi)checkIfWifiButtonIsPressed() {
+func (pi *RaspberryPi) checkIfWifiButtonIsPressed() {
 	if pi.WiFiConnectButton.ReadState() == rpio.High {
 		startTime := time.Now()
 		for {
@@ -279,7 +282,7 @@ func (pi RaspberryPi) startWifiConnect() {
 	}
 }
 
-func (pi *RaspberryPi)flashLED() {
+func (pi *RaspberryPi) flashLED() {
 	go func() {
 		for {
 			pi.WiFiConnectButtonLED.Toggle()
