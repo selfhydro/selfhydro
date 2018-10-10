@@ -84,7 +84,7 @@ func NewRaspberryPi() *RaspberryPi {
 		pi.handleConnectionError()
 	}
 
-	pi.ambientTempSensor, _ = NewMCP9808Sensor()
+	pi.ambientTempSensor, _ = NewTempSensor()
 
 	pi.alertChannel = make(chan string, 5)
 
@@ -207,6 +207,7 @@ func (pi RaspberryPi) startSensorCycle() {
 
 func (pi RaspberryPi) checkWaterLevels() (level float32) {
 	waterLevel := pi.WaterLevelSensor.MeasureDistance()
+	fmt.Print(waterLevel)
 	if waterLevel <= LowWaterDefault {
 		pi.alertChannel <- LowWaterLevel
 	}

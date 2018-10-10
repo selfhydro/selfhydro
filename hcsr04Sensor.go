@@ -38,9 +38,10 @@ func (hcsr04 *HCSR04) MeasureDistance() (cm float32) {
 	}
 	endTime := time.Now()
 
-	distance := float32(endTime.UnixNano()-startTime.UnixNano()) / float32(58*time.Microsecond)
+	distance := float32(endTime.Nanosecond()-startTime.Nanosecond()) / (58 * 1000)
 	return distance
 }
+
 func (hcsr04 *HCSR04) initPins() {
 	hcsr04.echoPin.SetMode(rpio.Output)
 	hcsr04.pingPin.SetMode(rpio.Output)
