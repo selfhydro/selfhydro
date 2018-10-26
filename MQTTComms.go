@@ -1,14 +1,15 @@
 package main
 
 import (
-	MQTT "github.com/eclipse/paho.mqtt.golang"
-	"github.com/dgrijalva/jwt-go"
-	"time"
-	"fmt"
-	"os"
-	"log"
-	"io/ioutil"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
+	"time"
+
+	"github.com/dgrijalva/jwt-go"
+	MQTT "github.com/eclipse/paho.mqtt.golang"
 )
 
 type MQTTComms interface {
@@ -18,11 +19,12 @@ type MQTTComms interface {
 }
 
 type SensorMessage struct {
-	WaterTemp   float64 `json:"waterTemp"`
-	AmbientTemp		   float32 `json:"ambientTemp"`
-	PiCPUTemp          float64 `json:"piCPUTemp"`
-	WaterLevel		   float32 `json:"waterLevel"`
-	Time               string  `json:"time"`
+	WaterTemp        float64 `json:"waterTemp"`
+	AmbientTemp      float32 `json:"ambientTemp"`
+	RelativeHumidity float32 `json:"relativeHumidity"`
+	PiCPUTemp        float64 `json:"piCPUTemp"`
+	WaterLevel       float32 `json:"waterLevel"`
+	Time             string  `json:"time"`
 }
 
 type MQTTDetail struct {
@@ -33,7 +35,7 @@ type MQTTDetail struct {
 }
 
 type mqttComms struct {
-	client MQTT.Client
+	client      MQTT.Client
 	mqttDetails MQTTDetail
 }
 
@@ -50,7 +52,6 @@ var f MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
 var subscribeHandler MQTT.MessageHandler = func(client MQTT.Client, message MQTT.Message) {
 	fmt.Printf("MSG: %s\n", message.Payload())
 }
-
 
 func (mqtt *mqttComms) ConnectDevice() error {
 	mqtt.loadMQTTConfig()
@@ -74,7 +75,7 @@ func (mqtt *mqttComms) GetDeviceID() string {
 	return mqtt.mqttDetails.DeviceID
 }
 
-func (mqtt *mqttComms) loadMQTTConfig(){
+func (mqtt *mqttComms) loadMQTTConfig() {
 	file, err := ioutil.ReadFile("/selfhydro/config/googleCloudIoTConfig.json")
 	if err != nil {
 		log.Printf("Could not find config file for Google Core IoT connection")
@@ -159,8 +160,8 @@ func createJWTToken(projectId string) (string, error) {
 	return tokenString, err
 }
 
-func CreateSensorMessage(waterTemp float64, ambientTemp float32, piCPUTemp float64, waterLevel float32) (string, error) {
-	m := SensorMessage{waterTemp,  ambientTemp, piCPUTemp, waterLevel,time.Now().Format("20060102150405")}
+func CreateSensorMessage(waterTemp float64, ambientTemp float32, relativeHumidity float32, piCPUTemp float64, waterLevel float32) (string, error) {
+	m := SensorMessage{waterTemp, ambientTemp, relativeHumidity, piCPUTemp, waterLevel, time.Now().Format("20060102150405")}
 	jsonMsg, err := json.Marshal(m)
 	return string(jsonMsg), err
 }

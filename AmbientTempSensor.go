@@ -8,7 +8,7 @@ import (
 )
 
 type AmbientTempSensor interface {
-	GetTemp() float32
+	GetReadings() (float32, float32)
 }
 
 type i2cTempSensor struct {
@@ -25,7 +25,7 @@ func NewTempSensor() (AmbientTempSensor, error) {
 	return &sensor, nil
 }
 
-func (tempSensor *i2cTempSensor) GetTemp() float32 {
+func (tempSensor *i2cTempSensor) GetReadings() (float32, float32) {
 	i2c, err := i2c.NewI2C(0x40, 1)
 	if err != nil {
 		log.Fatal(err)
@@ -50,5 +50,5 @@ func (tempSensor *i2cTempSensor) GetTemp() float32 {
 	log.Printf("Temprature in celsius = %v*C\n", temp)
 	tempSensor.temp = temp
 
-	return tempSensor.temp
+	return tempSensor.temp, tempSensor.humidity
 }

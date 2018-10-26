@@ -15,6 +15,8 @@ type HCSR04 struct {
 	pingPin RaspberryPiPin
 }
 
+const HardStop = 1000000
+
 func NewHCSR04Sensor(pingPin int, echoPin int) UltrasonicSensor {
 
 	hcsr04 := new(HCSR04)
@@ -27,19 +29,23 @@ func NewHCSR04Sensor(pingPin int, echoPin int) UltrasonicSensor {
 func (hcsr04 *HCSR04) MeasureDistance() (cm float32) {
 	hcsr04.initPins()
 
+	strobeZero := 0
+	strobeOne := 0
+
+	delayUs(200)
 	hcsr04.pingPin.WriteState(rpio.High)
-	time.Sleep(time.Microsecond * 15)
+	delayUs(15)
 	hcsr04.pingPin.WriteState(rpio.Low)
 
-	for i := 0; hcsr04.echoPin.ReadState() == rpio.Low; i++ {
+	for strobeZero = 0; strobeZero < HardStop && hcsr04.echoPin.ReadState() != rpio.High; strobeZero++ {
 	}
 	startTime := time.Now()
-	for hcsr04.echoPin.ReadState() == rpio.High {
+	for strobeOne = 0; strobeOne < HardStop && hcsr04.echoPin.ReadState() != rpio.Low; strobeOne++ {
+		delayUs(1)
 	}
 	endTime := time.Now()
 
-	distance := float32(endTime.Nanosecond()-startTime.Nanosecond()) / (58 * 1000)
-	return distance
+	return float32(endTime.UnixNano()-startTime.UnixNano()) / (58.0 * 1000)
 }
 
 func (hcsr04 *HCSR04) initPins() {
@@ -49,4 +55,8 @@ func (hcsr04 *HCSR04) initPins() {
 	hcsr04.pingPin.WriteState(rpio.Low)
 	time.Sleep(time.Microsecond)
 	hcsr04.echoPin.SetMode(rpio.Input)
+}
+
+func delayUs(ms int) {
+	time.Sleep(time.Duration(ms) * time.Microsecond)
 }

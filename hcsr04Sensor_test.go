@@ -29,7 +29,7 @@ func TestReadDistance(t *testing.T) {
 		distance := hc.MeasureDistance()
 
 		if distance > 2 || distance < 1 {
-			// t.Errorf("Distance not measured as expected, was %f but expected 1", distance)
+			t.Errorf("Distance not measured as expected, was %f but expected 1", distance)
 		}
 	})
 }

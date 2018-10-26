@@ -158,8 +158,8 @@ func (pi *RaspberryPi) StopSystem() {
 	rpio.Close()
 }
 
-func (pi *RaspberryPi) publishState(waterTemp float64, ambientTemp float32, CPUTemp float64, waterLevel float32) {
-	message, err := CreateSensorMessage(waterTemp, ambientTemp, CPUTemp, waterLevel)
+func (pi *RaspberryPi) publishState(waterTemp float64, ambientTemp float32, relativeHumidity float32, CPUTemp float64, waterLevel float32) {
+	message, err := CreateSensorMessage(waterTemp, ambientTemp, relativeHumidity, CPUTemp, waterLevel)
 	if err != nil {
 		log.Printf("Error creating sensor message: %s", err)
 	}
@@ -197,8 +197,8 @@ func (pi RaspberryPi) startSensorCycle() {
 			tankOneTemp := pi.WaterTempSensor.ReadTemperature()
 			CPUTemp := pi.getCPUTemp()
 			waterLevel := pi.checkWaterLevels()
-			ambientTemp := pi.ambientTempSensor.GetTemp()
-			pi.publishState(tankOneTemp, ambientTemp, CPUTemp, waterLevel)
+			ambientTemp, relativeHumidity := pi.ambientTempSensor.GetReadings()
+			pi.publishState(tankOneTemp, ambientTemp, relativeHumidity, CPUTemp, waterLevel)
 			time.Sleep(time.Hour * 3)
 		}
 
