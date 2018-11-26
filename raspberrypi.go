@@ -12,7 +12,9 @@ import (
 	"syscall"
 	"time"
 
+	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"github.com/stianeikeland/go-rpio"
+	Sensors "github.com/bchalk101/selfhydro/sensors"
 )
 
 type Controller interface {
@@ -31,7 +33,9 @@ const (
 	StartFast       = "START-FAST"
 )
 
+var SensorReadingFrequency = 3
 var configLocation = "/selfhydro/config/configData.json"
+var cpuTempFileLocation = "/sys/class/thermal/thermal_zone0/temp"
 
 type configData struct {
 	WaterTempSensorId string `json:"waterTempSensorId"`
@@ -45,7 +49,7 @@ type RaspberryPi struct {
 	WiFiConnectButtonLED RaspberryPiPin
 	WaterLevelSensor     UltrasonicSensor
 	WaterTempSensor      ds18b20
-	ambientTempSensor    AmbientTempSensor
+	ambientTempSensor    Sensors.Sensor
 	AirPumpPin           RaspberryPiPin
 	MQTTClient           MQTTComms
 	alertChannel         chan string
@@ -64,7 +68,6 @@ func NewRaspberryPi() *RaspberryPi {
 	}
 
 	pi.WaterLevelSensor = NewHCSR04Sensor(16, 17)
-
 	pi.WiFiConnectButton = NewRaspberryPiPin(13)
 	pi.WiFiConnectButton.SetMode(rpio.Input)
 	pi.WiFiConnectButtonLED = NewRaspberryPiPin(14)
@@ -83,8 +86,10 @@ func NewRaspberryPi() *RaspberryPi {
 	if err := pi.MQTTClient.ConnectDevice(); err != nil {
 		pi.handleConnectionError()
 	}
-
-	pi.ambientTempSensor, _ = NewTempSensor()
+	pi.ambientTempSensor = Sensors.NewMCP9808()
+	if err := pi.ambientTempSensor.SetupDevice(); err != nil {
+		log.Printf("could not setup ambient temp sensor, %s", err)
+	}
 
 	pi.alertChannel = make(chan string, 5)
 
@@ -119,7 +124,7 @@ func (pi *RaspberryPi) loadConfig() {
 }
 
 func (pi *RaspberryPi) handleConnectionError() {
-	log.Print("Could not connect device to IoT platform\n Are you connected to the web?")
+	log.Print("Could not connect device to IoT platform\n Are you connected to the internet?")
 	pi.startWifiConnect()
 	for {
 		pi.WiFiConnectButtonLED.Toggle()
@@ -131,11 +136,33 @@ func (pi *RaspberryPi) handleConnectionError() {
 }
 
 func (pi *RaspberryPi) StartHydroponics() {
-	pi.startSensorCycle()
+	go pi.startSensorCycle()
+	pi.subscribeToTopics()
 	pi.startLightCycle()
 	pi.startAirPumpCycle()
 	pi.startWifiConnectCycle()
 	pi.monitorAlerts()
+}
+
+func (pi *RaspberryPi) subscribeToTopics() {
+	deviceID := pi.MQTTClient.GetDeviceID()
+	topic := fmt.Sprintf("/devices/%s/commands/#", deviceID)
+	pi.MQTTClient.SubscribeToTopic(topic, pi.commandSubscriptionHandler)
+}
+
+func (pi *RaspberryPi) commandSubscriptionHandler(client MQTT.Client, message MQTT.Message) {
+
+	log.Printf("TOPIC: %s\n", message.Topic())
+	log.Printf("MSG: %s\n", message.Payload())
+
+	switch string(message.Payload()[:]) {
+	case "REREAD_TELEMETRY":
+		log.Print("message received for REREAD_TELEMETRY")
+		pi.readSensorData()
+	default:
+		log.Print("message unhandled")
+		log.Printf("message received: %s", message.Payload())
+	}
 }
 
 func (pi *RaspberryPi) monitorAlerts() {
@@ -153,8 +180,12 @@ func (pi *RaspberryPi) monitorAlerts() {
 }
 
 func (pi *RaspberryPi) StopSystem() {
+	deviceID := pi.MQTTClient.GetDeviceID()
+	topic := fmt.Sprintf("/devices/%s/commands/#", deviceID)
+
 	pi.GrowLedPin.WriteState(rpio.Low)
 	pi.AirPumpPin.WriteState(rpio.Low)
+	pi.MQTTClient.UnsubscribeFromTopic(topic)
 	rpio.Close()
 }
 
@@ -165,10 +196,6 @@ func (pi *RaspberryPi) publishState(waterTemp float64, ambientTemp float32, rela
 	}
 	fmt.Print(message)
 	pi.MQTTClient.publishMessage("/devices/"+pi.MQTTClient.GetDeviceID()+"/events", message)
-}
-
-func (pi *RaspberryPi) updateConfig() {
-	// pi.MQTTClient.
 }
 
 func (pi RaspberryPi) startLightCycle() {
@@ -190,19 +217,18 @@ func (pi RaspberryPi) changeLEDState(turnOnTime time.Time, turnOffTime time.Time
 	}
 }
 func (pi RaspberryPi) startSensorCycle() {
+	for {
+		pi.readSensorData()
+		time.Sleep(time.Hour * 3)
+	}
+}
 
-	go func() {
-		for {
-			fmt.Println("Sending sensor readings....")
-			tankOneTemp := pi.WaterTempSensor.ReadTemperature()
-			CPUTemp := pi.getCPUTemp()
-			waterLevel := pi.checkWaterLevels()
-			ambientTemp, relativeHumidity := pi.ambientTempSensor.GetReadings()
-			pi.publishState(tankOneTemp, ambientTemp, relativeHumidity, CPUTemp, waterLevel)
-			time.Sleep(time.Hour * 3)
-		}
-
-	}()
+func (pi RaspberryPi) readSensorData() {
+	tankOneTemp := pi.WaterTempSensor.ReadTemperature()
+	CPUTemp := pi.getCPUTemp()
+	waterLevel := pi.checkWaterLevels()
+	ambientTemp, _ := pi.ambientTempSensor.GetState()
+	pi.publishState(tankOneTemp, ambientTemp, 0, CPUTemp, waterLevel)
 }
 
 func (pi RaspberryPi) checkWaterLevels() (level float32) {
@@ -218,7 +244,7 @@ func (pi RaspberryPi) checkWaterLevels() (level float32) {
 func (pi RaspberryPi) getCPUTemp() float64 {
 
 	var temp float64
-	data, err := ioutil.ReadFile("/sys/class/thermal/thermal_zone0/temp")
+	data, err := ioutil.ReadFile(cpuTempFileLocation)
 	if err != nil {
 		log.Printf("Error: Can't read Raspberry Pi CPU Temp")
 		return 0.0
@@ -227,6 +253,8 @@ func (pi RaspberryPi) getCPUTemp() float64 {
 
 	temp, err = strconv.ParseFloat(string(tempData), 64)
 	if err != nil {
+		log.Println("could not read cpu temp")
+		log.Println("system will now shut down so as not to destroy the controller")
 		panic(err)
 	}
 	log.Printf("CPU Temp: %v", temp/1000)

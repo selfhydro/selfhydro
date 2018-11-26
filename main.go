@@ -1,11 +1,11 @@
 package main
 
 import (
-	"os"
-	"time"
-	"os/signal"
 	"log"
+	"os"
+	"os/signal"
 	"syscall"
+	"time"
 )
 
 type Time struct {
@@ -21,9 +21,7 @@ func main() {
 	}
 
 	defer f.Close()
-
 	log.SetOutput(f)
-
 	log.Println("Starting up SelfHydro")
 
 	controller := NewRaspberryPi()

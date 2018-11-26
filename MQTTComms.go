@@ -16,6 +16,8 @@ type MQTTComms interface {
 	ConnectDevice() error
 	publishMessage(topic string, message string)
 	GetDeviceID() string
+	SubscribeToTopic(string, MQTT.MessageHandler)
+	UnsubscribeFromTopic(topic string)
 }
 
 type SensorMessage struct {
@@ -44,9 +46,12 @@ const (
 	JWTEXPIRYINHOURS = 6
 )
 
+var subscriptionTopic string
+var subscribtionHandler MQTT.MessageHandler
+
 var f MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
-	fmt.Printf("TOPIC: %s\n", msg.Topic())
-	fmt.Printf("MSG: %s\n", msg.Payload())
+	log.Printf("TOPIC: %s\n", msg.Topic())
+	log.Printf("MSG: %s\n", msg.Payload())
 }
 
 var subscribeHandler MQTT.MessageHandler = func(client MQTT.Client, message MQTT.Message) {
@@ -65,6 +70,7 @@ func (mqtt *mqttComms) ConnectDevice() error {
 			fmt.Println("Refreshing JWT Token and reconneting")
 			mqtt.client.Disconnect(200)
 			mqtt.authenticateDevice()
+			mqtt.resubscribeToTopics()
 			timerTillRefresh = time.NewTimer(JWTEXPIRYINHOURS * time.Hour)
 		}
 	}()
@@ -73,6 +79,20 @@ func (mqtt *mqttComms) ConnectDevice() error {
 
 func (mqtt *mqttComms) GetDeviceID() string {
 	return mqtt.mqttDetails.DeviceID
+}
+
+func (mqtt *mqttComms) resubscribeToTopics() {
+	mqtt.SubscribeToTopic(subscriptionTopic, subscribtionHandler)
+}
+
+func (mqtt *mqttComms) SubscribeToTopic(topic string, callback MQTT.MessageHandler) {
+	log.Println("suibscribing to topic ", topic)
+	subscriptionTopic = topic
+	subscribtionHandler = callback
+	if token := mqtt.client.Subscribe(topic, 1, callback); token.Wait() && token.Error() != nil {
+		log.Println("error subscribing to topic ", topic)
+		log.Println(token.Error())
+	}
 }
 
 func (mqtt *mqttComms) loadMQTTConfig() {
@@ -115,13 +135,8 @@ func (mqtt *mqttComms) authenticateDevice() error {
 
 	return nil
 }
-func (mqtt *mqttComms) subscribeToTopic(topic string, callback MQTT.MessageHandler) {
-	if token := mqtt.client.Subscribe(topic, 0, callback); token.Wait() && token.Error() != nil {
-		fmt.Println(token.Error())
-		os.Exit(1)
-	}
-}
-func (mqtt *mqttComms) unsubscribeFromTopic(topic string) {
+
+func (mqtt *mqttComms) UnsubscribeFromTopic(topic string) {
 	if token := mqtt.client.Unsubscribe(topic); token.Wait() && token.Error() != nil {
 		fmt.Println(token.Error())
 		os.Exit(1)

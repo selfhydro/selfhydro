@@ -28,27 +28,25 @@ func NewTempSensor() (AmbientTempSensor, error) {
 func (tempSensor *i2cTempSensor) GetReadings() (float32, float32) {
 	i2c, err := i2c.NewI2C(0x40, 1)
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
+		return 0, 0
 	}
 	defer i2c.Close()
 
 	sensor := si7021.NewSi7021()
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
+		return 0, 0
 	}
-	rh, err := sensor.ReadRelativeHumidityMode1(i2c)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("Relative humidity = %v%%\n", rh)
-	tempSensor.humidity = rh
+	rh, temp, err := sensor.ReadRelativeHumidityAndTemperature(i2c)
 
-	temp, err := sensor.ReadTemperatureCelsiusMode1(i2c)
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
+		return 0, 0
 	}
 	log.Printf("Temprature in celsius = %v*C\n", temp)
 	tempSensor.temp = temp
+	tempSensor.humidity = rh
 
 	return tempSensor.temp, tempSensor.humidity
 }

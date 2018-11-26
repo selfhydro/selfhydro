@@ -3,10 +3,10 @@ package main
 import (
 	"errors"
 	"io/ioutil"
-	"strings"
-	"strconv"
 	"log"
 	"path/filepath"
+	"strconv"
+	"strings"
 )
 
 type ds18b20 struct {
@@ -14,12 +14,12 @@ type ds18b20 struct {
 }
 
 var dataDirectory = "/sys/bus/w1/devices/"
-
+var getReadDir = ioutil.ReadDir
 var ErrReadSensor = errors.New("failed to read sensor temperature")
 
 //Assumes that there is only one 1-wire device connected
 func (ds *ds18b20) GetID() {
-	files, err := ioutil.ReadDir(dataDirectory)
+	files, err := getReadDir(dataDirectory)
 	if err != nil {
 		log.Printf("error reading directory: %v", err)
 	}
@@ -27,7 +27,6 @@ func (ds *ds18b20) GetID() {
 	for _, file := range files {
 		if !strings.Contains(file.Name(), "w1") {
 			ds.id = file.Name()
-			log.Print(ds.id)
 		}
 	}
 }

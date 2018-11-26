@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/stianeikeland/go-rpio"
+	sensors "github.com/bchalk101/selfhydro/sensors"
 )
 
 func setupMock() *RaspberryPi {
@@ -19,7 +20,7 @@ func setupMock() *RaspberryPi {
 	testPi.AirPumpPin = new(mockRaspberryPiPinImpl)
 	testPi.GrowLedPin = new(mockRaspberryPiPinImpl)
 	testPi.WaterLevelSensor = new(mockUltrasonicSensor)
-	testPi.ambientTempSensor = new(mockAmbientTemp)
+	testPi.ambientTempSensor = new(sensors.MockSensor)
 	testPi.alertChannel = make(chan string)
 	return testPi
 }
@@ -77,7 +78,7 @@ func TestHydroCycle(t *testing.T) {
 	//	}
 	//})
 
-	t.Run("Test that button activates wifi-connect ap", func(t *testing.T) {
+	t.Run("Test that button activates wifi-connect app", func(t *testing.T) {
 		mockPi.WiFiConnectButton.(*mockRaspberryPiPinImpl).stateOfPin = rpio.High
 		mockPi.startWifiConnectCycle()
 		time.Sleep(time.Second * 2)
@@ -85,20 +86,29 @@ func TestHydroCycle(t *testing.T) {
 		time.Sleep(time.Second)
 	})
 
-	t.Run("Test when there are no alerts coming in", func(t *testing.T) {
+	t.Run("Test that no alert is triggered if there are no alerts", func(t *testing.T) {
 		var buf bytes.Buffer
 		log.SetOutput(&buf)
 		defer log.SetOutput(os.Stdout)
 		mockPi.monitorAlerts()
-
-		mockPi.startSensorCycle()
 		time.Sleep(time.Millisecond)
 		out := buf.String()
-
 		if strings.Contains(out, "Water Level is Low") {
-			t.Error("Water Level alert not received")
+			t.Error("Water Level alert received")
 		}
+	})
 
+	t.Run("Test that low water alert gets triggered", func(t *testing.T) {
+		var buf bytes.Buffer
+		log.SetOutput(&buf)
+		defer log.SetOutput(os.Stdout)
+		mockPi.monitorAlerts()
+		mockPi.alertChannel <- LowWaterLevel
+		time.Sleep(time.Millisecond)
+		out := buf.String()
+		if strings.Contains(out, "Water Level is Low") {
+			t.Error("Water Level alert received")
+		}
 	})
 
 	t.Run("Alerts should be logged when ever they come in", func(t *testing.T) {
@@ -121,6 +131,13 @@ func TestHydroCycle(t *testing.T) {
 		if betweenTime(startingTime, endTime) {
 			t.Error("Error: Current time should be between start and end time")
 		}
+	})
 
+	t.Run("Test reading CPU temp on raspberry pi", func(t *testing.T) {
+		cpuTempFileLocation = "./testdata/thermal_test/temp"
+		temp := mockPi.getCPUTemp()
+		if temp != float64(22) {
+			t.Errorf("cpu temp not read correctly, should have been 22 but was %f", temp)
+		}
 	})
 }
