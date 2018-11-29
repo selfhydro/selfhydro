@@ -1,0 +1,7 @@
+{
+  "waterTempSensor":"28-0316838ca7ff",
+  "ledOnTime": "6:00:00",
+  "ledOffTime": "23:00:00",
+  "airPumpDuration": "15",
+  "airPumpFrequency": "60"
+}
