@@ -38,5 +38,8 @@ func (mcp9808 MCP9808) GetState() (float32, error) {
 
 func (mcp9808 MCP9808) getTemp(encodedTemp uint16) (float32, error) {
 	temp := float32(encodedTemp&0x0fff) / 16
+	if encodedTemp&0x1000 == 0x1000 {
+		temp = -temp
+	}
 	return temp, nil
 }
