@@ -2,39 +2,45 @@ package sensors
 
 import (
 	"errors"
-	"log"
 	"os"
 	"testing"
   "gotest.tools/assert"
 )
 
 func TestGetID(t *testing.T) {
-	tempSensor := ds18b20{}
+	tempSensor := DS18b20{}
 	dataDirectory = "./testdata/sensor_test/"
 	tempSensor.SetupDevice()
-  assert.Equal(t, "testSensor", tempSensor.id)
+  assert.Equal(t, "testSensor", tempSensor.Id)
 }
 
 func TestShouldLogErrorIfCantGetId(t *testing.T) {
 	dataDirectory = ""
 	getReadDir = mockReadDir
-	tempSensor := ds18b20{}
-  assert.ErrorContains(t, 	tempSensor.SetupDevice(), "error finding directory for sensor")
+	tempSensor := DS18b20{}
+  assert.ErrorContains(t, tempSensor.SetupDevice(), "error finding directory for sensor")
 }
 
 func mockReadDir(dir string) ([]os.FileInfo, error) {
-  log.Print("using mock")
 	if dir == "" {
 		return nil, errors.New("error")
 	}
 	return nil, nil
 }
 
-func TestShoudlReadTemp(t *testing.T) {
-	waterTempSensor := ds18b20 {
-    id: "testSensor",
+func TestShouldReadTemp(t *testing.T) {
+	waterTempSensor := DS18b20 {
+    Id: "testSensor",
   }
 	dataDirectory = "testdata/sensor_test"
-	temp := waterTempSensor.GetState()
-  assert.Equal(t, float64(10), temp)
+	temp, _ := waterTempSensor.GetState()
+  assert.Equal(t, float32(10), temp)
+}
+
+func TestShouldReturnErrorWhenFailsToReadTemp(t *testing.T) {
+  waterTempSensor := DS18b20 {
+    Id: "fakeSensor",
+  }
+  _, err := waterTempSensor.GetState()
+  assert.ErrorContains(t, err, "failed to read sensor temperature")
 }

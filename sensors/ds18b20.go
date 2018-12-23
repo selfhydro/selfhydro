@@ -9,16 +9,19 @@ import (
 	"strings"
 )
 
-type ds18b20 struct {
-	id string
+type DS18b20 struct {
+	Id string
 }
 
 var dataDirectory = "/sys/bus/w1/devices/"
 var getReadDir = ioutil.ReadDir
 var sensorError = errors.New("failed to read sensor temperature")
 
-//Assumes that there is only one 1-wire device connected
-func (ds *ds18b20) SetupDevice() error {
+func NewDS18B20(id string) Sensor {
+	return &DS18b20{ Id: id }
+}
+
+func (ds *DS18b20) SetupDevice() (error) {
 	files, err := getReadDir(dataDirectory)
 	if err != nil {
 		log.Printf("error reading directory: %v", err)
@@ -26,24 +29,24 @@ func (ds *ds18b20) SetupDevice() error {
 	}
 	for _, file := range files {
 		if !strings.Contains(file.Name(), "w1") {
-			ds.id = file.Name()
+			ds.Id = file.Name()
 		}
 	}
   return nil
 }
 
-func (ds *ds18b20) GetState() float64 {
-	temp, err := ds.getTemp(ds.id)
+func (ds DS18b20) GetState() (float32, error) {
+	temp, err := ds.getTemp(ds.Id)
 	if err != nil {
 		log.Printf("Error: Cant read temp of water tank")
 		log.Print(err.Error())
-		return 0.0
+		return 0.0, err
 	}
 	log.Printf("Water temperature: %.2f°C\n", temp)
-	return temp
+	return temp, nil
 }
 
-func (ds18b20) getTemp(sensor string) (float64, error) {
+func (DS18b20) getTemp(sensor string) (float32, error) {
 	sensorDirectory := filepath.Join(dataDirectory, sensor, "w1_slave")
 	data, err := ioutil.ReadFile(sensorDirectory)
 	if err != nil {
@@ -58,5 +61,5 @@ func (ds18b20) getTemp(sensor string) (float64, error) {
 	if err != nil {
 		return 0.0, sensorError
 	}
-	return c / 1000.0, nil
+	return float32(c / 1000.0), nil
 }

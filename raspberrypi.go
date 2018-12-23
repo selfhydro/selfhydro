@@ -48,7 +48,7 @@ type RaspberryPi struct {
 	WiFiConnectButton    RaspberryPiPin
 	WiFiConnectButtonLED RaspberryPiPin
 	WaterLevelSensor     UltrasonicSensor
-	WaterTempSensor      ds18b20
+	WaterTempSensor      Sensors.Sensor
 	ambientTempSensor    Sensors.Sensor
 	AirPumpPin           RaspberryPiPin
 	MQTTClient           MQTTComms
@@ -120,7 +120,7 @@ func (pi *RaspberryPi) loadConfig() {
 	if err != nil {
 		log.Printf("error could not parse turn off time, %s", err.Error())
 	}
-	pi.WaterTempSensor.id = configData.WaterTempSensorId
+	pi.WaterTempSensor = Sensors.NewDS18B20(configData.WaterTempSensorId)
 }
 
 func (pi *RaspberryPi) handleConnectionError() {
@@ -189,7 +189,7 @@ func (pi *RaspberryPi) StopSystem() {
 	rpio.Close()
 }
 
-func (pi *RaspberryPi) publishState(waterTemp float64, ambientTemp float32, relativeHumidity float32, CPUTemp float64, waterLevel float32) {
+func (pi *RaspberryPi) publishState(waterTemp float32, ambientTemp float32, relativeHumidity float32, CPUTemp float64, waterLevel float32) {
 	message, err := CreateSensorMessage(waterTemp, ambientTemp, relativeHumidity, CPUTemp, waterLevel)
 	if err != nil {
 		log.Printf("Error creating sensor message: %s", err)
@@ -224,11 +224,11 @@ func (pi RaspberryPi) startSensorCycle() {
 }
 
 func (pi RaspberryPi) readSensorData() {
-	tankOneTemp := pi.WaterTempSensor.ReadTemperature()
+	waterTemp, _ := pi.WaterTempSensor.GetState()
 	CPUTemp := pi.getCPUTemp()
 	waterLevel := pi.checkWaterLevels()
 	ambientTemp, _ := pi.ambientTempSensor.GetState()
-	pi.publishState(tankOneTemp, ambientTemp, 0, CPUTemp, waterLevel)
+	pi.publishState(waterTemp, ambientTemp, 0, CPUTemp, waterLevel)
 }
 
 func (pi RaspberryPi) checkWaterLevels() (level float32) {
