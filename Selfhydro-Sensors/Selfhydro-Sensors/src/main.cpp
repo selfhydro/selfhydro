@@ -8,8 +8,8 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 const char* ssid = "ii52938Dprimary";
 const char* wifi_password = "3dcd5fb5";
 
-const char* mqtt_server = "";
-const char* mqtt_topic = "/sensors/reading";
+const char* mqtt_server = "10.1.1.3";
+const char* mqtt_topic = "/sensors/water_level";
 const char* mqtt_username = "";
 const char* mqtt_password = "";
 
@@ -40,12 +40,12 @@ void setup() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  // if (client.connect(clientID, mqtt_username, mqtt_password)) {
-  //   Serial.println("Connected to MQTT Broker!");
-  // }
-  // else {
-  //   Serial.println("Connection to MQTT Broker failed...");
-  // }
+  if (client.connect(clientID, mqtt_username, mqtt_password)) {
+    Serial.println("Connected to MQTT Broker!");
+  }
+  else {
+    Serial.println("Connection to MQTT Broker failed...");
+  }
 
   Serial.println("Adafruit VL53L0X test");
   if (!lox.begin()) {
@@ -60,15 +60,16 @@ void loop() {
 
   Serial.print("Reading a measurement... ");
   lox.rangingTest(&measure, false);
-
+  String mqttMessage = String("\"Water Level\":" + measure.RangeMilliMeter);
+  char cstr[16];
   if (measure.RangeStatus != 4) { 
     Serial.print("Distance (mm): "); Serial.println(measure.RangeMilliMeter);
-    // if (client.publish(mqtt_topic, "Water Level: ")) {
-    //   Serial.println("Button pushed and message sent!");
-    // }
+    if (client.publish(mqtt_topic, itoa(measure.RangeMilliMeter, cstr, 10))) {
+      Serial.println("Distance measured and message sent!");
+    }
   } else {
   Serial.println(" out of range ");
   }
 
-  delay(100);
+  delay(10000);
 }
