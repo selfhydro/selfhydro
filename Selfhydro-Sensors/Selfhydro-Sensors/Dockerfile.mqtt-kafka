@@ -4,4 +4,4 @@ RUN go get github.com/selfhydro/mqtt-kafka-producer
 
 WORKDIR /go/src/github.com/selfhydro/mqtt-kafka-producer
 
-ENTRYPOINT [ "go", "run", "producer.go" ]
+ENTRYPOINT [ "sleep" "10", "&&", "go", "run", "producer.go" ]
