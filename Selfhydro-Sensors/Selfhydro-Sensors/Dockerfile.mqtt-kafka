@@ -2,6 +2,6 @@ FROM golang:1.10-stretch
 
 RUN go get github.com/selfhydro/mqtt-kafka-producer
 
-WORKDIR /go/github/selfhydro/mqtt-kafka-producer
+WORKDIR /go/src/github.com/selfhydro/mqtt-kafka-producer
 
 ENTRYPOINT [ "go", "run", "producer.go" ]
