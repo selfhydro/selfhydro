@@ -27,6 +27,11 @@ services:
       - 9092:9092
     depends_on:
       - "zookeeper"    
+    healthcheck:
+      test: ["CMD", "/kafka/bin/kafka-topics.sh", "--zookeeper", "zookeeper:2181", "--list"]
+      interval: 10s
+      timeout: 10s
+      retries: 5  
   mqtt-kafka-producer:
     image: mqtt-kafka
     build:
