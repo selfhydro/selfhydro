@@ -8,9 +8,9 @@ services:
     ports:
       - 1883:1883
   zookeeper:
-    image: rpi-kafka
+    image: rpi-zookeeper
     build:
-      dockerfile: Dockerfile.kafka
+      dockerfile: Dockerfile.zookeeper
       context: .
       args:
         KAFKA_VERSION: 2.1.0    

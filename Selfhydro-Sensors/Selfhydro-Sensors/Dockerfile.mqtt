@@ -6,7 +6,7 @@ EXPOSE 1883
 
 RUN mkdir -p /mqtt/
 
-COPY mosquitto/mosquitto.conf /mqtt/config/mosquitto.conf
+COPY config/mosquitto.conf /mqtt/config/mosquitto.conf
 
 RUN mkdir -p /var/lib/mosquitto/
 

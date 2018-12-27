@@ -1,13 +1,17 @@
 FROM openjdk:8-jre-slim 
 
 ARG KAFKA_VERSION=2.1.0
-ENV KAFKA_VERSION {ZOOKEEPER_VERSION}
+ENV KAFKA_VERSION $KAFKA_VERSION
 
-RUN set -ex && apt-get update && apg-get -y upgrade && apt-get install -y wget
+RUN set -ex && apt-get update && apt-get -y upgrade && apt-get install -y wget
 
-RUN set -ex && wget http://apache.mirror.amaze.com.au/kafka/2.1.0/kafka_2.11-{KAFKA_VERSION}.tgz &&\
- tar -xzf kafka_2.11-{KAFKA_VERSION}.tgz &&\
- mv kafka_2.11-{KAFKA_VERSION} kafka
+RUN set -ex && wget http://apache.mirror.amaze.com.au/kafka/2.1.0/kafka_2.11-$KAFKA_VERSION.tgz &&\
+ tar -xzf kafka_2.11-$KAFKA_VERSION.tgz &&\
+ mv kafka_2.11-$KAFKA_VERSION kafka
+
+RUN mkdir -p /kafka/data/zookeeper/ 
+
+COPY config/zookeeper.properties /kafka/config/zookeeper.properties
 
 EXPOSE 2181
 
