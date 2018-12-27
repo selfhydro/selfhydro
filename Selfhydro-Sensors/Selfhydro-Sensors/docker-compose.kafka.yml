@@ -25,8 +25,12 @@ services:
         KAFKA_VERSION: 2.1.0
     ports:
       - 9092:9092
+    depends_on:
+      - "zookeeper"    
   mqtt-kafka-producer:
     image: mqtt-kafka
     build:
       dockerfile: Dockerfile.mqtt-kafka
       context: .
+    depends_on:
+      - "kafka"  
