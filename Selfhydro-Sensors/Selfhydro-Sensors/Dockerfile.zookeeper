@@ -1,0 +1,14 @@
+FROM openjdk:8-jre-slim 
+
+ARG KAFKA_VERSION=2.1.0
+ENV KAFKA_VERSION {ZOOKEEPER_VERSION}
+
+RUN set -ex && apt-get update && apg-get -y upgrade && apt-get install -y wget
+
+RUN set -ex && wget http://apache.mirror.amaze.com.au/kafka/2.1.0/kafka_2.11-{KAFKA_VERSION}.tgz &&\
+ tar -xzf kafka_2.11-{KAFKA_VERSION}.tgz &&\
+ mv kafka_2.11-{KAFKA_VERSION} kafka
+
+EXPOSE 2181
+
+ENTRYPOINT [ "./kafka/bin/zookeeper-server-start.sh", "./kafka/config/zookeeper.properties" ]

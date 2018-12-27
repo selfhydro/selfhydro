@@ -1,26 +1,28 @@
 version: '3'
 services:
-  mqtt-kafka-proxy:
-    image: confluentinc/cp-kafka-mqtt
+  mqtt-broker:
+    image: mosquitto-broker
+    build:
+      dockerfile: Dockerfile.mqtt
+      context: .
     ports:
       - 1883:1883
-    environment:  
-      KAFKA_MQTT_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:9092
-      KAFKA_MQTT_TOPIC_REGEX_LIST: sensors:.*
-      KAFKA_MQTT_CONFLUENT_TOPIC_REPLICATION_FACTOR: 1
-
   zookeeper:
-    image: confluentinc/cp-zookeeper
+    image: rpi-kafka
+    build:
+      dockerfile: Dockerfile.kafka
+      context: .
+      args:
+        KAFKA_VERSION: 2.1.0    
     ports:
       - 2181:2181  
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
   kafka:
-    image: confluentinc/cp-kafka
+    image: rpi-kafka
+    build:
+      dockerfile: Dockerfile.kafka
+      context: .
+      args:
+        KAFKA_VERSION: 2.1.0
     ports:
       - 9092:9092
-    environment:
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181  
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 

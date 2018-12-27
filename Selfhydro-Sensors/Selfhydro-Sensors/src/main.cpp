@@ -18,6 +18,20 @@ const char* clientID = "Water Level Sensor";
 WiFiClient wifiClient;
 PubSubClient client(mqtt_server, 1883, wifiClient);
 
+void reconnect() {
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    if (client.connect(clientID)) {
+      Serial.println("connected");
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      delay(5000);
+    }
+  }
+}
+
 void setup() {
   Serial.begin(115200);
 
@@ -58,6 +72,10 @@ void setup() {
 void loop() {
   VL53L0X_RangingMeasurementData_t measure;
 
+  if (!client.connected()){
+    reconnect();
+  }
+
   Serial.print("Reading a measurement... ");
   lox.rangingTest(&measure, false);
   String mqttMessage = String("\"Water Level\":" + measure.RangeMilliMeter);
@@ -65,11 +83,15 @@ void loop() {
   if (measure.RangeStatus != 4) { 
     Serial.print("Distance (mm): "); Serial.println(measure.RangeMilliMeter);
     if (client.publish(mqtt_topic, itoa(measure.RangeMilliMeter, cstr, 10))) {
-      Serial.println("Distance measured and message sent!");
+      Serial.println("Distance measured and message sent");
+    } else {
+      Serial.println("Message failed to send via mqtt");
+      reconnect();
+      client.publish(mqtt_topic, itoa(measure.RangeMilliMeter, cstr, 10));
     }
   } else {
   Serial.println(" out of range ");
   }
 
-  delay(10000);
+  delay(5000);
 }
