@@ -25,6 +25,8 @@ func main() {
 	log.Println("Starting up SelfHydro")
 
 	controller := NewRaspberryPi()
+	sh := selfhydro{}
+	sh.Setup()
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs)
@@ -41,7 +43,6 @@ func main() {
 
 	}()
 	controller.StartHydroponics()
-
 	for {
 		time.Sleep(time.Second)
 	}
