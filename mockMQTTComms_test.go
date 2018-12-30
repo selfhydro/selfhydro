@@ -17,9 +17,10 @@ func (m *mockMQTTComms) GetDeviceID() string {
 	return ""
 }
 
-func (m *mockMQTTComms) SubscribeToTopic(topix string, callback MQTT.MessageHandler) {
-
+func (m *mockMQTTComms) SubscribeToTopic(topix string, callback MQTT.MessageHandler) error {
+	return nil
 }
+
 func (m *mockMQTTComms) UnsubscribeFromTopic(topic string) {
 
 }

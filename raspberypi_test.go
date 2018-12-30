@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stianeikeland/go-rpio"
 	sensors "github.com/bchalk101/selfhydro/sensors"
+	"github.com/stianeikeland/go-rpio"
 )
 
 func setupMock() *RaspberryPi {
@@ -19,7 +19,6 @@ func setupMock() *RaspberryPi {
 	testPi.WiFiConnectButton = new(mockRaspberryPiPinImpl)
 	testPi.AirPumpPin = new(mockRaspberryPiPinImpl)
 	testPi.GrowLedPin = new(mockRaspberryPiPinImpl)
-	testPi.WaterLevelSensor = new(mockUltrasonicSensor)
 	testPi.ambientTempSensor = new(sensors.MockSensor)
 	testPi.alertChannel = make(chan string)
 	return testPi

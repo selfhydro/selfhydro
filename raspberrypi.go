@@ -12,9 +12,9 @@ import (
 	"syscall"
 	"time"
 
+	Sensors "github.com/bchalk101/selfhydro/sensors"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"github.com/stianeikeland/go-rpio"
-	Sensors "github.com/bchalk101/selfhydro/sensors"
 )
 
 type Controller interface {
@@ -47,7 +47,6 @@ type RaspberryPi struct {
 	GrowLedPin           RaspberryPiPin
 	WiFiConnectButton    RaspberryPiPin
 	WiFiConnectButtonLED RaspberryPiPin
-	WaterLevelSensor     UltrasonicSensor
 	WaterTempSensor      Sensors.Sensor
 	ambientTempSensor    Sensors.Sensor
 	AirPumpPin           RaspberryPiPin
@@ -67,7 +66,6 @@ func NewRaspberryPi() *RaspberryPi {
 		os.Exit(1)
 	}
 
-	pi.WaterLevelSensor = NewHCSR04Sensor(16, 17)
 	pi.WiFiConnectButton = NewRaspberryPiPin(13)
 	pi.WiFiConnectButton.SetMode(rpio.Input)
 	pi.WiFiConnectButtonLED = NewRaspberryPiPin(14)
@@ -226,20 +224,20 @@ func (pi RaspberryPi) startSensorCycle() {
 func (pi RaspberryPi) readSensorData() {
 	waterTemp, _ := pi.WaterTempSensor.GetState()
 	CPUTemp := pi.getCPUTemp()
-	waterLevel := pi.checkWaterLevels()
+	// waterLevel := pi.checkWaterLevels()
 	ambientTemp, _ := pi.ambientTempSensor.GetState()
-	pi.publishState(waterTemp, ambientTemp, 0, CPUTemp, waterLevel)
+	pi.publishState(waterTemp, ambientTemp, 0, CPUTemp, 0)
 }
 
-func (pi RaspberryPi) checkWaterLevels() (level float32) {
-	waterLevel := pi.WaterLevelSensor.MeasureDistance()
-	fmt.Print(waterLevel)
-	if waterLevel <= LowWaterDefault {
-		pi.alertChannel <- LowWaterLevel
-	}
-	log.Printf("Water level is %f", waterLevel)
-	return waterLevel
-}
+// func (pi RaspberryPi) checkWaterLevels() (level float32) {
+// 	waterLevel := pi.WaterLevelSensor.MeasureDistance()
+// 	fmt.Print(waterLevel)
+// 	if waterLevel <= LowWaterDefault {
+// 		pi.alertChannel <- LowWaterLevel
+// 	}
+// 	log.Printf("Water level is %f", waterLevel)
+// 	return float32(0)
+// }
 
 func (pi RaspberryPi) getCPUTemp() float64 {
 

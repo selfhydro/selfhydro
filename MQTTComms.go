@@ -16,7 +16,7 @@ type MQTTComms interface {
 	ConnectDevice() error
 	publishMessage(topic string, message string)
 	GetDeviceID() string
-	SubscribeToTopic(string, MQTT.MessageHandler)
+	SubscribeToTopic(string, MQTT.MessageHandler) error
 	UnsubscribeFromTopic(topic string)
 }
 
@@ -85,14 +85,16 @@ func (mqtt *mqttComms) resubscribeToTopics() {
 	mqtt.SubscribeToTopic(subscriptionTopic, subscribtionHandler)
 }
 
-func (mqtt *mqttComms) SubscribeToTopic(topic string, callback MQTT.MessageHandler) {
-	log.Println("suibscribing to topic ", topic)
+func (mqtt *mqttComms) SubscribeToTopic(topic string, callback MQTT.MessageHandler) error {
+	log.Println("subscribing to topic ", topic)
 	subscriptionTopic = topic
 	subscribtionHandler = callback
 	if token := mqtt.client.Subscribe(topic, 1, callback); token.Wait() && token.Error() != nil {
 		log.Println("error subscribing to topic ", topic)
 		log.Println(token.Error())
+		return token.Error()
 	}
+	return nil
 }
 
 func (mqtt *mqttComms) loadMQTTConfig() {
@@ -114,9 +116,8 @@ func (mqtt *mqttComms) authenticateDevice() error {
 
 	opts := MQTT.NewClientOptions().AddBroker("ssl://mqtt.googleapis.com:8883")
 
-	clientId := "projects/" + mqtt.mqttDetails.ProjectID + "/locations/" + mqtt.mqttDetails.Location + "/registries/" + mqtt.mqttDetails.RegistryID + "/devices/" + mqtt.mqttDetails.DeviceID
-	fmt.Print(clientId)
-	opts.SetClientID(clientId)
+	clientID := "projects/" + mqtt.mqttDetails.ProjectID + "/locations/" + mqtt.mqttDetails.Location + "/registries/" + mqtt.mqttDetails.RegistryID + "/devices/" + mqtt.mqttDetails.DeviceID
+	opts.SetClientID(clientID)
 	opts.SetDefaultPublishHandler(f)
 	opts.SetPassword(tokenString)
 	opts.SetProtocolVersion(4)
