@@ -9,6 +9,37 @@ import (
 	"gotest.tools/assert"
 )
 
+func Test_ShouldSetupSelfhydro(t *testing.T) {
+	mockMQTT := &MockMQTTComms{}
+	sh := selfhydro{
+		localMQTT: mockMQTT,
+	}
+	sh.Setup()
+	assert.Equal(t, sh.waterLevel.waterLevel, float32(0))
+}
+
+func Test_ShouldReturnErrorIfTryingToStartButNotSetup(t *testing.T) {
+	mockMQTT := &MockMQTTComms{}
+	mockMQTT.On("ConnectDevice").Return(nil)
+	sh := selfhydro{
+		localMQTT: mockMQTT,
+	}
+	err := sh.Start()
+	assert.Error(t, err, "must setup selfhydro before starting (use Setup())")
+}
+
+func Test_ShouldStartSelfhydro(t *testing.T) {
+	mockMQTT := &MockMQTTComms{}
+	mockMQTT.On("ConnectDevice").Return(nil)
+	sh := selfhydro{
+		localMQTT: mockMQTT,
+	}
+	sh.Setup()
+	err := sh.Start()
+	assert.Equal(t, err, nil)
+	assert.Equal(t, sh.waterLevel.waterLevel, float32(0))
+}
+
 func TestShouldGetAmbientTemp(t *testing.T) {
 	sh := selfhydro{}
 	ambientTemp := sh.GetAmbientTemp()

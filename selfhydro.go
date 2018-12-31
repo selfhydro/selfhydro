@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/binary"
+	"errors"
 	"log"
 	"math"
 
@@ -12,6 +13,7 @@ type selfhydro struct {
 	currentTemp float32
 	waterLevel  *WaterLevel
 	localMQTT   MQTTComms
+	setup       bool
 }
 
 const (
@@ -21,8 +23,16 @@ const (
 var waterLevelChannel chan float32
 
 func (sh *selfhydro) Setup() error {
-	sh.localMQTT.ConnectDevice()
 	sh.waterLevel = &WaterLevel{}
+	sh.setup = true
+	return nil
+}
+
+func (sh *selfhydro) Start() error {
+	if !sh.setup {
+		return errors.New("must setup selfhydro before starting (use Setup())")
+	}
+	sh.localMQTT.ConnectDevice()
 	return nil
 }
 
@@ -45,6 +55,7 @@ func (sh *selfhydro) updateWaterLevel() {
 	for {
 		waterLevel := <-waterLevelChannel
 		sh.waterLevel.waterLevel = waterLevel
+		log.Printf("water level currently %f", waterLevel)
 	}
 }
 

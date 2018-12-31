@@ -42,6 +42,7 @@ func main() {
 		}
 
 	}()
+	sh.Start()
 	controller.StartHydroponics()
 	for {
 		time.Sleep(time.Second)
