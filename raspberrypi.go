@@ -60,12 +60,6 @@ type RaspberryPi struct {
 func NewRaspberryPi() *RaspberryPi {
 	pi := new(RaspberryPi)
 
-	error := rpio.Open()
-	if error != nil {
-		log.Fatalf("Could not open rpio pins %v", error.Error())
-		os.Exit(1)
-	}
-
 	pi.WiFiConnectButton = NewRaspberryPiPin(13)
 	pi.WiFiConnectButton.SetMode(rpio.Input)
 	pi.WiFiConnectButtonLED = NewRaspberryPiPin(14)
@@ -197,7 +191,7 @@ func (pi *RaspberryPi) publishState(waterTemp float32, ambientTemp float32, rela
 }
 
 func (pi RaspberryPi) startLightCycle() {
-	log.Printf("starting led cycle with on time at %s and off time at %s", pi.ledStartTime, pi.ledStartTime)
+	log.Printf("starting led cycle with on time at %s and off time at %s", pi.ledStartTime, pi.ledOffTime)
 	go func() {
 		for {
 			pi.changeLEDState(pi.ledStartTime, pi.ledOffTime)
@@ -217,7 +211,7 @@ func (pi RaspberryPi) changeLEDState(turnOnTime time.Time, turnOffTime time.Time
 func (pi RaspberryPi) startSensorCycle() {
 	for {
 		pi.readSensorData()
-		time.Sleep(time.Hour * 3)
+		time.Sleep(time.Hour * 1)
 	}
 }
 

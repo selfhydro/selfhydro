@@ -1,10 +1,9 @@
 package main
 
 import (
-	"encoding/binary"
 	"errors"
 	"log"
-	"math"
+	"strconv"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -12,18 +11,27 @@ import (
 type selfhydro struct {
 	currentTemp float32
 	waterLevel  *WaterLevel
+	waterPump   Actuator
 	localMQTT   MQTTComms
 	setup       bool
 }
 
 const (
+	WATER_PUMP_PIN = 18
+)
+
+var WATER_MIN_LEVEL float32 = 80
+var WATER_MAX_LEVEL float32 = 35
+
+const (
 	WATER_LEVEL_TOPIC = "/sensors/water_level"
 )
 
-var waterLevelChannel chan float32
-
-func (sh *selfhydro) Setup() error {
+func (sh *selfhydro) Setup(waterPump Actuator) error {
 	sh.waterLevel = &WaterLevel{}
+	sh.waterPump = waterPump
+	sh.waterPump.Setup()
+	sh.localMQTT = NewLocalMQTT()
 	sh.setup = true
 	return nil
 }
@@ -33,38 +41,45 @@ func (sh *selfhydro) Start() error {
 		return errors.New("must setup selfhydro before starting (use Setup())")
 	}
 	sh.localMQTT.ConnectDevice()
+	sh.SubscribeToWaterLevel()
+	sh.RunWaterPump()
 	return nil
 }
 
-func (sh selfhydro) GetAmbientTemp() float32 {
-
-	return 10
-}
-
 func (sh selfhydro) SubscribeToWaterLevel() error {
-	go sh.updateWaterLevel()
-	if err := sh.localMQTT.SubscribeToTopic(WATER_LEVEL_TOPIC, waterLevelHandler); err != nil {
+	if err := sh.localMQTT.SubscribeToTopic(WATER_LEVEL_TOPIC, sh.waterLevelHandler); err != nil {
 		log.Print(err.Error())
 		return err
 	}
 	return nil
 }
 
-func (sh *selfhydro) updateWaterLevel() {
-	waterLevelChannel = make(chan float32, 1)
-	for {
-		waterLevel := <-waterLevelChannel
-		sh.waterLevel.waterLevel = waterLevel
-		log.Printf("water level currently %f", waterLevel)
+func (sh *selfhydro) RunWaterPump() {
+	go func() {
+		for {
+			sh.checkWaterLevel()
+		}
+	}()
+}
+
+func (sh selfhydro) checkWaterLevel() {
+	if sh.waterLevel.GetWaterLevel() > WATER_MIN_LEVEL && !sh.waterPump.GetState() {
+		log.Print("turning on water pump")
+		log.Printf("water level %f", sh.waterLevel.GetWaterLevel())
+		sh.waterPump.TurnOn()
+	} else if sh.waterLevel.GetWaterLevel() < WATER_MAX_LEVEL && sh.waterPump.GetState() {
+		log.Print("turning off water pump")
+		log.Printf("water level %f", sh.waterLevel.GetWaterLevel())
+		sh.waterPump.TurnOff()
 	}
 }
 
-var waterLevelHandler = func(client mqtt.Client, message mqtt.Message) {
-	waterLevelChannel <- float32frombytes(message.Payload())
-}
-
-func float32frombytes(bytes []byte) float32 {
-	bits := binary.LittleEndian.Uint32(bytes)
-	float := math.Float32frombits(bits)
-	return float
+func (sh *selfhydro) waterLevelHandler(client mqtt.Client, message mqtt.Message) {
+	waterLevel := string(message.Payload()[:])
+	waterLevelFloat, err := strconv.ParseFloat(waterLevel, 32)
+	if err != nil {
+		log.Print("error converting payload to float")
+		return
+	}
+	sh.waterLevel.waterLevel = float32(waterLevelFloat)
 }

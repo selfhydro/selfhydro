@@ -1,12 +1,7 @@
 package main
 
-import (
-	"bytes"
-	"encoding/binary"
-	"fmt"
-)
-
 type mockMessage struct {
+	payload []byte
 }
 
 func (msg *mockMessage) Duplicate() bool {
@@ -30,16 +25,7 @@ func (msg *mockMessage) MessageID() uint16 {
 }
 
 func (msg *mockMessage) Payload() []byte {
-	return float32ToByte(float32(2.24))
-}
-
-func float32ToByte(f float32) []byte {
-	var buf bytes.Buffer
-	err := binary.Write(&buf, binary.LittleEndian, f)
-	if err != nil {
-		fmt.Println("binary.Write failed:", err)
-	}
-	return buf.Bytes()
+	return msg.payload
 }
 
 func (msg *mockMessage) Ack() {

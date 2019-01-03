@@ -8,7 +8,7 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 const char* ssid = "ii52938Dprimary";
 const char* wifi_password = "3dcd5fb5";
 
-const char* mqtt_server = "10.1.1.3";
+const char* mqtt_server = "water.local";
 const char* mqtt_topic = "/sensors/water_level";
 const char* mqtt_username = "";
 const char* mqtt_password = "";
@@ -78,7 +78,6 @@ void loop() {
 
   Serial.print("Reading a measurement... ");
   lox.rangingTest(&measure, false);
-  String mqttMessage = String("\"Water Level\":" + measure.RangeMilliMeter);
   char cstr[16];
   if (measure.RangeStatus != 4) { 
     Serial.print("Distance (mm): "); Serial.println(measure.RangeMilliMeter);
@@ -90,8 +89,9 @@ void loop() {
       client.publish(mqtt_topic, itoa(measure.RangeMilliMeter, cstr, 10));
     }
   } else {
-  Serial.println(" out of range ");
+      Serial.println(" out of range ");
+      client.publish(mqtt_topic, "0");
   }
 
-  delay(5000);
+  delay(1000);
 }

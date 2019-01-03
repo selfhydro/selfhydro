@@ -6,6 +6,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	rpio "github.com/stianeikeland/go-rpio"
 )
 
 type Time struct {
@@ -24,9 +26,20 @@ func main() {
 	log.SetOutput(f)
 	log.Println("Starting up SelfHydro")
 
+	error := rpio.Open()
+	if error != nil {
+		log.Fatalf("Could not open rpio pins %v", error.Error())
+		os.Exit(1)
+	}
+	defer rpio.Close()
+
 	controller := NewRaspberryPi()
 	sh := selfhydro{}
-	sh.Setup()
+	waterPump := NewWaterPump(18)
+	err = sh.Setup(waterPump)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs)

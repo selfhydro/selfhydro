@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/mock"
 	"gotest.tools/assert"
@@ -11,10 +10,12 @@ import (
 
 func Test_ShouldSetupSelfhydro(t *testing.T) {
 	mockMQTT := &MockMQTTComms{}
+	mockWaterPump := &MockActuator{}
+	mockWaterPump.On("Setup").Return(nil)
 	sh := selfhydro{
 		localMQTT: mockMQTT,
 	}
-	sh.Setup()
+	sh.Setup(mockWaterPump)
 	assert.Equal(t, sh.waterLevel.waterLevel, float32(0))
 }
 
@@ -30,20 +31,21 @@ func Test_ShouldReturnErrorIfTryingToStartButNotSetup(t *testing.T) {
 
 func Test_ShouldStartSelfhydro(t *testing.T) {
 	mockMQTT := &MockMQTTComms{}
+	mockWaterPump := &MockActuator{}
 	mockMQTT.On("ConnectDevice").Return(nil)
+	mockMQTT.On("SubscribeToTopic", string("/sensors/water_level"), mock.AnythingOfType("mqtt.MessageHandler")).Return(nil)
+	mockWaterPump.On("TurnOff").Return(nil)
+	mockWaterPump.On("GetState").Return(false)
 	sh := selfhydro{
-		localMQTT: mockMQTT,
+		localMQTT:  mockMQTT,
+		setup:      true,
+		waterPump:  mockWaterPump,
+		waterLevel: &WaterLevel{},
 	}
-	sh.Setup()
 	err := sh.Start()
 	assert.Equal(t, err, nil)
-	assert.Equal(t, sh.waterLevel.waterLevel, float32(0))
-}
-
-func TestShouldGetAmbientTemp(t *testing.T) {
-	sh := selfhydro{}
-	ambientTemp := sh.GetAmbientTemp()
-	assert.Equal(t, float32(10), ambientTemp)
+	mockMQTT.AssertNumberOfCalls(t, "ConnectDevice", 1)
+	mockMQTT.AssertNumberOfCalls(t, "SubscribeToTopic", 1)
 }
 
 func Test_ShouldGetWaterLevelFromSensor(t *testing.T) {
@@ -68,16 +70,50 @@ func Test_ShouldLogErrorWhenCantSubscribeToWaterLevel(t *testing.T) {
 
 func Test_ShouldUpdateWaterLevelWhenReceivedFromTopic(t *testing.T) {
 	mockMQTT := &MockMQTTComms{}
-	mockMessage := &mockMessage{}
+	mockMessage := &mockMessage{
+		payload: []byte("22.4"),
+	}
 	sh := &selfhydro{
 		localMQTT:  mockMQTT,
 		waterLevel: &WaterLevel{},
 	}
 	mockMQTT.On("SubscribeToTopic", string("/sensors/water_level"), mock.AnythingOfType("mqtt.MessageHandler")).Return(nil).Run(func(args mock.Arguments) {
-		waterLevelHandler(nil, mockMessage)
+		sh.waterLevelHandler(nil, mockMessage)
 	})
 	err := sh.SubscribeToWaterLevel()
-	time.Sleep(time.Second)
-	assert.Equal(t, sh.waterLevel.GetWaterLevel(), float32(2.24))
+	assert.Equal(t, sh.waterLevel.GetWaterLevel(), float32(22.4))
 	assert.Equal(t, err, nil)
+}
+
+func Test_ShouldTurnOnWaterPumpIfWaterIsVeryLow(t *testing.T) {
+	mockMQTT := &MockMQTTComms{}
+	mockWaterPump := &MockActuator{}
+	waterLevel := new(WaterLevel)
+	mockWaterPump.On("GetState").Return(false)
+	sh := selfhydro{
+		localMQTT:  mockMQTT,
+		waterPump:  mockWaterPump,
+		waterLevel: waterLevel,
+	}
+	mockWaterPump.On("TurnOn").Return(nil)
+	sh.waterLevel.waterLevel = float32(81.0)
+	sh.checkWaterLevel()
+	mockWaterPump.AssertNumberOfCalls(t, "TurnOn", 1)
+}
+
+func Test_ShouldTurnOffWaterPumpIfWaterGetToGoodLevel(t *testing.T) {
+	mockMQTT := &MockMQTTComms{}
+	mockWaterPump := &MockActuator{}
+	sh := &selfhydro{
+		localMQTT:  mockMQTT,
+		waterPump:  mockWaterPump,
+		waterLevel: &WaterLevel{},
+	}
+	mockWaterPump.On("GetState").Return(true)
+	mockWaterPump.On("TurnOn").Return(nil)
+	mockWaterPump.On("TurnOff").Return(nil)
+	sh.waterLevel.waterLevel = float32(25.0)
+
+	sh.checkWaterLevel()
+	mockWaterPump.AssertNumberOfCalls(t, "TurnOff", 1)
 }

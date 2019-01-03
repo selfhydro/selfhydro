@@ -3,11 +3,11 @@ package main
 import "github.com/stianeikeland/go-rpio"
 
 type mockRaspberryPiPinImpl struct {
-	stateOfPin rpio.State
-	readStateCalled bool
+	stateOfPin       rpio.State
+	readStateCalled  bool
 	writeStateCalled bool
+	ModeOfPin        rpio.Mode
 }
-
 
 func (r *mockRaspberryPiPinImpl) ReadState() rpio.State {
 	return r.stateOfPin
@@ -19,10 +19,10 @@ func (r *mockRaspberryPiPinImpl) WriteState(state rpio.State) {
 }
 
 func (r *mockRaspberryPiPinImpl) SetMode(mode rpio.Mode) {
-
+	r.ModeOfPin = mode
 }
 
-func (r *mockRaspberryPiPinImpl) Frequency(freq int){
+func (r *mockRaspberryPiPinImpl) Frequency(freq int) {
 }
 
 func (r *mockRaspberryPiPinImpl) DutyCycle(dutyLen, cycleLen uint32) {
@@ -30,4 +30,3 @@ func (r *mockRaspberryPiPinImpl) DutyCycle(dutyLen, cycleLen uint32) {
 
 func (r *mockRaspberryPiPinImpl) Toggle() {
 }
-
