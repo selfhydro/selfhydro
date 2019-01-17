@@ -17,7 +17,6 @@ func setupMock() *RaspberryPi {
 	testPi.MQTTClient = new(mockMQTTComms)
 
 	testPi.WiFiConnectButton = new(mockRaspberryPiPinImpl)
-	testPi.AirPumpPin = new(mockRaspberryPiPinImpl)
 	testPi.GrowLedPin = new(mockRaspberryPiPinImpl)
 	testPi.ambientTempSensor = new(sensors.MockSensor)
 	testPi.alertChannel = make(chan string)
@@ -52,13 +51,6 @@ func TestHydroCycle(t *testing.T) {
 		mockPi.changeLEDState(startTime, offTime)
 		if mockPi.GrowLedPin.ReadState() != rpio.High {
 			t.Errorf("Error: GrowLED not turned on")
-		}
-	})
-
-	t.Run("Test Air Pump cycle", func(t *testing.T) {
-		mockPi.airPumpCycle(time.Second, time.Second)
-		if mockPi.AirPumpPin.ReadState() != rpio.Low {
-			t.Errorf("Error: Airpump was not turned on")
 		}
 	})
 

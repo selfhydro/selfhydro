@@ -49,7 +49,6 @@ type RaspberryPi struct {
 	WiFiConnectButtonLED RaspberryPiPin
 	WaterTempSensor      Sensors.Sensor
 	ambientTempSensor    Sensors.Sensor
-	AirPumpPin           RaspberryPiPin
 	MQTTClient           MQTTComms
 	alertChannel         chan string
 	ledChannel           chan string
@@ -67,9 +66,6 @@ func NewRaspberryPi() *RaspberryPi {
 
 	pi.GrowLedPin = NewRaspberryPiPin(19)
 	pi.GrowLedPin.SetMode(rpio.Output)
-
-	pi.AirPumpPin = NewRaspberryPiPin(21)
-	pi.AirPumpPin.SetMode(rpio.Output)
 
 	pi.MQTTClient = new(mqttComms)
 
@@ -131,7 +127,6 @@ func (pi *RaspberryPi) StartHydroponics() {
 	go pi.startSensorCycle()
 	pi.subscribeToTopics()
 	pi.startLightCycle()
-	pi.startAirPumpCycle()
 	pi.startWifiConnectCycle()
 	pi.monitorAlerts()
 }
@@ -176,7 +171,6 @@ func (pi *RaspberryPi) StopSystem() {
 	topic := fmt.Sprintf("/devices/%s/commands/#", deviceID)
 
 	pi.GrowLedPin.WriteState(rpio.Low)
-	pi.AirPumpPin.WriteState(rpio.Low)
 	pi.MQTTClient.UnsubscribeFromTopic(topic)
 	rpio.Close()
 }
@@ -254,21 +248,6 @@ func (pi RaspberryPi) getCPUTemp() float64 {
 
 }
 
-func (pi RaspberryPi) startAirPumpCycle() {
-	go func() {
-		for {
-			pi.airPumpCycle(time.Minute*30, time.Hour*2)
-		}
-	}()
-}
-func (pi RaspberryPi) airPumpCycle(airPumpOnDuration time.Duration, airPumpOffDuration time.Duration) {
-	log.Printf("Turning on air pump")
-	pi.AirPumpPin.WriteState(rpio.High)
-	time.Sleep(airPumpOnDuration)
-	log.Printf("Turning off air pump")
-	pi.AirPumpPin.WriteState(rpio.Low)
-	time.Sleep(airPumpOffDuration)
-}
 func (pi *RaspberryPi) startWifiConnectCycle() {
 	go func() {
 		for {

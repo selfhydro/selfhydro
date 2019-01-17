@@ -36,7 +36,8 @@ func main() {
 	controller := NewRaspberryPi()
 	sh := selfhydro{}
 	waterPump := NewWaterPump(18)
-	err = sh.Setup(waterPump)
+	airPump := NewAirPump(21)
+	err = sh.Setup(waterPump, airPump)
 	if err != nil {
 		log.Fatal(err)
 	}

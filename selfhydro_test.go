@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/mock"
 	"gotest.tools/assert"
@@ -11,12 +12,16 @@ import (
 func Test_ShouldSetupSelfhydro(t *testing.T) {
 	mockMQTT := &MockMQTTComms{}
 	mockWaterPump := &MockActuator{}
+	mockAirPump := &MockActuator{}
 	mockWaterPump.On("Setup").Return(nil)
+	mockAirPump.On("Setup").Return(nil)
+
 	sh := selfhydro{
 		localMQTT: mockMQTT,
 	}
-	sh.Setup(mockWaterPump)
+	sh.Setup(mockWaterPump, mockAirPump)
 	assert.Equal(t, sh.waterLevel.waterLevel, float32(0))
+	assert.Equal(t, sh.airPumpOnDuration, time.Minute*40)
 }
 
 func Test_ShouldReturnErrorIfTryingToStartButNotSetup(t *testing.T) {
@@ -32,20 +37,26 @@ func Test_ShouldReturnErrorIfTryingToStartButNotSetup(t *testing.T) {
 func Test_ShouldStartSelfhydro(t *testing.T) {
 	mockMQTT := &MockMQTTComms{}
 	mockWaterPump := &MockActuator{}
+	mockAirPump := &MockActuator{}
 	mockMQTT.On("ConnectDevice").Return(nil)
 	mockMQTT.On("SubscribeToTopic", string("/sensors/water_level"), mock.AnythingOfType("mqtt.MessageHandler")).Return(nil)
 	mockWaterPump.On("TurnOff").Return(nil)
 	mockWaterPump.On("GetState").Return(false)
+	mockAirPump.On("TurnOn").Return(nil)
+	mockAirPump.On("TurnOff").Return(nil)
 	sh := selfhydro{
 		localMQTT:  mockMQTT,
 		setup:      true,
 		waterPump:  mockWaterPump,
 		waterLevel: &WaterLevel{},
+		airPump:    mockAirPump,
 	}
 	err := sh.Start()
+	time.Sleep(time.Millisecond)
 	assert.Equal(t, err, nil)
 	mockMQTT.AssertNumberOfCalls(t, "ConnectDevice", 1)
 	mockMQTT.AssertNumberOfCalls(t, "SubscribeToTopic", 1)
+	mockAirPump.AssertCalled(t, "TurnOn")
 }
 
 func Test_ShouldGetWaterLevelFromSensor(t *testing.T) {
@@ -101,7 +112,7 @@ func Test_ShouldTurnOnWaterPumpIfWaterIsVeryLow(t *testing.T) {
 	mockWaterPump.AssertNumberOfCalls(t, "TurnOn", 1)
 }
 
-func Test_ShouldTurnOffWaterPumpIfWaterGetToGoodLevel(t *testing.T) {
+func Test_ShouldTurnOffWaterPumpIfWaterGetsToGoodLevel(t *testing.T) {
 	mockMQTT := &MockMQTTComms{}
 	mockWaterPump := &MockActuator{}
 	sh := &selfhydro{
@@ -117,3 +128,44 @@ func Test_ShouldTurnOffWaterPumpIfWaterGetToGoodLevel(t *testing.T) {
 	sh.checkWaterLevel()
 	mockWaterPump.AssertNumberOfCalls(t, "TurnOff", 1)
 }
+
+func Test_ShouldTurnOnAirPumps(t *testing.T) {
+	mockAirPump := &MockActuator{}
+	mockAirPump.On("TurnOn").Return(nil)
+	mockAirPump.On("TurnOff").Return(nil)
+	sh := &selfhydro{
+		airPump: mockAirPump,
+	}
+	sh.runAirPumpCycle()
+	time.Sleep(time.Microsecond)
+	mockAirPump.AssertCalled(t, "TurnOn")
+}
+
+func Test_ShouldTurnOffAirPumpAfterSetDuration(t *testing.T) {
+	mockAirPump := &MockActuator{}
+	mockAirPump.On("TurnOn").Return(nil)
+	mockAirPump.On("TurnOff").Return(nil)
+	sh := &selfhydro{
+		airPump:           mockAirPump,
+		airPumpOnDuration: -time.Microsecond,
+	}
+	sh.runAirPumpCycle()
+	time.Sleep(time.Millisecond)
+	mockAirPump.AssertCalled(t, "TurnOn")
+	mockAirPump.AssertCalled(t, "TurnOff")
+}
+
+// func Test_ShouldTurnOnAirPumpEveryTimeFrequencyPeriodElapses(t *testing.T) {
+// 	mockAirPump := &MockActuator{}
+// 	mockAirPump.On("TurnOn").Return(nil)
+// 	mockAirPump.On("TurnOff").Return(nil)
+// 	sh := &selfhydro{
+// 		airPump:           mockAirPump,
+// 		airPumpOnDuration: 0,
+// 		airPumpFrequency:  time.Microsecond,
+// 	}
+// 	sh.runAirPump()
+// 	time.Sleep(time.Microsecond * 5)
+// 	mockAirPump.AssertNumberOfCalls(t, "TurnOn", 2)
+// 	mockAirPump.AssertNumberOfCalls(t, "TurnOff", 2)
+// }

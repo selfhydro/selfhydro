@@ -4,16 +4,20 @@ import (
 	"errors"
 	"log"
 	"strconv"
+	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
 type selfhydro struct {
-	currentTemp float32
-	waterLevel  *WaterLevel
-	waterPump   Actuator
-	localMQTT   MQTTComms
-	setup       bool
+	currentTemp       float32
+	waterLevel        *WaterLevel
+	waterPump         Actuator
+	airPump           Actuator
+	airPumpOnDuration time.Duration
+	airPumpFrequency  time.Duration
+	localMQTT         MQTTComms
+	setup             bool
 }
 
 const (
@@ -27,10 +31,13 @@ const (
 	WATER_LEVEL_TOPIC = "/sensors/water_level"
 )
 
-func (sh *selfhydro) Setup(waterPump Actuator) error {
+func (sh *selfhydro) Setup(waterPump, airPump Actuator) error {
 	sh.waterLevel = &WaterLevel{}
 	sh.waterPump = waterPump
 	sh.waterPump.Setup()
+	sh.airPumpOnDuration = time.Minute * 40
+	sh.airPump = airPump
+	sh.airPump.Setup()
 	sh.localMQTT = NewLocalMQTT()
 	sh.setup = true
 	return nil
@@ -43,6 +50,7 @@ func (sh *selfhydro) Start() error {
 	sh.localMQTT.ConnectDevice()
 	sh.SubscribeToWaterLevel()
 	sh.RunWaterPump()
+	sh.runAirPump()
 	return nil
 }
 
@@ -60,6 +68,22 @@ func (sh *selfhydro) RunWaterPump() {
 			sh.checkWaterLevel()
 		}
 	}()
+}
+
+func (sh selfhydro) runAirPump() {
+	go func() {
+		for {
+			sh.runAirPumpCycle()
+			time.Sleep(sh.airPumpFrequency)
+		}
+	}()
+}
+
+func (sh selfhydro) runAirPumpCycle() {
+	sh.airPump.TurnOn()
+	time.AfterFunc(sh.airPumpOnDuration, func() {
+		sh.airPump.TurnOff()
+	})
 }
 
 func (sh selfhydro) checkWaterLevel() {
