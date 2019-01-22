@@ -18,21 +18,21 @@ var getReadDir = ioutil.ReadDir
 var sensorError = errors.New("failed to read sensor temperature")
 
 func NewDS18B20(id string) Sensor {
-	return &DS18b20{ Id: id }
+	return &DS18b20{Id: id}
 }
 
-func (ds *DS18b20) SetupDevice() (error) {
+func (ds *DS18b20) SetupDevice() error {
 	files, err := getReadDir(dataDirectory)
 	if err != nil {
 		log.Printf("error reading directory: %v", err)
-    return errors.New("error finding directory for sensor")
+		return errors.New("error finding directory for sensor")
 	}
 	for _, file := range files {
 		if !strings.Contains(file.Name(), "w1") {
 			ds.Id = file.Name()
 		}
 	}
-  return nil
+	return nil
 }
 
 func (ds DS18b20) GetState() (float32, error) {

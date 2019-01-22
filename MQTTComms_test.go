@@ -4,7 +4,6 @@ import "testing"
 
 func TestMQTTComms_ConnectDevice(t *testing.T) {
 
-
 }
 
 //func TestPublishMessage(t *testing.T) {

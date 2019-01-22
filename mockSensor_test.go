@@ -2,7 +2,7 @@ package main
 
 import "github.com/stianeikeland/go-rpio"
 
-type mockSensor struct{
+type mockSensor struct {
 	sensorState rpio.State
 }
 

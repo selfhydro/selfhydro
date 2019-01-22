@@ -33,7 +33,7 @@ func (r *raspberryPiPinImpl) SetMode(mode rpio.Mode) {
 	r.rpioPin.Mode(mode)
 }
 
-func (r *raspberryPiPinImpl) Frequency(freq int){
+func (r *raspberryPiPinImpl) Frequency(freq int) {
 	r.rpioPin.Freq(freq)
 }
 

@@ -4,19 +4,19 @@ import "log"
 
 type MCP9808 struct {
 	address string
-	device i2cDevice
+	device  i2cDevice
 }
 
 const (
 	defaultI2CAddr = 0x18
-	regTemp             = 0x05
+	regTemp        = 0x05
 )
 
 func NewMCP9808() Sensor {
 	return &MCP9808{}
 }
 
-func (mcp9808 *MCP9808) SetupDevice() (error) {
+func (mcp9808 *MCP9808) SetupDevice() error {
 	var err error
 	mcp9808.device, err = NewI2C(defaultI2CAddr, 1)
 	if err != nil {

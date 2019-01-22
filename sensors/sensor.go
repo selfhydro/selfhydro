@@ -1,6 +1,6 @@
 package sensors
 
 type Sensor interface {
-	SetupDevice() (error)
+	SetupDevice() error
 	GetState() (float32, error)
 }

@@ -208,18 +208,3 @@ func Test_ShouldWaitFor3ReadingsOverMinWateLevelToTurnOnWaterPump(t *testing.T) 
 	sh.checkWaterLevel()
 	mockWaterPump.AssertNumberOfCalls(t, "TurnOn", 0)
 }
-
-// func Test_ShouldTurnOnAirPumpEveryTimeFrequencyPeriodElapses(t *testing.T) {
-// 	mockAirPump := &MockActuator{}
-// 	mockAirPump.On("TurnOn").Return(nil)
-// 	mockAirPump.On("TurnOff").Return(nil)
-// 	sh := &selfhydro{
-// 		airPump:           mockAirPump,
-// 		airPumpOnDuration: 0,
-// 		airPumpFrequency:  time.Microsecond,
-// 	}
-// 	sh.runAirPump()
-// 	time.Sleep(time.Microsecond * 5)
-// 	mockAirPump.AssertNumberOfCalls(t, "TurnOn", 2)
-// 	mockAirPump.AssertNumberOfCalls(t, "TurnOff", 2)
-// }
