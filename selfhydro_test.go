@@ -21,7 +21,7 @@ func Test_ShouldSetupSelfhydro(t *testing.T) {
 	}
 	sh.Setup(mockWaterPump, mockAirPump)
 	assert.Equal(t, sh.waterLevel.waterLevel, float32(0))
-	assert.Equal(t, sh.airPumpOnDuration, time.Minute*40)
+	assert.Equal(t, sh.airPumpOnDuration, time.Minute*30)
 }
 
 func Test_ShouldReturnErrorIfTryingToStartButNotSetup(t *testing.T) {
@@ -102,14 +102,16 @@ func Test_ShouldTurnOnWaterPumpIfWaterIsVeryLow(t *testing.T) {
 	waterLevel := new(WaterLevel)
 	mockWaterPump.On("GetState").Return(false)
 	sh := selfhydro{
-		localMQTT:  mockMQTT,
-		waterPump:  mockWaterPump,
-		waterLevel: waterLevel,
+		localMQTT:             mockMQTT,
+		waterPump:             mockWaterPump,
+		waterLevel:            waterLevel,
+		lowWaterLevelReadings: 4,
 	}
 	mockWaterPump.On("TurnOn").Return(nil)
 	sh.waterLevel.waterLevel = float32(81.0)
 	sh.checkWaterLevel()
 	mockWaterPump.AssertNumberOfCalls(t, "TurnOn", 1)
+	assert.Equal(t, sh.lowWaterLevelReadings, 0)
 }
 
 func Test_ShouldTurnOffWaterPumpIfWaterGetsToGoodLevel(t *testing.T) {
@@ -153,6 +155,58 @@ func Test_ShouldTurnOffAirPumpAfterSetDuration(t *testing.T) {
 	time.Sleep(time.Millisecond)
 	mockAirPump.AssertCalled(t, "TurnOn")
 	mockAirPump.AssertCalled(t, "TurnOff")
+}
+
+func Test_ShouldNotTurnOnWaterPumpAgainWhenLastTurnOnTimeWasTooRecently(t *testing.T) {
+	mockMQTT := &MockMQTTComms{}
+	mockWaterPump := &MockActuator{}
+	waterLevel := new(WaterLevel)
+	mockWaterPump.On("GetState").Return(false)
+	sh := selfhydro{
+		localMQTT:           mockMQTT,
+		waterPump:           mockWaterPump,
+		waterLevel:          waterLevel,
+		waterPumpLastOnTime: time.Now().Add(time.Hour * -2),
+	}
+	mockWaterPump.On("TurnOn").Return(nil)
+	sh.waterLevel.waterLevel = float32(81.0)
+	sh.checkWaterLevel()
+	mockWaterPump.AssertNumberOfCalls(t, "TurnOn", 0)
+}
+func Test_OnlyTurnOnWaterPumpAfterEnoughTimeHasElasped(t *testing.T) {
+	mockMQTT := &MockMQTTComms{}
+	mockWaterPump := &MockActuator{}
+	waterLevel := new(WaterLevel)
+	mockWaterPump.On("GetState").Return(false)
+	sh := selfhydro{
+		localMQTT:             mockMQTT,
+		waterPump:             mockWaterPump,
+		waterLevel:            waterLevel,
+		lowWaterLevelReadings: 3,
+		waterPumpLastOnTime:   time.Now().Add(time.Hour * -6),
+	}
+	mockWaterPump.On("TurnOn").Return(nil)
+	sh.waterLevel.waterLevel = float32(81.0)
+	sh.checkWaterLevel()
+	mockWaterPump.AssertNumberOfCalls(t, "TurnOn", 1)
+}
+
+func Test_ShouldWaitFor3ReadingsOverMinWateLevelToTurnOnWaterPump(t *testing.T) {
+	mockMQTT := &MockMQTTComms{}
+	mockWaterPump := &MockActuator{}
+	waterLevel := new(WaterLevel)
+	mockWaterPump.On("GetState").Return(false)
+	sh := selfhydro{
+		localMQTT:             mockMQTT,
+		waterPump:             mockWaterPump,
+		waterLevel:            waterLevel,
+		waterPumpLastOnTime:   time.Now().Add(time.Hour * -6),
+		lowWaterLevelReadings: 1,
+	}
+	mockWaterPump.On("TurnOn").Return(nil)
+	sh.waterLevel.waterLevel = float32(81.0)
+	sh.checkWaterLevel()
+	mockWaterPump.AssertNumberOfCalls(t, "TurnOn", 0)
 }
 
 // func Test_ShouldTurnOnAirPumpEveryTimeFrequencyPeriodElapses(t *testing.T) {

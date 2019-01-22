@@ -10,22 +10,28 @@ import (
 )
 
 type selfhydro struct {
-	currentTemp       float32
-	waterLevel        *WaterLevel
-	waterPump         Actuator
-	airPump           Actuator
-	airPumpOnDuration time.Duration
-	airPumpFrequency  time.Duration
-	localMQTT         MQTTComms
-	setup             bool
+	currentTemp           float32
+	waterLevel            *WaterLevel
+	waterPump             Actuator
+	waterPumpLastOnTime   time.Time
+	lowWaterLevelReadings int
+	airPump               Actuator
+	airPumpOnDuration     time.Duration
+	airPumpFrequency      time.Duration
+	localMQTT             MQTTComms
+	setup                 bool
 }
 
 const (
 	WATER_PUMP_PIN = 18
 )
 
-var WATER_MIN_LEVEL float32 = 80
+var WaterMinLevel float32 = 80
 var WATER_MAX_LEVEL float32 = 35
+var AIR_PUMP_ON_DURATION = time.Minute * 30
+var AIR_PUMP_FREQUENCY = time.Minute * 60
+var MinWaterPumpOffPeriod = time.Hour * 5
+var MIN_LOW_WATER_READINGS = 3
 
 const (
 	WATER_LEVEL_TOPIC = "/sensors/water_level"
@@ -35,10 +41,11 @@ func (sh *selfhydro) Setup(waterPump, airPump Actuator) error {
 	sh.waterLevel = &WaterLevel{}
 	sh.waterPump = waterPump
 	sh.waterPump.Setup()
-	sh.airPumpOnDuration = time.Minute * 40
 	sh.airPump = airPump
 	sh.airPump.Setup()
 	sh.localMQTT = NewLocalMQTT()
+	sh.airPumpFrequency = AIR_PUMP_FREQUENCY
+	sh.airPumpOnDuration = AIR_PUMP_ON_DURATION
 	sh.setup = true
 	return nil
 }
@@ -52,6 +59,10 @@ func (sh *selfhydro) Start() error {
 	sh.RunWaterPump()
 	sh.runAirPump()
 	return nil
+}
+
+func (sh *selfhydro) StopSelfhydro() {
+
 }
 
 func (sh selfhydro) SubscribeToWaterLevel() error {
@@ -80,17 +91,32 @@ func (sh selfhydro) runAirPump() {
 }
 
 func (sh selfhydro) runAirPumpCycle() {
+	log.Print("turning on air pumps")
 	sh.airPump.TurnOn()
 	time.AfterFunc(sh.airPumpOnDuration, func() {
+		log.Print("turning off air pumps")
 		sh.airPump.TurnOff()
 	})
 }
 
-func (sh selfhydro) checkWaterLevel() {
-	if sh.waterLevel.GetWaterLevel() > WATER_MIN_LEVEL && !sh.waterPump.GetState() {
+func (sh *selfhydro) checkWaterLevel() {
+	var turnOn = false
+	var lastOnTimeTooRecently = time.Now().Sub(sh.waterPumpLastOnTime) <= MinWaterPumpOffPeriod && sh.waterPumpLastOnTime != time.Time{}
+	if lastOnTimeTooRecently {
+		log.Print("Water pump turned on too recently not turning on")
+	}
+	if sh.waterLevel.GetWaterLevel() > WaterMinLevel && !lastOnTimeTooRecently {
+		sh.lowWaterLevelReadings++
+	}
+	if sh.lowWaterLevelReadings > MIN_LOW_WATER_READINGS {
+		turnOn = true
+	}
+	if turnOn {
 		log.Print("turning on water pump")
 		log.Printf("water level %f", sh.waterLevel.GetWaterLevel())
 		sh.waterPump.TurnOn()
+		sh.waterPumpLastOnTime = time.Now()
+		sh.lowWaterLevelReadings = 0
 	} else if sh.waterLevel.GetWaterLevel() < WATER_MAX_LEVEL && sh.waterPump.GetState() {
 		log.Print("turning off water pump")
 		log.Printf("water level %f", sh.waterLevel.GetWaterLevel())

@@ -89,18 +89,18 @@ func TestHydroCycle(t *testing.T) {
 		}
 	})
 
-	t.Run("Test that low water alert gets triggered", func(t *testing.T) {
-		var buf bytes.Buffer
-		log.SetOutput(&buf)
-		defer log.SetOutput(os.Stdout)
-		mockPi.monitorAlerts()
-		mockPi.alertChannel <- LowWaterLevel
-		time.Sleep(time.Millisecond)
-		out := buf.String()
-		if strings.Contains(out, "Water Level is Low") {
-			t.Error("Water Level alert received")
-		}
-	})
+	// t.Run("Test that low water alert gets triggered", func(t *testing.T) {
+	// 	var buf bytes.Buffer
+	// 	log.SetOutput(&buf)
+	// 	defer log.SetOutput(os.Stdout)
+	// 	mockPi.monitorAlerts()
+	// 	mockPi.alertChannel <- LowWaterLevel
+	// 	time.Sleep(time.Millisecond)
+	// 	out := buf.String()
+	// 	if strings.Contains(out, "Water Level is Low") {
+	// 		t.Error("Water Level alert received")
+	// 	}
+	// })
 
 	t.Run("Alerts should be logged when ever they come in", func(t *testing.T) {
 		var buf bytes.Buffer
