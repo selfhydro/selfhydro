@@ -1,5 +1,7 @@
 # SelfHydro - Automated Hydroponics
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/selfhydro/selfhydro)](https://goreportcard.com/report/github.com/selfhydro/selfhydro)
+
 This is an automated hydroponic system.
 
 The system currently consists of the following:

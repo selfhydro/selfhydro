@@ -18,7 +18,7 @@ type WaterPump struct {
 	pin    RaspberryPiPin
 }
 
-var MAX_SECONDS_ON float64 = 120 * time.Second.Seconds()
+var MAX_SECONDS_ON float64 = 90 * time.Second.Seconds()
 
 func NewWaterPump(pin int) *WaterPump {
 	return &WaterPump{

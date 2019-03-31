@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	rpio "github.com/stianeikeland/go-rpio"
 )
@@ -33,7 +32,6 @@ func main() {
 	}
 	defer rpio.Close()
 
-	controller := NewRaspberryPi()
 	sh := selfhydro{}
 	waterPump := NewWaterPump(18)
 	airPump := NewAirPump(21)
@@ -44,36 +42,16 @@ func main() {
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs)
-	go func() {
-		s := <-sigs
-		if s != syscall.SIGPIPE {
-			log.Println("Exiting program...")
-			log.Println("RECEIVED SIGNAL: ", s)
-
-			controller.StopSystem()
-
-			os.Exit(0)
-		}
-
-	}()
 	sh.Start()
-	controller.StartHydroponics()
-	for {
-		time.Sleep(time.Second)
-	}
-
+	defer sh.StopSystem()
+	handleExit(<-sigs)
 }
 
-func handleExit(controller *RaspberryPi) {
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs)
-	go func() {
-		s := <-sigs
+func handleExit(signal os.Signal) {
+	if signal != syscall.SIGPIPE {
 		log.Println("Exiting program...")
-		log.Println("RECEIVED SIGNAL: ", s)
-
-		controller.StopSystem()
+		log.Println("RECEIVED SIGNAL: ", signal)
 
 		os.Exit(0)
-	}()
+	}
 }

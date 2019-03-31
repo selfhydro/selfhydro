@@ -3,7 +3,12 @@
 #include <ESP8266WiFi.h> 
 #include <PubSubClient.h> 
 
+#include <Wire.h>
+#include <VL53L0X.h>
+
+VL53L0X sensor;
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();
+#define HIGH_ACCURACY
 
 const char* ssid = "ii52938Dprimary";
 const char* wifi_password = "3dcd5fb5";
@@ -61,37 +66,43 @@ void setup() {
     Serial.println("Connection to MQTT Broker failed...");
   }
 
-  Serial.println("Adafruit VL53L0X test");
-  if (!lox.begin()) {
-    Serial.println(F("Failed to boot VL53L0X"));
-    while(1);
-  }
-  Serial.println(F("VL53L0X API Simple Ranging example\n\n"));
+  Serial.println("VL53L0X setup");
+  Wire.begin();
+
+  sensor.init();
+  sensor.setTimeout(500);
+
+  #if defined HIGH_SPEED
+    // reduce timing budget to 20 ms (default is about 33 ms)
+    sensor.setMeasurementTimingBudget(20000);
+  #elif defined HIGH_ACCURACY
+    // increase timing budget to 200 ms
+    sensor.setMeasurementTimingBudget(200000);
+  #endif
 }
 
 void loop() {
-  VL53L0X_RangingMeasurementData_t measure;
-
   if (!client.connected()){
     reconnect();
   }
 
   Serial.print("Reading a measurement... ");
-  lox.rangingTest(&measure, false);
+  double range = sensor.readRangeSingleMillimeters();
+  double adjustedRange = range - double(100);
   char cstr[16];
-  if (measure.RangeStatus != 4) { 
-    Serial.print("Distance (mm): "); Serial.println(measure.RangeMilliMeter);
-    if (client.publish(mqtt_topic, itoa(measure.RangeMilliMeter, cstr, 10))) {
+  if (!sensor.timeoutOccurred()) { 
+    Serial.print("Distance (mm): "); Serial.println(adjustedRange);
+    if (client.publish(mqtt_topic, itoa(adjustedRange, cstr, 10))) {
       Serial.println("Distance measured and message sent");
     } else {
       Serial.println("Message failed to send via mqtt");
       reconnect();
-      client.publish(mqtt_topic, itoa(measure.RangeMilliMeter, cstr, 10));
+      client.publish(mqtt_topic, itoa(adjustedRange, cstr, 10));
     }
   } else {
       Serial.println(" out of range ");
       client.publish(mqtt_topic, "0");
   }
 
-  delay(1000);
+  delay(2000);
 }
