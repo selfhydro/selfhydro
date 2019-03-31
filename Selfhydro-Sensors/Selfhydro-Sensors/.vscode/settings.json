@@ -1,6 +1,0 @@
-{
-    "terminal.integrated.env.osx": {
-        "PATH": "/Users/bchalk/.platformio/penv/bin:/Users/bchalk/.platformio/penv:/usr/local/opt/openssl/bin:/Users/bchalk/Downloads/google-cloud-sdk/bin:/usr/local/bin:/Library/Frameworks/Python.framework/Versions/3.6/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/go/bin:/usr/local/share/dotnet:/opt/X11/bin:~/.dotnet/tools:/Applications/Wireshark.app/Contents/MacOS:/Applications/Postgres.app/Contents/Versions/latest/bin:/Users/bchalk/go/bin",
-        "PLATFORMIO_CALLER": "vscode"
-    }
-}

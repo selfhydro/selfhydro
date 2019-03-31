@@ -34,3 +34,4 @@ yarn-debug.log*
 yarn-error.log*
 
 config/googleCloudIoTConfig.json
+.vscode
