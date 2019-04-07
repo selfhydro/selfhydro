@@ -1,14 +1,13 @@
 #include <Arduino.h>
-#include "Adafruit_VL53L0X.h"
 #include <ESP8266WiFi.h> 
 #include <PubSubClient.h> 
 
 #include <Wire.h>
 #include <VL53L0X.h>
 
+#include "Adafruit_VL53L0X.h"
+
 VL53L0X sensor;
-Adafruit_VL53L0X lox = Adafruit_VL53L0X();
-#define HIGH_ACCURACY
 
 const char* ssid = "ii52938Dprimary";
 const char* wifi_password = "3dcd5fb5";

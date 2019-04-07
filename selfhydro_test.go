@@ -14,15 +14,17 @@ func Test_ShouldSetupSelfhydro(t *testing.T) {
 	mockMQTT := &MockMQTTComms{}
 	mockWaterPump := &MockActuator{}
 	mockAirPump := &MockActuator{}
+	mockGrowLight := &MockActuator{}
 	externalMockMQTT := &MockMQTTComms{}
 
 	mockWaterPump.On("Setup").Return(nil)
 	mockAirPump.On("Setup").Return(nil)
+	mockGrowLight.On("Setup").Return(nil)
 	sh := selfhydro{
 		localMQTT:    mockMQTT,
 		externalMQTT: externalMockMQTT,
 	}
-	sh.Setup(mockWaterPump, mockAirPump)
+	sh.Setup(mockWaterPump, mockAirPump, mockGrowLight)
 	assert.Equal(t, sh.airPumpOnDuration, time.Minute*30)
 }
 
@@ -40,6 +42,7 @@ func Test_ShouldStartSelfhydro(t *testing.T) {
 	mockMQTT := &MockMQTTComms{}
 	mockWaterPump := &MockActuator{}
 	mockAirPump := &MockActuator{}
+	mockGrowLight := &MockActuator{}
 	mockExternalMQTT := &MockMQTTComms{}
 	mockMQTT.On("ConnectDevice").Return(nil)
 	mockMQTT.On("SubscribeToTopic", string("/sensors/water_level"), mock.AnythingOfType("mqtt.MessageHandler")).Return(nil)
@@ -47,7 +50,12 @@ func Test_ShouldStartSelfhydro(t *testing.T) {
 	mockWaterPump.On("GetState").Return(false)
 	mockAirPump.On("TurnOn").Return(nil)
 	mockAirPump.On("TurnOff").Return(nil)
+	mockGrowLight.On("GetState").Return(true)
+	mockGrowLight.On("TurnOff").Return(nil)
+	mockGrowLight.On("TurnOn").Return(nil)
+	mockExternalMQTT.On("GetDeviceID").Return("sdss112")
 	mockExternalMQTT.On("ConnectDevice").Return(nil)
+	mockExternalMQTT.On("publishMessage", mock.Anything, mock.Anything).Return(nil)
 	sh := selfhydro{
 		localMQTT:    mockMQTT,
 		setup:        true,
@@ -55,6 +63,7 @@ func Test_ShouldStartSelfhydro(t *testing.T) {
 		waterLevel:   &WaterLevel{},
 		airPump:      mockAirPump,
 		externalMQTT: mockExternalMQTT,
+		growLight:    mockGrowLight,
 	}
 	err := sh.Start()
 	time.Sleep(time.Millisecond)
@@ -242,7 +251,43 @@ func Test_ShouldPublishState(t *testing.T) {
 		externalMQTT: mockMQTT,
 		waterLevel:   mockWaterLevel,
 	}
-	sh.publishWaterLevel()
+	sh.publishState()
 	expectedMessage := fmt.Sprintf("{\"waterLevel\":20,\"time\":\"%s\"}", time.Format("20060102150405"))
 	mockMQTT.AssertCalled(t, "publishMessage", "/devices/device/events", expectedMessage)
+}
+
+func Test_ShouldTurnOnGrowLight(t *testing.T) {
+	mockGrowLight := &MockActuator{}
+	startTimeString := time.Now().Add(-time.Minute).Format("15:04:05")
+	startTime, _ := time.Parse("15:04:05", startTimeString)
+
+	offTimeString := time.Now().Add(time.Minute).Format("15:04:05")
+	offTime, _ := time.Parse("15:04:05", offTimeString)
+
+	sh := selfhydro{
+		growLight: mockGrowLight,
+	}
+	mockGrowLight.On("TurnOn").Return(nil)
+	mockGrowLight.On("GetState").Return(false)
+	sh.changeGrowLightState(startTime, offTime)
+	mockGrowLight.AssertNumberOfCalls(t, "TurnOn", 1)
+}
+
+func Test_ShouldTurnOffGrowLights(t *testing.T) {
+	mockGrowLight := &MockActuator{}
+	startTimeString := time.Now().Add(time.Minute).Format("15:04:05")
+	startTime, _ := time.Parse("15:04:05", startTimeString)
+
+	offTimeString := time.Now().Add(-time.Minute).Format("15:04:05")
+	offTime, _ := time.Parse("15:04:05", offTimeString)
+
+	sh := selfhydro{
+		growLight: mockGrowLight,
+	}
+	mockGrowLight.On("TurnOn").Return(nil)
+	mockGrowLight.On("TurnOff").Return(nil)
+	mockGrowLight.On("GetState").Return(true)
+	sh.changeGrowLightState(startTime, offTime)
+	mockGrowLight.AssertNumberOfCalls(t, "TurnOn", 0)
+	mockGrowLight.AssertNumberOfCalls(t, "TurnOff", 1)
 }

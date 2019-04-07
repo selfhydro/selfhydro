@@ -63,13 +63,15 @@ func (mqtt *mqttComms) ConnectDevice() error {
 	if err := mqtt.authenticateDevice(); err != nil {
 		return err
 	}
-	timerTillRefresh := time.NewTimer(JWTEXPIRYINHOURS * time.Hour)
 	go func() {
 		for {
+			timerTillRefresh := time.NewTimer((JWTEXPIRYINHOURS - 1) * time.Hour)
 			<-timerTillRefresh.C
 			fmt.Println("Refreshing JWT Token and reconneting")
 			mqtt.client.Disconnect(200)
-			mqtt.authenticateDevice()
+			if err := mqtt.authenticateDevice(); err != nil {
+				log.Print(err.Error())
+			}
 			mqtt.resubscribeToTopics()
 			timerTillRefresh = time.NewTimer(JWTEXPIRYINHOURS * time.Hour)
 		}

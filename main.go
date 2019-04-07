@@ -35,7 +35,8 @@ func main() {
 	sh := selfhydro{}
 	waterPump := NewWaterPump(18)
 	airPump := NewAirPump(21)
-	err = sh.Setup(waterPump, airPump)
+	growLight := NewGrowLight(19)
+	err = sh.Setup(waterPump, airPump, growLight)
 	if err != nil {
 		log.Fatal(err)
 	}

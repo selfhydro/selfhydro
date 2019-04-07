@@ -20,6 +20,7 @@ type selfhydro struct {
 	currentTemp           float32
 	waterLevel            WaterLevelMeasurer
 	waterPump             Actuator
+	growLight             Actuator
 	waterPumpLastOnTime   time.Time
 	lowWaterLevelReadings int
 	airPump               Actuator
@@ -46,12 +47,14 @@ const (
 	WATER_LEVEL_TOPIC = "/sensors/water_level"
 )
 
-func (sh *selfhydro) Setup(waterPump, airPump Actuator) error {
+func (sh *selfhydro) Setup(waterPump, airPump, growLight Actuator) error {
 	sh.waterLevel = &WaterLevel{}
 	sh.waterPump = waterPump
 	sh.waterPump.Setup()
 	sh.airPump = airPump
 	sh.airPump.Setup()
+	sh.growLight = growLight
+	sh.growLight.Setup()
 	sh.localMQTT = NewLocalMQTT()
 	sh.externalMQTT = &mqttComms{}
 	sh.airPumpFrequency = AIR_PUMP_FREQUENCY
@@ -85,8 +88,10 @@ func (sh *selfhydro) Start() error {
 	sh.localMQTT.ConnectDevice()
 	sh.setupExternalMQTTComms()
 	sh.SubscribeToWaterLevel()
+	sh.runStatePublisherCycle()
 	sh.RunWaterPump()
 	sh.runAirPump()
+	sh.runGrowLights()
 	return nil
 }
 
@@ -100,6 +105,33 @@ func (sh selfhydro) SubscribeToWaterLevel() error {
 		return err
 	}
 	return nil
+}
+
+func (sh *selfhydro) runGrowLights() {
+	turnOnTime, _ := time.Parse("15:04:05", "06:00:00")
+	turnOffTime, _ := time.Parse("15:04:05", "18:00:00")
+	go func() {
+		sh.changeGrowLightState(turnOnTime, turnOffTime)
+	}()
+}
+
+func (sh selfhydro) changeGrowLightState(turnOnTime time.Time, turnOffTime time.Time) {
+	if !sh.growLight.GetState() && betweenTime(turnOnTime, turnOffTime) {
+		log.Printf("Turning on GROW LEDS")
+		sh.growLight.TurnOn()
+	} else if sh.growLight.GetState() && betweenTime(turnOffTime, turnOnTime.Add(time.Hour*24)) {
+		log.Printf("Turning off GROW LEDS")
+		sh.growLight.TurnOff()
+	}
+
+}
+func betweenTime(startTime time.Time, endTime time.Time) bool {
+	currentTimeString := time.Now().Format("15:04:05")
+	currentTime, _ := time.Parse("15:04:05", currentTimeString)
+	if currentTime.After(startTime) && currentTime.Before(endTime) {
+		return true
+	}
+	return false
 }
 
 func (sh *selfhydro) RunWaterPump() {
@@ -164,7 +196,16 @@ func (sh *selfhydro) waterLevelHandler(client mqtt.Client, message mqtt.Message)
 	sh.waterLevel.SetWaterLevel(float32(waterLevelFloat))
 }
 
-func (sh *selfhydro) publishWaterLevel() {
+func (sh *selfhydro) runStatePublisherCycle() {
+	go func() {
+		for {
+			sh.publishState()
+			time.Sleep(time.Hour * 3)
+		}
+	}()
+}
+
+func (sh *selfhydro) publishState() {
 	message, err := sh.createWaterLevelMessage()
 	if err != nil {
 		log.Printf("Error creating sensor message: %s", err)
