@@ -14,10 +14,12 @@ func NewGrowLight(pin int) *GrowLight {
 }
 
 func (gl *GrowLight) TurnOn() {
+	gl.lightsOn = true
 	gl.pin.WriteState(rpio.High)
 }
 
 func (gl *GrowLight) TurnOff() {
+	gl.lightsOn = false
 	gl.pin.WriteState(rpio.Low)
 }
 
@@ -27,5 +29,10 @@ func (gl *GrowLight) GetState() bool {
 
 func (gl *GrowLight) Setup() error {
 	gl.pin.SetMode(rpio.Output)
+	if gl.pin.ReadState() == rpio.High {
+		gl.lightsOn = true
+	} else {
+		gl.lightsOn = false
+	}
 	return nil
 }

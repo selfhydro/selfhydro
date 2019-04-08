@@ -109,9 +109,11 @@ func (sh selfhydro) SubscribeToWaterLevel() error {
 
 func (sh *selfhydro) runGrowLights() {
 	turnOnTime, _ := time.Parse("15:04:05", "06:00:00")
-	turnOffTime, _ := time.Parse("15:04:05", "18:00:00")
+	turnOffTime, _ := time.Parse("15:04:05", "18:30:00")
 	go func() {
-		sh.changeGrowLightState(turnOnTime, turnOffTime)
+		for {
+			sh.changeGrowLightState(turnOnTime, turnOffTime)
+		}
 	}()
 }
 
