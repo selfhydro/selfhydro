@@ -1,9 +1,10 @@
-package main
+package mqtt
 
 import (
 	"log"
 	"testing"
 
+	"github.com/bchalk101/selfhydro/mocks"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"gotest.tools/assert"
 )
@@ -16,7 +17,7 @@ func TestShouldCreateNewLocalMQTT(t *testing.T) {
 
 func TestShouldConnectToLocalMQTTBroker(t *testing.T) {
 	localMQTT := LocalMQTT{
-		mqttClient: &mockClient{},
+		mqttClient: &mocks.MockMQTTClient{},
 	}
 	localMQTT.ConnectDevice()
 	assert.Equal(t, localMQTT.mqttClient.IsConnected(), true)
@@ -24,8 +25,8 @@ func TestShouldConnectToLocalMQTTBroker(t *testing.T) {
 
 func Test_ShouldLogErrorWhenCantConnectToMQTTBroker(t *testing.T) {
 	localMQTT := LocalMQTT{
-		mqttClient: &mockClient{
-			hasErrorConnecting: true,
+		mqttClient: &mocks.MockMQTTClient{
+			HasErrorConnecting: true,
 		},
 	}
 	error := localMQTT.ConnectDevice()
@@ -34,7 +35,7 @@ func Test_ShouldLogErrorWhenCantConnectToMQTTBroker(t *testing.T) {
 
 func Test_ShouldSubscribeToAGivenTopic(t *testing.T) {
 	localMQTT := LocalMQTT{
-		mqttClient: &mockClient{},
+		mqttClient: &mocks.MockMQTTClient{},
 	}
 	error := localMQTT.SubscribeToTopic("/test/", mockMessageHandler)
 	assert.Equal(t, localMQTT.subscribtionTopics[0], "/test/")
@@ -43,8 +44,8 @@ func Test_ShouldSubscribeToAGivenTopic(t *testing.T) {
 
 func Test_ShouldReturnErrorWhenCantSubscribeToTopic(t *testing.T) {
 	localMQTT := LocalMQTT{
-		mqttClient: &mockClient{
-			hasErrorConnecting: true,
+		mqttClient: &mocks.MockMQTTClient{
+			HasErrorConnecting: true,
 		},
 	}
 	error := localMQTT.SubscribeToTopic("/test/", mockMessageHandler)

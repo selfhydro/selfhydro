@@ -3,17 +3,16 @@
 #include <PubSubClient.h> 
 
 #include <Wire.h>
-#include <VL53L0X.h>
+#include "Adafruit_Si7021.h"
+#include <ArduinoJson.h>
 
-#include "Adafruit_VL53L0X.h"
-
-VL53L0X sensor;
+Adafruit_Si7021 sensor = Adafruit_Si7021();
 
 const char* ssid = "ii52938Dprimary";
 const char* wifi_password = "3dcd5fb5";
 
 const char* mqtt_server = "water.local";
-const char* mqtt_topic = "/sensors/water_level";
+const char* mqtt_topic = "/sensors/ambient_temp_humidity";
 const char* mqtt_username = "";
 const char* mqtt_password = "";
 
@@ -64,44 +63,63 @@ void setup() {
   else {
     Serial.println("Connection to MQTT Broker failed...");
   }
+  
+  Serial.println("Si7021 test!");
+  
+  if (!sensor.begin()) {
+    Serial.println("Did not find Si7021 sensor!");
+    while (true);
+  }
 
-  Serial.println("VL53L0X setup");
-  Wire.begin();
-
-  sensor.init();
-  sensor.setTimeout(500);
-
-  #if defined HIGH_SPEED
-    // reduce timing budget to 20 ms (default is about 33 ms)
-    sensor.setMeasurementTimingBudget(20000);
-  #elif defined HIGH_ACCURACY
-    // increase timing budget to 200 ms
-    sensor.setMeasurementTimingBudget(200000);
-  #endif
+  Serial.print("Found model ");
+  switch(sensor.getModel()) {
+    case SI_Engineering_Samples:
+      Serial.print("SI engineering samples"); break;
+    case SI_7013:
+      Serial.print("Si7013"); break;
+    case SI_7020:
+      Serial.print("Si7020"); break;
+    case SI_7021:
+      Serial.print("Si7021"); break;
+    case SI_UNKNOWN:
+    default:
+      Serial.print("Unknown");
+  }
+  Serial.print(" Rev(");
+  Serial.print(sensor.getRevision());
+  Serial.print(")");
+  Serial.print(" Serial #"); Serial.print(sensor.sernum_a, HEX); Serial.println(sensor.sernum_b, HEX); 
 }
 
 void loop() {
   if (!client.connected()){
     reconnect();
   }
+    
+  float humidity = sensor.readHumidity();
+  float temperature = sensor.readTemperature();
 
-  Serial.print("Reading a measurement... ");
-  double range = sensor.readRangeSingleMillimeters();
-  double adjustedRange = range - double(100);
-  char cstr[16];
-  if (!sensor.timeoutOccurred()) { 
-    Serial.print("Distance (mm): "); Serial.println(adjustedRange);
-    if (client.publish(mqtt_topic, itoa(adjustedRange, cstr, 10))) {
-      Serial.println("Distance measured and message sent");
-    } else {
-      Serial.println("Message failed to send via mqtt");
-      reconnect();
-      client.publish(mqtt_topic, itoa(adjustedRange, cstr, 10));
-    }
+  Serial.print("Humidity:    ");
+  Serial.print(humidity, 2);
+  Serial.print("\tTemperature: ");
+  Serial.println(temperature, 2);
+
+  const int capacity = JSON_OBJECT_SIZE(3);
+  StaticJsonDocument<capacity> sensorJson;
+
+  sensorJson["humidity"] = humidity;
+  sensorJson["temperature"] = temperature;
+
+  char cstr[128];
+  serializeJson(sensorJson, cstr);
+
+  if (client.publish(mqtt_topic, cstr)) {
+    Serial.println("Distance measured and message sent");
   } else {
-      Serial.println(" out of range ");
-      client.publish(mqtt_topic, "0");
+    Serial.println("Message failed to send via mqtt");
+    reconnect();
+    client.publish(mqtt_topic, cstr);
   }
 
-  delay(2000);
+  delay(1000);
 }

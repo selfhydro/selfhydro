@@ -6,16 +6,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bchalk101/selfhydro/mocks"
 	"github.com/stretchr/testify/mock"
 	"gotest.tools/assert"
 )
 
 func Test_ShouldSetupSelfhydro(t *testing.T) {
-	mockMQTT := &MockMQTTComms{}
+	mockMQTT := &mocks.MockMQTTComms{}
 	mockWaterPump := &MockActuator{}
 	mockAirPump := &MockActuator{}
 	mockGrowLight := &MockActuator{}
-	externalMockMQTT := &MockMQTTComms{}
+	externalMockMQTT := &mocks.MockMQTTComms{}
 
 	mockWaterPump.On("Setup").Return(nil)
 	mockAirPump.On("Setup").Return(nil)
@@ -29,7 +30,7 @@ func Test_ShouldSetupSelfhydro(t *testing.T) {
 }
 
 func Test_ShouldReturnErrorIfTryingToStartButNotSetup(t *testing.T) {
-	mockMQTT := &MockMQTTComms{}
+	mockMQTT := &mocks.MockMQTTComms{}
 	mockMQTT.On("ConnectDevice").Return(nil)
 	sh := selfhydro{
 		localMQTT: mockMQTT,
@@ -39,13 +40,15 @@ func Test_ShouldReturnErrorIfTryingToStartButNotSetup(t *testing.T) {
 }
 
 func Test_ShouldStartSelfhydro(t *testing.T) {
-	mockMQTT := &MockMQTTComms{}
+	mockMQTT := &mocks.MockMQTTComms{}
 	mockWaterPump := &MockActuator{}
 	mockAirPump := &MockActuator{}
 	mockGrowLight := &MockActuator{}
-	mockExternalMQTT := &MockMQTTComms{}
+	mockExternalMQTT := &mocks.MockMQTTComms{}
+	mockMQTTTopic := &mocks.MQTTTopic{}
 	mockMQTT.On("ConnectDevice").Return(nil)
 	mockMQTT.On("SubscribeToTopic", string("/sensors/water_level"), mock.AnythingOfType("mqtt.MessageHandler")).Return(nil)
+	mockMQTTTopic.On("Subscribe", mock.Anything, mock.Anything).Return(nil)
 	mockWaterPump.On("TurnOff").Return(nil)
 	mockWaterPump.On("GetState").Return(false)
 	mockAirPump.On("TurnOn").Return(nil)
@@ -55,7 +58,7 @@ func Test_ShouldStartSelfhydro(t *testing.T) {
 	mockGrowLight.On("TurnOn").Return(nil)
 	mockExternalMQTT.On("GetDeviceID").Return("sdss112")
 	mockExternalMQTT.On("ConnectDevice").Return(nil)
-	mockExternalMQTT.On("publishMessage", mock.Anything, mock.Anything).Return(nil)
+	mockExternalMQTT.On("PublishMessage", mock.Anything, mock.Anything).Return(nil)
 	sh := selfhydro{
 		localMQTT:    mockMQTT,
 		setup:        true,
@@ -64,6 +67,7 @@ func Test_ShouldStartSelfhydro(t *testing.T) {
 		airPump:      mockAirPump,
 		externalMQTT: mockExternalMQTT,
 		growLight:    mockGrowLight,
+		environment:  mockMQTTTopic,
 	}
 	err := sh.Start()
 	time.Sleep(time.Millisecond)
@@ -74,7 +78,7 @@ func Test_ShouldStartSelfhydro(t *testing.T) {
 }
 
 func Test_ShouldGetWaterLevelFromSensor(t *testing.T) {
-	mockMQTT := &MockMQTTComms{}
+	mockMQTT := &mocks.MockMQTTComms{}
 	sh := selfhydro{
 		localMQTT: mockMQTT,
 	}
@@ -84,7 +88,7 @@ func Test_ShouldGetWaterLevelFromSensor(t *testing.T) {
 }
 
 func Test_ShouldLogErrorWhenCantSubscribeToWaterLevel(t *testing.T) {
-	mockMQTT := &MockMQTTComms{}
+	mockMQTT := &mocks.MockMQTTComms{}
 	sh := selfhydro{
 		localMQTT: mockMQTT,
 	}
@@ -94,9 +98,9 @@ func Test_ShouldLogErrorWhenCantSubscribeToWaterLevel(t *testing.T) {
 }
 
 func Test_ShouldUpdateWaterLevelWhenReceivedFromTopic(t *testing.T) {
-	mockMQTT := &MockMQTTComms{}
-	mockMessage := &mockMessage{
-		payload: []byte("22.4"),
+	mockMQTT := &mocks.MockMQTTComms{}
+	mockMessage := &mocks.MockMQTTMessage{
+		ReceivedPayload: []byte("22.4"),
 	}
 	sh := &selfhydro{
 		localMQTT:  mockMQTT,
@@ -112,9 +116,9 @@ func Test_ShouldUpdateWaterLevelWhenReceivedFromTopic(t *testing.T) {
 }
 
 func Test_ShouldTurnOnWaterPumpIfWaterIsVeryLow(t *testing.T) {
-	mockMQTT := &MockMQTTComms{}
+	mockMQTT := &mocks.MockMQTTComms{}
 	mockWaterPump := &MockActuator{}
-	mockWaterLevel := &MockWaterLevelMeasurer{}
+	mockWaterLevel := &mocks.MockWaterLevelMeasurer{}
 	mockWaterPump.On("GetState").Return(false)
 	sh := selfhydro{
 		localMQTT:             mockMQTT,
@@ -131,9 +135,9 @@ func Test_ShouldTurnOnWaterPumpIfWaterIsVeryLow(t *testing.T) {
 }
 
 func Test_ShouldTurnOffWaterPumpIfWaterGetsToGoodLevel(t *testing.T) {
-	mockMQTT := &MockMQTTComms{}
+	mockMQTT := &mocks.MockMQTTComms{}
 	mockWaterPump := &MockActuator{}
-	mockWaterLevel := &MockWaterLevelMeasurer{}
+	mockWaterLevel := &mocks.MockWaterLevelMeasurer{}
 	sh := &selfhydro{
 		localMQTT:  mockMQTT,
 		waterPump:  mockWaterPump,
@@ -175,9 +179,9 @@ func Test_ShouldTurnOffAirPumpAfterSetDuration(t *testing.T) {
 }
 
 func Test_ShouldNotTurnOnWaterPumpAgainWhenLastTurnOnTimeWasTooRecently(t *testing.T) {
-	mockMQTT := &MockMQTTComms{}
+	mockMQTT := &mocks.MockMQTTComms{}
 	mockWaterPump := &MockActuator{}
-	mockWaterLevel := &MockWaterLevelMeasurer{}
+	mockWaterLevel := &mocks.MockWaterLevelMeasurer{}
 	mockWaterPump.On("GetState").Return(false)
 	sh := selfhydro{
 		localMQTT:           mockMQTT,
@@ -192,9 +196,9 @@ func Test_ShouldNotTurnOnWaterPumpAgainWhenLastTurnOnTimeWasTooRecently(t *testi
 	mockWaterPump.AssertNumberOfCalls(t, "TurnOn", 0)
 }
 func Test_OnlyTurnOnWaterPumpAfterEnoughTimeHasElasped(t *testing.T) {
-	mockMQTT := &MockMQTTComms{}
+	mockMQTT := &mocks.MockMQTTComms{}
 	mockWaterPump := &MockActuator{}
-	mockWaterLevel := &MockWaterLevelMeasurer{}
+	mockWaterLevel := &mocks.MockWaterLevelMeasurer{}
 	mockWaterPump.On("GetState").Return(false)
 	sh := selfhydro{
 		localMQTT:             mockMQTT,
@@ -211,9 +215,9 @@ func Test_OnlyTurnOnWaterPumpAfterEnoughTimeHasElasped(t *testing.T) {
 }
 
 func Test_ShouldWaitFor3ReadingsOverMinWateLevelToTurnOnWaterPump(t *testing.T) {
-	mockMQTT := &MockMQTTComms{}
+	mockMQTT := &mocks.MockMQTTComms{}
 	mockWaterPump := &MockActuator{}
-	mockWaterLevel := &MockWaterLevelMeasurer{}
+	mockWaterLevel := &mocks.MockWaterLevelMeasurer{}
 	mockWaterPump.On("GetState").Return(false)
 	sh := selfhydro{
 		localMQTT:             mockMQTT,
@@ -230,7 +234,7 @@ func Test_ShouldWaitFor3ReadingsOverMinWateLevelToTurnOnWaterPump(t *testing.T) 
 }
 
 func Test_ShouldHandleErrorIfCantConnectToExternalMQTT(t *testing.T) {
-	mockMQTT := &MockMQTTComms{}
+	mockMQTT := &mocks.MockMQTTComms{}
 	sh := selfhydro{
 		externalMQTT: mockMQTT,
 	}
@@ -241,9 +245,9 @@ func Test_ShouldHandleErrorIfCantConnectToExternalMQTT(t *testing.T) {
 }
 
 func Test_ShouldPublishState(t *testing.T) {
-	mockMQTT := &MockMQTTComms{}
-	mockWaterLevel := &MockWaterLevelMeasurer{}
-	mockMQTT.On("publishMessage", mock.Anything, mock.Anything).Return(nil)
+	mockMQTT := &mocks.MockMQTTComms{}
+	mockWaterLevel := &mocks.MockWaterLevelMeasurer{}
+	mockMQTT.On("PublishMessage", mock.Anything, mock.Anything).Return(nil)
 	mockMQTT.On("GetDeviceID").Return("device")
 	time := time.Now()
 	mockWaterLevel.On("GetWaterLevel").Return(float32(20), time)

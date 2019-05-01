@@ -1,4 +1,4 @@
-package main
+package mqtt
 
 import (
 	"log"
@@ -34,7 +34,7 @@ func (lmqtt *LocalMQTT) ConnectDevice() error {
 	return nil
 }
 
-func (lmqtt *LocalMQTT) publishMessage(topic string, message string) {
+func (lmqtt *LocalMQTT) PublishMessage(topic string, message string) {
 }
 
 func (lmqtt *LocalMQTT) GetDeviceID() string {

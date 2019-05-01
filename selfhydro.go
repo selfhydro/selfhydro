@@ -8,7 +8,8 @@ import (
 	"strconv"
 	"time"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
+	mqtt "github.com/bchalk101/selfhydro/mqtt"
+	mqttPaho "github.com/eclipse/paho.mqtt.golang"
 )
 
 type WaterLevelMessage struct {
@@ -18,6 +19,7 @@ type WaterLevelMessage struct {
 
 type selfhydro struct {
 	currentTemp           float32
+	environment           MQTTTopic
 	waterLevel            WaterLevelMeasurer
 	waterPump             Actuator
 	growLight             Actuator
@@ -26,8 +28,8 @@ type selfhydro struct {
 	airPump               Actuator
 	airPumpOnDuration     time.Duration
 	airPumpFrequency      time.Duration
-	localMQTT             MQTTComms
-	externalMQTT          MQTTComms
+	localMQTT             mqtt.MQTTComms
+	externalMQTT          mqtt.MQTTComms
 	setup                 bool
 }
 
@@ -49,14 +51,15 @@ const (
 
 func (sh *selfhydro) Setup(waterPump, airPump, growLight Actuator) error {
 	sh.waterLevel = &WaterLevel{}
+	sh.environment = &Environment{}
 	sh.waterPump = waterPump
 	sh.waterPump.Setup()
 	sh.airPump = airPump
 	sh.airPump.Setup()
 	sh.growLight = growLight
 	sh.growLight.Setup()
-	sh.localMQTT = NewLocalMQTT()
-	sh.externalMQTT = &mqttComms{}
+	sh.localMQTT = mqtt.NewLocalMQTT()
+	sh.externalMQTT = &mqtt.GCPMQTTComms{}
 	sh.airPumpFrequency = AIR_PUMP_FREQUENCY
 	sh.airPumpOnDuration = AIR_PUMP_ON_DURATION
 	sh.setup = true
@@ -86,6 +89,7 @@ func (sh *selfhydro) Start() error {
 		return errors.New("must setup selfhydro before starting (use Setup())")
 	}
 	sh.localMQTT.ConnectDevice()
+	sh.environment.Subscribe(sh.localMQTT)
 	sh.setupExternalMQTTComms()
 	sh.SubscribeToWaterLevel()
 	sh.runStatePublisherCycle()
@@ -188,7 +192,7 @@ func (sh *selfhydro) checkWaterLevel() {
 	}
 }
 
-func (sh *selfhydro) waterLevelHandler(client mqtt.Client, message mqtt.Message) {
+func (sh *selfhydro) waterLevelHandler(client mqttPaho.Client, message mqttPaho.Message) {
 	waterLevel := string(message.Payload()[:])
 	waterLevelFloat, err := strconv.ParseFloat(waterLevel, 32)
 	if err != nil {
@@ -213,7 +217,7 @@ func (sh *selfhydro) publishState() {
 		log.Printf("Error creating sensor message: %s", err)
 	}
 	fmt.Print(message)
-	sh.externalMQTT.publishMessage("/devices/"+sh.externalMQTT.GetDeviceID()+"/events", message)
+	sh.externalMQTT.PublishMessage("/devices/"+sh.externalMQTT.GetDeviceID()+"/events", message)
 }
 
 func (sh *selfhydro) createWaterLevelMessage() (string, error) {

@@ -1,4 +1,4 @@
-package main
+package mqtt
 
 import (
 	"encoding/json"
@@ -14,7 +14,7 @@ import (
 
 type MQTTComms interface {
 	ConnectDevice() error
-	publishMessage(topic string, message string)
+	PublishMessage(topic string, message string)
 	GetDeviceID() string
 	SubscribeToTopic(string, MQTT.MessageHandler) error
 	UnsubscribeFromTopic(topic string)
@@ -36,7 +36,7 @@ type MQTTDetail struct {
 	DeviceID   string `json:"deviceID"`
 }
 
-type mqttComms struct {
+type GCPMQTTComms struct {
 	client      MQTT.Client
 	mqttDetails MQTTDetail
 }
@@ -58,7 +58,7 @@ var subscribeHandler MQTT.MessageHandler = func(client MQTT.Client, message MQTT
 	fmt.Printf("MSG: %s\n", message.Payload())
 }
 
-func (mqtt *mqttComms) ConnectDevice() error {
+func (mqtt *GCPMQTTComms) ConnectDevice() error {
 	mqtt.loadMQTTConfig()
 	if err := mqtt.authenticateDevice(); err != nil {
 		return err
@@ -79,15 +79,15 @@ func (mqtt *mqttComms) ConnectDevice() error {
 	return nil
 }
 
-func (mqtt *mqttComms) GetDeviceID() string {
+func (mqtt *GCPMQTTComms) GetDeviceID() string {
 	return mqtt.mqttDetails.DeviceID
 }
 
-func (mqtt *mqttComms) resubscribeToTopics() {
+func (mqtt *GCPMQTTComms) resubscribeToTopics() {
 	mqtt.SubscribeToTopic(subscriptionTopic, subscribtionHandler)
 }
 
-func (mqtt *mqttComms) SubscribeToTopic(topic string, callback MQTT.MessageHandler) error {
+func (mqtt *GCPMQTTComms) SubscribeToTopic(topic string, callback MQTT.MessageHandler) error {
 	log.Println("subscribing to topic ", topic)
 	subscriptionTopic = topic
 	subscribtionHandler = callback
@@ -99,7 +99,7 @@ func (mqtt *mqttComms) SubscribeToTopic(topic string, callback MQTT.MessageHandl
 	return nil
 }
 
-func (mqtt *mqttComms) loadMQTTConfig() {
+func (mqtt *GCPMQTTComms) loadMQTTConfig() {
 	file, err := ioutil.ReadFile("/selfhydro/config/googleCloudIoTConfig.json")
 	if err != nil {
 		log.Printf("Could not find config file for Google Core IoT connection")
@@ -112,7 +112,7 @@ func (mqtt *mqttComms) loadMQTTConfig() {
 	}
 }
 
-func (mqtt *mqttComms) authenticateDevice() error {
+func (mqtt *GCPMQTTComms) authenticateDevice() error {
 
 	tokenString, _ := createJWTToken(mqtt.mqttDetails.ProjectID)
 
@@ -139,14 +139,14 @@ func (mqtt *mqttComms) authenticateDevice() error {
 	return nil
 }
 
-func (mqtt *mqttComms) UnsubscribeFromTopic(topic string) {
+func (mqtt *GCPMQTTComms) UnsubscribeFromTopic(topic string) {
 	if token := mqtt.client.Unsubscribe(topic); token.Wait() && token.Error() != nil {
 		fmt.Println(token.Error())
 		os.Exit(1)
 	}
 	mqtt.client.Disconnect(250)
 }
-func (mqtt *mqttComms) publishMessage(topic string, message string) {
+func (mqtt *GCPMQTTComms) PublishMessage(topic string, message string) {
 	if mqtt.client.IsConnected() {
 
 		log.Printf("Sending: %v", message)
