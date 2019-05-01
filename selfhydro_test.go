@@ -261,7 +261,7 @@ func Test_ShouldPublishState(t *testing.T) {
 		ambientTemperature: mockAmbientTemperature,
 	}
 	sh.publishState()
-	expectedMessage := fmt.Sprintf(`{"temperature":21.12,"time":"%s"}`, time.Format("20060102150405"))
+	expectedMessage := fmt.Sprintf(`{"ambientTemperature":21.12,"time":"%s"}`, time.Format("20060102150405"))
 	mockMQTT.AssertCalled(t, "PublishMessage", "/devices/device/events", expectedMessage)
 }
 

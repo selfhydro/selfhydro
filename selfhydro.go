@@ -13,8 +13,8 @@ import (
 )
 
 type StateMessage struct {
-	Temperature float64 `json:"temperature"`
-	Time        string  `json:"time"`
+	AmbientTemperature float64 `json:"ambientTemperature"`
+	Time               string  `json:"time"`
 }
 
 type selfhydro struct {
