@@ -12,11 +12,12 @@ const char* ssid = "ii52938Dprimary";
 const char* wifi_password = "3dcd5fb5";
 
 const char* mqtt_server = "water.local";
-const char* mqtt_topic = "/sensors/ambient_temp_humidity";
+const char* mqtt_ambient_temperature_topic = "/state/ambient_temperature";
+const char* mqtt_ambient_humidity_topic = "/state/ambient_humidity";
 const char* mqtt_username = "";
 const char* mqtt_password = "";
 
-const char* clientID = "Water Level Sensor";
+const char* clientID = "Ambient Temperature and Humidity Sensor";
 
 WiFiClient wifiClient;
 PubSubClient client(mqtt_server, 1883, wifiClient);
@@ -105,21 +106,32 @@ void loop() {
   Serial.println(temperature, 2);
 
   const int capacity = JSON_OBJECT_SIZE(3);
-  StaticJsonDocument<capacity> sensorJson;
+  StaticJsonDocument<capacity> ambientTemperatureJson;
+  StaticJsonDocument<capacity> ambientHumidityJson;
+  ambientHumidityJson["humidity"] = humidity;
+  ambientTemperatureJson["temperature"] = temperature;
 
-  sensorJson["humidity"] = humidity;
-  sensorJson["temperature"] = temperature;
+  char ambientTemperatureCStr[128];
+  char ambientHumidityCStr[128];
 
-  char cstr[128];
-  serializeJson(sensorJson, cstr);
+  serializeJson(ambientTemperatureJson, ambientTemperatureCStr);
+  serializeJson(ambientHumidityJson, ambientHumidityCStr);
 
-  if (client.publish(mqtt_topic, cstr)) {
-    Serial.println("Distance measured and message sent");
+  if (client.publish(mqtt_ambient_temperature_topic, ambientTemperatureCStr)) {
+    Serial.println("Temperature measured and message sent");
   } else {
     Serial.println("Message failed to send via mqtt");
     reconnect();
-    client.publish(mqtt_topic, cstr);
+    client.publish(mqtt_ambient_temperature_topic, ambientTemperatureCStr);
   }
 
-  delay(1000);
+  if (client.publish(mqtt_ambient_humidity_topic, ambientHumidityCStr)) {
+    Serial.println("Humidity mesured and message sent");
+  } else {
+    Serial.println("Message failed to send via mqtt");
+    reconnect();
+    client.publish(mqtt_ambient_humidity_topic, ambientHumidityCStr);
+  }
+
+  delay(5000);
 }

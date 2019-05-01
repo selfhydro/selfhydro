@@ -12,14 +12,14 @@ import (
 	mqttPaho "github.com/eclipse/paho.mqtt.golang"
 )
 
-type WaterLevelMessage struct {
-	WaterLevel float32 `json:"waterLevel"`
-	Time       string  `json:"time"`
+type StateMessage struct {
+	Temperature float64 `json:"temperature"`
+	Time        string  `json:"time"`
 }
 
 type selfhydro struct {
 	currentTemp           float32
-	environment           MQTTTopic
+	ambientTemperature    MQTTTopic
 	waterLevel            WaterLevelMeasurer
 	waterPump             Actuator
 	growLight             Actuator
@@ -51,7 +51,7 @@ const (
 
 func (sh *selfhydro) Setup(waterPump, airPump, growLight Actuator) error {
 	sh.waterLevel = &WaterLevel{}
-	sh.environment = &Environment{}
+	sh.ambientTemperature = &AmbientTemperature{}
 	sh.waterPump = waterPump
 	sh.waterPump.Setup()
 	sh.airPump = airPump
@@ -89,7 +89,7 @@ func (sh *selfhydro) Start() error {
 		return errors.New("must setup selfhydro before starting (use Setup())")
 	}
 	sh.localMQTT.ConnectDevice()
-	sh.environment.Subscribe(sh.localMQTT)
+	sh.ambientTemperature.Subscribe(sh.localMQTT)
 	sh.setupExternalMQTTComms()
 	sh.SubscribeToWaterLevel()
 	sh.runStatePublisherCycle()
@@ -212,17 +212,17 @@ func (sh *selfhydro) runStatePublisherCycle() {
 }
 
 func (sh *selfhydro) publishState() {
-	message, err := sh.createWaterLevelMessage()
+	message, err := sh.createStateMessage()
 	if err != nil {
-		log.Printf("Error creating sensor message: %s", err)
+		log.Printf("error creating sensor message: %s", err)
 	}
-	fmt.Print(message)
 	sh.externalMQTT.PublishMessage("/devices/"+sh.externalMQTT.GetDeviceID()+"/events", message)
 }
 
-func (sh *selfhydro) createWaterLevelMessage() (string, error) {
-	waterLevel, time := sh.waterLevel.GetWaterLevel()
-	m := WaterLevelMessage{waterLevel, time.Format("20060102150405")}
+func (sh *selfhydro) createStateMessage() (string, error) {
+	temperature := sh.ambientTemperature.GetLatestData()
+	time := time.Now()
+	m := StateMessage{temperature, time.Format("20060102150405")}
 	jsonMsg, err := json.Marshal(m)
 	return string(jsonMsg), err
 }
