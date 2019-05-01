@@ -46,9 +46,11 @@ func Test_ShouldStartSelfhydro(t *testing.T) {
 	mockGrowLight := &MockActuator{}
 	mockExternalMQTT := &mocks.MockMQTTComms{}
 	mockAmbientTemperature := &mocks.MQTTTopic{}
+	mockAmbientHumidity := &mocks.MQTTTopic{}
 	mockMQTT.On("ConnectDevice").Return(nil)
 	mockMQTT.On("SubscribeToTopic", string("/sensors/water_level"), mock.AnythingOfType("mqtt.MessageHandler")).Return(nil)
 	mockAmbientTemperature.On("Subscribe", mock.Anything, mock.Anything).Return(nil)
+	mockAmbientHumidity.On("Subscribe", mock.Anything, mock.Anything).Return(nil)
 	mockWaterPump.On("TurnOff").Return(nil)
 	mockWaterPump.On("GetState").Return(false)
 	mockAirPump.On("TurnOn").Return(nil)
@@ -60,6 +62,7 @@ func Test_ShouldStartSelfhydro(t *testing.T) {
 	mockExternalMQTT.On("ConnectDevice").Return(nil)
 	mockExternalMQTT.On("PublishMessage", mock.Anything, mock.Anything).Return(nil)
 	mockAmbientTemperature.On("GetLatestData").Return(21.00)
+	mockAmbientHumidity.On("GetLatestData").Return(21.00)
 
 	sh := selfhydro{
 		localMQTT:          mockMQTT,
@@ -70,6 +73,7 @@ func Test_ShouldStartSelfhydro(t *testing.T) {
 		externalMQTT:       mockExternalMQTT,
 		growLight:          mockGrowLight,
 		ambientTemperature: mockAmbientTemperature,
+		ambientHumidity:    mockAmbientHumidity,
 	}
 	err := sh.Start()
 	time.Sleep(time.Millisecond)
@@ -250,18 +254,21 @@ func Test_ShouldPublishState(t *testing.T) {
 	mockMQTT := &mocks.MockMQTTComms{}
 	mockWaterLevel := &mocks.MockWaterLevelMeasurer{}
 	mockAmbientTemperature := &mocks.MQTTTopic{}
+	mockAmbientHumidity := &mocks.MQTTTopic{}
 	mockMQTT.On("PublishMessage", mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(nil)
 	mockMQTT.On("GetDeviceID").Return("device")
 	time := time.Now()
 	mockWaterLevel.On("GetWaterLevel").Return(float32(20), time)
 	mockAmbientTemperature.On("GetLatestData").Return(21.12)
+	mockAmbientHumidity.On("GetLatestData").Return(43.22)
 	sh := selfhydro{
 		externalMQTT:       mockMQTT,
 		waterLevel:         mockWaterLevel,
 		ambientTemperature: mockAmbientTemperature,
+		ambientHumidity:    mockAmbientHumidity,
 	}
 	sh.publishState()
-	expectedMessage := fmt.Sprintf(`{"ambientTemperature":21.12,"time":"%s"}`, time.Format("20060102150405"))
+	expectedMessage := fmt.Sprintf(`{"ambientTemperature":21.12,"ambientHumidity":43.22,"time":"%s"}`, time.Format("20060102150405"))
 	mockMQTT.AssertCalled(t, "PublishMessage", "/devices/device/events", expectedMessage)
 }
 
