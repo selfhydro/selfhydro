@@ -20,15 +20,6 @@ type MQTTComms interface {
 	UnsubscribeFromTopic(topic string)
 }
 
-type SensorMessage struct {
-	WaterTemp        float32 `json:"waterTemp"`
-	AmbientTemp      float32 `json:"ambientTemp"`
-	RelativeHumidity float32 `json:"relativeHumidity"`
-	PiCPUTemp        float64 `json:"piCPUTemp"`
-	WaterLevel       float32 `json:"waterLevel"`
-	Time             string  `json:"time"`
-}
-
 type MQTTDetail struct {
 	Location   string `json:"location"`
 	ProjectID  string `json:"projectID"`
@@ -67,13 +58,12 @@ func (mqtt *GCPMQTTComms) ConnectDevice() error {
 		for {
 			timerTillRefresh := time.NewTimer((JWTEXPIRYINHOURS - 1) * time.Hour)
 			<-timerTillRefresh.C
-			fmt.Println("Refreshing JWT Token and reconneting")
+			log.Println("Refreshing JWT Token and reconneting")
 			mqtt.client.Disconnect(200)
 			if err := mqtt.authenticateDevice(); err != nil {
 				log.Print(err.Error())
 			}
 			mqtt.resubscribeToTopics()
-			timerTillRefresh = time.NewTimer(JWTEXPIRYINHOURS * time.Hour)
 		}
 	}()
 	return nil
@@ -148,7 +138,6 @@ func (mqtt *GCPMQTTComms) UnsubscribeFromTopic(topic string) {
 }
 func (mqtt *GCPMQTTComms) PublishMessage(topic string, message string) {
 	if mqtt.client.IsConnected() {
-
 		log.Printf("Sending: %v", message)
 		token := mqtt.client.Publish(topic, 0, false, message)
 		response := token.Wait()
@@ -176,10 +165,4 @@ func createJWTToken(projectId string) (string, error) {
 
 	tokenString, err := token.SignedString(rsaPrivateKey)
 	return tokenString, err
-}
-
-func CreateSensorMessage(waterTemp float32, ambientTemp float32, relativeHumidity float32, piCPUTemp float64, waterLevel float32) (string, error) {
-	m := SensorMessage{waterTemp, ambientTemp, relativeHumidity, piCPUTemp, waterLevel, time.Now().Format("20060102150405")}
-	jsonMsg, err := json.Marshal(m)
-	return string(jsonMsg), err
 }

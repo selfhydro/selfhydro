@@ -4,7 +4,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/bchalk101/selfhydro/mocks"
+	"github.com/bchalk101/selfhydro/mqtt/mocks"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"gotest.tools/assert"
 )

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/bchalk101/selfhydro/mocks"
+	mqttMocks "github.com/bchalk101/selfhydro/mqtt/mocks"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/stretchr/testify/mock"
 	"gotest.tools/assert"
@@ -18,8 +19,8 @@ func Test_ShouldReturnCurrentTempAndHumidity(t *testing.T) {
 }
 
 func Test_ShouldSubscribeToEnvironmentTopic(t *testing.T) {
-	mockMQTT := &mocks.MockMQTTComms{}
-	mockMQTTClient := &mocks.MockMQTTClient{}
+	mockMQTT := &mqttMocks.MockMQTTComms{}
+	mockMQTTClient := &mqttMocks.MockMQTTClient{}
 	mockMQTTMessage := &mocks.MockMQTTMessage{
 		ReceivedPayload: []byte(`{"temperature":20.76101}`),
 	}
