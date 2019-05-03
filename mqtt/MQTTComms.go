@@ -63,7 +63,7 @@ func (mqtt *GCPMQTTComms) ConnectDevice() error {
 			if err := mqtt.authenticateDevice(); err != nil {
 				log.Print(err.Error())
 			}
-			mqtt.resubscribeToTopics()
+			// mqtt.resubscribeToTopics()
 		}
 	}()
 	return nil
