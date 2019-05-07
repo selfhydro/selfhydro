@@ -15,6 +15,7 @@ import (
 type StateMessage struct {
 	AmbientTemperature float64 `json:"ambientTemperature"`
 	AmbientHumidity    float64 `json:"ambientHumidity"`
+	WaterTemperature   float64 `json:"waterTemperature"`
 	Time               string  `json:"time"`
 }
 
@@ -22,6 +23,7 @@ type selfhydro struct {
 	currentTemp           float32
 	ambientTemperature    MQTTTopic
 	ambientHumidity       MQTTTopic
+	waterTemperature      MQTTTopic
 	waterLevel            WaterLevelMeasurer
 	waterPump             Actuator
 	growLight             Actuator
@@ -55,6 +57,7 @@ func (sh *selfhydro) Setup(waterPump, airPump, growLight Actuator) error {
 	sh.waterLevel = &WaterLevel{}
 	sh.ambientTemperature = &AmbientTemperature{}
 	sh.ambientHumidity = &AmbientHumidity{}
+	sh.waterTemperature = &WaterTemperature{}
 	sh.waterPump = waterPump
 	sh.waterPump.Setup()
 	sh.airPump = airPump
@@ -94,6 +97,7 @@ func (sh *selfhydro) Start() error {
 	sh.localMQTT.ConnectDevice()
 	sh.ambientTemperature.Subscribe(sh.localMQTT)
 	sh.ambientHumidity.Subscribe(sh.localMQTT)
+	sh.waterTemperature.Subscribe(sh.localMQTT)
 	sh.setupExternalMQTTComms()
 	sh.SubscribeToWaterLevel()
 	sh.runStatePublisherCycle()
@@ -227,8 +231,9 @@ func (sh *selfhydro) publishState() {
 func (sh *selfhydro) createStateMessage() (string, error) {
 	temperature := sh.ambientTemperature.GetLatestData()
 	humidity := sh.ambientHumidity.GetLatestData()
+	waterTemperature := sh.waterTemperature.GetLatestData()
 	time := time.Now()
-	m := StateMessage{temperature, humidity, time.Format("20060102150405")}
+	m := StateMessage{temperature, humidity, waterTemperature, time.Format("20060102150405")}
 	jsonMsg, err := json.Marshal(m)
 	return string(jsonMsg), err
 }
