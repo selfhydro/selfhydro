@@ -212,10 +212,10 @@ func (sh *selfhydro) waterLevelHandler(client mqttPaho.Client, message mqttPaho.
 
 func (sh *selfhydro) runStatePublisherCycle() {
 	go func() {
+		time.Sleep(time.Minute)
 		for {
-			time.Sleep(time.Minute)
 			sh.publishState()
-			time.Sleep(time.Minute * 15)
+			time.Sleep(time.Hour)
 		}
 	}()
 }
