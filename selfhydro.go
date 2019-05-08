@@ -9,6 +9,7 @@ import (
 	"time"
 
 	mqtt "github.com/bchalk101/selfhydro/mqtt"
+	"github.com/bchalk101/selfhydro/sensors"
 	mqttPaho "github.com/eclipse/paho.mqtt.golang"
 )
 
@@ -21,9 +22,9 @@ type StateMessage struct {
 
 type selfhydro struct {
 	currentTemp           float32
-	ambientTemperature    MQTTTopic
-	ambientHumidity       MQTTTopic
-	waterTemperature      MQTTTopic
+	ambientTemperature    sensors.MQTTTopic
+	ambientHumidity       sensors.MQTTTopic
+	waterTemperature      sensors.MQTTTopic
 	waterLevel            WaterLevelMeasurer
 	waterPump             Actuator
 	growLight             Actuator
@@ -55,9 +56,9 @@ const (
 
 func (sh *selfhydro) Setup(waterPump, airPump, growLight Actuator) error {
 	sh.waterLevel = &WaterLevel{}
-	sh.ambientTemperature = &AmbientTemperature{}
-	sh.ambientHumidity = &AmbientHumidity{}
-	sh.waterTemperature = &WaterTemperature{}
+	sh.ambientTemperature = &sensors.AmbientTemperature{}
+	sh.ambientHumidity = &sensors.AmbientHumidity{}
+	sh.waterTemperature = &sensors.WaterTemperature{}
 	sh.waterPump = waterPump
 	sh.waterPump.Setup()
 	sh.airPump = airPump
