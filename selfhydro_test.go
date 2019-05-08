@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bchalk101/selfhydro/mocks"
-	mqttMocks "github.com/bchalk101/selfhydro/mqtt/mocks"
+	"github.com/selfhydro/selfhydro/mocks"
+	mqttMocks "github.com/selfhydro/selfhydro/mqtt/mocks"
 	"github.com/stretchr/testify/mock"
 	"gotest.tools/assert"
 )

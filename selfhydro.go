@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"time"
 
-	mqtt "github.com/bchalk101/selfhydro/mqtt"
-	"github.com/bchalk101/selfhydro/sensors"
 	mqttPaho "github.com/eclipse/paho.mqtt.golang"
+	mqtt "github.com/selfhydro/selfhydro/mqtt"
+	"github.com/selfhydro/selfhydro/sensors"
 )
 
 type StateMessage struct {
@@ -65,7 +65,7 @@ func (sh *selfhydro) Setup(waterPump, airPump, growLight Actuator) error {
 	sh.airPump.Setup()
 	sh.growLight = growLight
 	sh.growLight.Setup()
-	sh.localMQTT = mqtt.NewLocalMQTT()
+	sh.localMQTT = mqtt.NewLocalMQTT(mqtt.CLIENT_ID)
 	sh.externalMQTT = &mqtt.GCPMQTTComms{}
 	sh.airPumpFrequency = AIR_PUMP_FREQUENCY
 	sh.airPumpOnDuration = AIR_PUMP_ON_DURATION

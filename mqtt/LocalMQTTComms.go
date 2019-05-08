@@ -17,9 +17,9 @@ const (
 	CLIENT_ID         = "selfhydro-controller"
 )
 
-func NewLocalMQTT() *LocalMQTT {
+func NewLocalMQTT(clientId string) *LocalMQTT {
 	opts := MQTT.NewClientOptions().AddBroker(MQTT_LOCAL_BROKER)
-	opts.SetClientID(CLIENT_ID)
+	opts.SetClientID(clientId)
 	return &LocalMQTT{
 		mqttOptions: opts,
 		mqttClient:  MQTT.NewClient(opts),

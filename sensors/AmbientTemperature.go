@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/bchalk101/selfhydro/mqtt"
+	"github.com/selfhydro/selfhydro/mqtt"
 	mqttPaho "github.com/eclipse/paho.mqtt.golang"
 )
 

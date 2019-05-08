@@ -4,10 +4,10 @@ set -e
 
 export GOPATH=$PWD
 
-mkdir -p src/github.com/bchalk101/
-cp -R ./selfhydro src/github.com/bchalk101/.
+mkdir -p src/github.com/selfhydro/
+cp -R ./selfhydro src/github.com/selfhydro/.
 
-cd src/github.com/bchalk101/selfhydro
+cd src/github.com/selfhydro/selfhydro
 go get
 go test -cover ./... | tee test_coverage.txt
 

@@ -3,7 +3,7 @@ resources:
 - name: selfhydro
   type: git
   source:
-    uri: https://github.com/bchalk101/selfhydro.git
+    uri: https://github.com/selfhydro/selfhydro.git
 #
 #- name: selfhydro-docker-image
 #  type: docker-image
@@ -17,7 +17,7 @@ resources:
   type: semver
   source:
     driver: git
-    uri: git@github.com:bchalk101/selfhydro-version.git
+    uri: git@github.com:selfhydro/selfhydro-version.git
     branch: master
     file: version
     private_key: ((selfhydro-version-repo.private_key))
@@ -25,7 +25,7 @@ resources:
 - name: selfhydro-release
   type: github-release
   source:
-    owner: bchalk101
+    owner: selfhydro
     repository: selfhydro
     access_token: ((github-access-token))
 

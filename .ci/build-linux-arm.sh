@@ -27,11 +27,11 @@ cat > release/body <<EOF
 Selfhydro release
 EOF
 
-mkdir -p src/github.com/bchalk101/
+mkdir -p src/github.com/selfhydro/
 
-cp -R ./selfhydro src/github.com/bchalk101/.
+cp -R ./selfhydro src/github.com/selfhydro/.
 
-cd src/github.com/bchalk101/selfhydro
+cd src/github.com/selfhydro/selfhydro
 
 go get
 env ${GO_CROSS_ENV[@]} go build -o $GOPATH/release/selfhydro

@@ -3,8 +3,8 @@ package sensors
 import (
 	"testing"
 
-	"github.com/bchalk101/selfhydro/mocks"
-	mqttMocks "github.com/bchalk101/selfhydro/mqtt/mocks"
+	"github.com/selfhydro/selfhydro/mocks"
+	mqttMocks "github.com/selfhydro/selfhydro/mqtt/mocks"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 
 	"github.com/stretchr/testify/mock"

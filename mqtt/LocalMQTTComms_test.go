@@ -4,13 +4,13 @@ import (
 	"log"
 	"testing"
 
-	"github.com/bchalk101/selfhydro/mqtt/mocks"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
+	"github.com/selfhydro/selfhydro/mqtt/mocks"
 	"gotest.tools/assert"
 )
 
 func TestShouldCreateNewLocalMQTT(t *testing.T) {
-	localMQTT := NewLocalMQTT()
+	localMQTT := NewLocalMQTT("selfhydro-controller")
 	assert.Equal(t, localMQTT.mqttOptions.Servers[0].String(), "tcp://127.0.0.1:1883")
 	assert.Equal(t, localMQTT.mqttOptions.ClientID, "selfhydro-controller")
 }
