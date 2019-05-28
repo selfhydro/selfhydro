@@ -9,7 +9,7 @@ import (
 )
 
 type waterECMessage struct {
-	ElectricalConductivity float64 `json:"temperature"`
+	ElectricalConductivity float64 `json:"ecLevel"`
 }
 
 type WaterEC struct {
