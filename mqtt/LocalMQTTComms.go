@@ -13,12 +13,18 @@ type LocalMQTT struct {
 }
 
 const (
-	MQTT_LOCAL_BROKER = ":1883"
-	CLIENT_ID         = "selfhydro-controller"
+	MQTT_DEFAULT_BROKER = ":1883"
+	CLIENT_ID           = "selfhydro-controller"
 )
 
-func NewLocalMQTT(clientId string) *LocalMQTT {
-	opts := MQTT.NewClientOptions().AddBroker(MQTT_LOCAL_BROKER)
+func NewLocalMQTT(clientId string, brokerAddress string) *LocalMQTT {
+	var broker string
+	if brokerAddress == "" {
+		broker = MQTT_DEFAULT_BROKER
+	} else {
+		broker = brokerAddress
+	}
+	opts := MQTT.NewClientOptions().AddBroker(broker)
 	opts.SetClientID(clientId)
 	return &LocalMQTT{
 		mqttOptions: opts,
