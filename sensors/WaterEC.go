@@ -12,13 +12,13 @@ type waterECMessage struct {
 	ElectricalConductivity float64 `json:"ecLevel"`
 }
 
-type WaterEC struct {
+type WaterElectricalConductivity struct {
 	electricalConducivity float64
 }
 
 const WaterECTopic = "/state/water_ec"
 
-func (e *WaterEC) Subscribe(mqtt mqtt.MQTTComms) error {
+func (e *WaterElectricalConductivity) Subscribe(mqtt mqtt.MQTTComms) error {
 	if err := mqtt.SubscribeToTopic(WaterECTopic, e.ECHandler); err != nil {
 		log.Print(err.Error())
 		return err
@@ -26,12 +26,12 @@ func (e *WaterEC) Subscribe(mqtt mqtt.MQTTComms) error {
 	return nil
 }
 
-func (e *WaterEC) ECHandler(client mqttPaho.Client, message mqttPaho.Message) {
+func (e *WaterElectricalConductivity) ECHandler(client mqttPaho.Client, message mqttPaho.Message) {
 	eM := &waterECMessage{}
 	json.Unmarshal(message.Payload(), eM)
 	e.electricalConducivity = eM.ElectricalConductivity
 }
 
-func (e WaterEC) GetLatestData() float64 {
+func (e WaterElectricalConductivity) GetLatestData() float64 {
 	return e.electricalConducivity
 }
