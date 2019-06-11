@@ -2,18 +2,20 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/selfhydro/selfhydro)](https://goreportcard.com/report/github.com/selfhydro/selfhydro)
 
-This is an automated hydroponic system.
+This is an automated hydroponic system, focusing on getting the current state of the system.
 
 The system currently consists of the following:
 - Lights on a timed cycle
-- Air pump turned on every 30 mins
-- Water and ambient temperature sensors, which take readings every 3 hours
+- Air pump cycle
 - Water level of the tank
+- Temperature, Humidity, Electrical Conductivity sensors
 
-Both the lights and the air pump are controlled via relays currently
+## Overview of system architecture
+
+![](ArchitectureDiagram.jpg)
 
 ## Sensors
-- Water temperature sensor is a DS18B20 sensor - communicating over one wire.
+- Water temperature sensor is a DS18B20 sensor.
 - Ambient temperature sensor is a MCP9808 sensor, communicating using I2C.
 - Water level sensor is Ultrasonic HC-SR04 sensor.
 
