@@ -1,10 +1,14 @@
-FROM armhf/debian
+FROM arm32v6/alpine
 
 ARG TAG
 
-ADD https://github.com/selfhydro/selfhydro/releases/download/$TAG/selfhydro bin/selfhydro
+USER selfhydro
 
-RUN chmod 755 bin/selfhydro
+RUN apt update && apt install dumb-init
 
-CMD /bin/selfhydro&
+RUN mkdir -p /bin/selfhydro \
+    && curl -SL https://github.com/selfhydro/selfhydro/releases/download/$TAG/selfhydro
 
+RUN chmod 755 bin/selfhydro/selfhydro
+
+ENTRYPOINT ["dumbinit", "/bin/selfhydro"]

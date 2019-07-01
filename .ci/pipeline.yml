@@ -4,23 +4,19 @@ resources:
   type: git
   source:
     uri: https://github.com/selfhydro/selfhydro.git
-#
-#- name: selfhydro-docker-image
-#  type: docker-image
-#  source:
-#    email: ((docker-hub-email))
-#    username: ((docker-hub-username))
-#    password: ((docker-hub-password))
-#    repository: ((docker-hub-username))/selfhydro-release
+
+- name: selfhydro-docker-image
+  type: docker-image
+  source:
+    email: ((docker-hub-email))
+    username: ((docker-hub-username))
+    password: ((docker-hub-password))
+    repository: ((docker-hub-username))/selfhydro
 
 - name: version
   type: semver
   source:
-    driver: git
-    uri: git@github.com:selfhydro/selfhydro-version.git
-    branch: master
-    file: version
-    private_key: ((selfhydro-version-repo.private_key))
+    driver: gcs
 
 - name: selfhydro-release
   type: github-release
@@ -29,7 +25,7 @@ resources:
     repository: selfhydro
     access_token: ((github-access-token))
 
-jobs:    
+jobs:
 - name: tests
   plan:
   - get: selfhydro
@@ -55,20 +51,20 @@ jobs:
       body: release/body
       globs:
        [release/selfhydro, release/docker-args]
-#
-#- name: create-docker-image
-#  plan:
-#  - get: selfhydro-release
-#    trigger: true
-#    passed: [build]
-#  - get: selfhydro
-#    trigger: true
-#    passed: [build]
-#  - put: selfhydro-docker-image
-#    params:
-#      build: selfhydro/.ci/docker
-#      build_args_file: selfhydro-release/docker-args
-#      tag: selfhydro-release/tag
+
+- name: create-docker-image
+  plan:
+  - get: selfhydro-release
+    trigger: true
+    passed: [build]
+  - get: selfhydro
+    trigger: true
+    passed: [build]
+  - put: selfhydro-docker-image
+    params:
+      build: selfhydro/.ci/docker
+      build_args_file: selfhydro-release/docker-args
+      tag: selfhydro-release/tag
 
 - name: deploy
   plan:
@@ -81,6 +77,5 @@ jobs:
   - task: deploy
     file: selfhydro/.ci/deploy.yml
     params:
-          DEPLOY_KEY: ((selfhydro-rpi-deploy-key.private_key))
-#          DOCKER_USERNAME: ((docker-hub-username))
-#          DOCKER_PASSWORD: ((docker-hub-password))
+         DOCKER_USERNAME: ((docker-hub-username))
+         DOCKER_PASSWORD: ((docker-hub-password))

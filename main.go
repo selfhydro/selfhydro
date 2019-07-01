@@ -1,11 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/mitchellh/panicwrap"
 	rpio "github.com/stianeikeland/go-rpio"
 )
 
@@ -21,6 +23,14 @@ func main() {
 		log.Fatal(err)
 	}
 
+	var wrapConfig panicwrap.WrapConfig
+	exitStatus, err := panicwrap.BasicWrap(panicHandler)
+	if err != nil {
+		panic(err)
+	}
+	if exitStatus >= 0 {
+		os.Exit(exitStatus)
+	}
 	defer f.Close()
 	log.SetOutput(f)
 	log.Println("Starting up SelfHydro")
@@ -46,6 +56,11 @@ func main() {
 	sh.Start()
 	defer sh.StopSystem()
 	handleExit(<-sigs)
+}
+
+func panicHandler(output string) {
+	fmt.Printf("The child panicked:\n\n%s\n", output)
+	os.Exit(1)
 }
 
 func handleExit(signal os.Signal) {
