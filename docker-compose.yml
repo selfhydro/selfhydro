@@ -1,0 +1,5 @@
+version: "3.7"
+services:
+  selfhydro:
+    image: bchalk/selfhydro:${TAG}
+    restart: always
