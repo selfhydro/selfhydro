@@ -3,9 +3,9 @@ package sensors
 import (
 	"testing"
 
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/selfhydro/selfhydro/mocks"
 	mqttMocks "github.com/selfhydro/selfhydro/mqtt/mocks"
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/stretchr/testify/mock"
 	"gotest.tools/assert"
 )
@@ -30,4 +30,12 @@ func Test_ShouldSubscribeToEnvironmentTopic(t *testing.T) {
 	e := &AmbientTemperature{}
 	e.Subscribe(mockMQTT)
 	assert.Equal(t, e.temperature, 20.76101)
+}
+
+func Test_ShouldGetLatestSensorVoltage(t *testing.T) {
+	e := AmbientTemperature{
+		temperature: 12.2,
+		Sensor:      Sensor{batteryVoltage: 3.4, id: 111},
+	}
+	assert.Equal(t, e.GetLatestBatteryVoltage(), 3.4)
 }

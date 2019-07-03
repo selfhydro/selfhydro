@@ -4,15 +4,17 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/selfhydro/selfhydro/mqtt"
 	mqttPaho "github.com/eclipse/paho.mqtt.golang"
+	"github.com/selfhydro/selfhydro/mqtt"
 )
 
 type waterTemperatureMessage struct {
+	sensorMessage
 	Temperature float64 `json:"temperature"`
 }
 
 type WaterTemperature struct {
+	Sensor
 	temperature float64
 }
 
@@ -34,4 +36,8 @@ func (e *WaterTemperature) TemperatureHandler(client mqttPaho.Client, message mq
 
 func (e WaterTemperature) GetLatestData() float64 {
 	return e.temperature
+}
+
+func (e WaterTemperature) GetLatestBatteryVoltage() float64 {
+	return e.batteryVoltage
 }

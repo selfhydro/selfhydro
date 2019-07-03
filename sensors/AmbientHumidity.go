@@ -4,15 +4,17 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/selfhydro/selfhydro/mqtt"
 	mqttPaho "github.com/eclipse/paho.mqtt.golang"
+	"github.com/selfhydro/selfhydro/mqtt"
 )
 
 type humidityMessage struct {
+	sensorMessage
 	Humidity float64 `json:"humidity"`
 }
 
 type AmbientHumidity struct {
+	Sensor
 	humidity float64
 }
 
@@ -34,4 +36,8 @@ func (e *AmbientHumidity) HumidityHandler(client mqttPaho.Client, message mqttPa
 
 func (e AmbientHumidity) GetLatestData() float64 {
 	return e.humidity
+}
+
+func (e AmbientHumidity) GetLatestBatteryVoltage() float64 {
+	return e.batteryVoltage
 }

@@ -4,20 +4,33 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/selfhydro/selfhydro/mqtt"
 	mqttPaho "github.com/eclipse/paho.mqtt.golang"
+	"github.com/selfhydro/selfhydro/mqtt"
 )
 
 type MQTTTopic interface {
 	Subscribe(mqtt mqtt.MQTTComms) error
 	GetLatestData() float64
+	GetLatestBatteryVoltage() float64
 }
 
 type temperatureMessage struct {
+	sensorMessage
 	Temperature float64 `json:"temperature"`
 }
 
+type Sensor struct {
+	batteryVoltage float64
+	id             int
+}
+
+type sensorMessage struct {
+	BatteryVoltage float32 `json:"batteryVoltage"`
+	ID             int     `json:"id"`
+}
+
 type AmbientTemperature struct {
+	Sensor
 	temperature float64
 }
 
@@ -39,4 +52,8 @@ func (e *AmbientTemperature) TemperatureHandler(client mqttPaho.Client, message 
 
 func (e AmbientTemperature) GetLatestData() float64 {
 	return e.temperature
+}
+
+func (e AmbientTemperature) GetLatestBatteryVoltage() float64 {
+	return e.batteryVoltage
 }

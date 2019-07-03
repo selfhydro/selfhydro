@@ -8,10 +8,10 @@ resources:
 - name: selfhydro-docker-image
   type: docker-image
   source:
-    email: ((docker-hub-email))
-    username: ((docker-hub-username))
-    password: ((docker-hub-password))
-    repository: ((docker-hub-username))/selfhydro
+    email: ((docker-hub.email))
+    username: ((docker-hub.username))
+    password: ((docker-hub.password))
+    repository: ((docker-hub.username))/selfhydro
 
 - name: version
   type: semver
@@ -23,7 +23,7 @@ resources:
   source:
     owner: selfhydro
     repository: selfhydro
-    access_token: ((github-access-token))
+    access_token: ((github.access-token))
 
 jobs:
 - name: tests

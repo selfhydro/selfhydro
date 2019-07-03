@@ -9,10 +9,12 @@ import (
 )
 
 type waterECMessage struct {
+	sensorMessage
 	ElectricalConductivity float64 `json:"ecLevel"`
 }
 
 type WaterElectricalConductivity struct {
+	Sensor
 	electricalConducivity float64
 }
 
@@ -34,4 +36,8 @@ func (e *WaterElectricalConductivity) ECHandler(client mqttPaho.Client, message 
 
 func (e WaterElectricalConductivity) GetLatestData() float64 {
 	return e.electricalConducivity
+}
+
+func (e WaterElectricalConductivity) GetLatestBatteryVoltage() float64 {
+	return e.batteryVoltage
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -23,7 +22,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var wrapConfig panicwrap.WrapConfig
 	exitStatus, err := panicwrap.BasicWrap(panicHandler)
 	if err != nil {
 		panic(err)
@@ -59,7 +57,7 @@ func main() {
 }
 
 func panicHandler(output string) {
-	fmt.Printf("The child panicked:\n\n%s\n", output)
+	log.Printf("The child panicked:\n\n%s\n", output)
 	os.Exit(1)
 }
 
