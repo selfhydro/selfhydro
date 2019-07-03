@@ -3,5 +3,5 @@ fileignoreconfig:
   checksum: 3c196b4c3afda16bb241db3d4185a5b0621d6f039ecca96548009d801a02e0e6
   ignore_detectors: []
 - filename: .ci/pipeline.yml
-  checksum: c9e89fcf256ee0fe122f9b60867f8e55af7414a7f1d5d8292f094289ee192f63
+  checksum: 90d78d7789a0f27d053d5a5801410116515263ef430c1c0096e191b311fe9855
   ignore_detectors: []

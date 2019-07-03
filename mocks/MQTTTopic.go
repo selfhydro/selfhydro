@@ -38,6 +38,20 @@ func (_m *MQTTTopic) GetLatestData() float64 {
 	return r0
 }
 
+// GetSensorID provides a mock function with given fields:
+func (_m *MQTTTopic) GetSensorID() int {
+	ret := _m.Called()
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func() int); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	return r0
+}
+
 // Subscribe provides a mock function with given fields: _a0
 func (_m *MQTTTopic) Subscribe(_a0 mqtt.MQTTComms) error {
 	ret := _m.Called(_a0)

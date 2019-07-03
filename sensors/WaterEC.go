@@ -41,3 +41,7 @@ func (e WaterElectricalConductivity) GetLatestData() float64 {
 func (e WaterElectricalConductivity) GetLatestBatteryVoltage() float64 {
 	return e.batteryVoltage
 }
+
+func (e WaterElectricalConductivity) GetSensorID() int {
+	return e.id
+}

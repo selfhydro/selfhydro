@@ -41,3 +41,7 @@ func (e AmbientHumidity) GetLatestData() float64 {
 func (e AmbientHumidity) GetLatestBatteryVoltage() float64 {
 	return e.batteryVoltage
 }
+
+func (e AmbientHumidity) GetSensorID() int {
+	return e.id
+}

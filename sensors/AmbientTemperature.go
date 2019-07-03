@@ -12,6 +12,7 @@ type MQTTTopic interface {
 	Subscribe(mqtt mqtt.MQTTComms) error
 	GetLatestData() float64
 	GetLatestBatteryVoltage() float64
+	GetSensorID() int
 }
 
 type temperatureMessage struct {
@@ -56,4 +57,8 @@ func (e AmbientTemperature) GetLatestData() float64 {
 
 func (e AmbientTemperature) GetLatestBatteryVoltage() float64 {
 	return e.batteryVoltage
+}
+
+func (e AmbientTemperature) GetSensorID() int {
+	return e.id
 }

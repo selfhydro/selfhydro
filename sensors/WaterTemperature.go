@@ -41,3 +41,7 @@ func (e WaterTemperature) GetLatestData() float64 {
 func (e WaterTemperature) GetLatestBatteryVoltage() float64 {
 	return e.batteryVoltage
 }
+
+func (e WaterTemperature) GetSensorID() int {
+	return e.id
+}
