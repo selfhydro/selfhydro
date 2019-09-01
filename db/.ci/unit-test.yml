@@ -1,0 +1,17 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: golang
+    tag: stretch
+
+inputs:
+- name: selfhydro
+
+outputs:
+- name: coverage-results
+
+run:
+  path: selfhydro/db/.ci/unit-test.sh

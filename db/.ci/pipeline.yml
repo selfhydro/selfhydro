@@ -1,0 +1,113 @@
+---
+resource_types:
+  - name: terraform
+    type: docker-image
+    source:
+      repository: ljfranklin/terraform-resource
+      tag: latest
+
+resources:
+  - name: selfhydro
+    type: git
+    source:
+      uri: https://github.com/selfhydro/selfhydro.git
+
+  - name: version
+    type: semver
+    source:
+      driver: gcs
+      bucket: selfhydro-versions
+      key: selfhydro-state-db
+      json_key: |
+        {
+          "type": "service_account",
+          "project_id": "selfhydro-197504",
+          "private_key_id": "((gcs-service_account.private_key_id))",
+          "private_key": "((gcs-service_account.private_key))",
+          "client_email": "((gcs-service_account.client_email))",
+          "client_id": "((gcs-service_account.client_id))",
+          "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+          "token_uri": "https://oauth2.googleapis.com/token",
+          "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+          "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/concourse-deployment%40selfhydro-197504.iam.gserviceaccount.com"
+        }
+
+  - name: terraform
+    type: terraform
+    source:
+      backend_type: gcs
+      vars:
+        credentials: ((gcpServiceAccount.json))
+      backend_config:
+        bucket: selfhydro-infra-state
+        prefix: selfhydro-state-db
+        credentials: ((gcpServiceAccount.json))
+      env:
+        AWS_ACCESS_KEY_ID: ((aws_access.key))
+        AWS_SECRET_ACCESS_KEY: ((aws_secret.key))
+
+  - name: gcs-artifact-bucket
+    type: google-cloud-storage
+    source:
+      bucket: selfhydro-build-artifacts
+      regexp: selfhydro-state-db/release-(.*).tar
+      json_key: |
+        {
+          "type": "service_account",
+          "project_id": "selfhydro-197504",
+          "private_key_id": "((gcs-service_account.private_key_id))",
+          "private_key": "((gcs-service_account.private_key))",
+          "client_email": "((gcs-service_account.client_email))",
+          "client_id": "((gcs-service_account.client_id))",
+          "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+          "token_uri": "https://oauth2.googleapis.com/token",
+          "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+          "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/concourse-deployment%40selfhydro-197504.iam.gserviceaccount.com"
+        }
+
+jobs:
+  - name: test
+    plan:
+      - get: selfhydro
+        trigger: true
+      - task: unit-test
+        file: selfhydro/db/.ci/unit-test.yml
+  - name: build
+    plan:
+      - get: selfhydro
+        trigger: true
+        passed: [test]
+      - get: version
+        params: {bump: patch}
+      - task: build
+        file: /selfhydro/db/.ci/build.yml
+      - put: gcs-artifact-bucket
+        params:
+          file: release/selfhydro-state-db-release-*
+          predefined_acl: projectPrivate
+      - put: version
+        params: {file: version/version}
+  - name: terraform-plan
+    plan:
+      - get: selfhydro
+        trigger: true
+        passed: [build]
+      - put: terraform
+        params:
+          var_files: [selfhydro/db/infra/prod.tfvars]
+          terraform_source: selfhydro/db/infra
+          env_name: prod
+          plan_only: true
+  - name: terraform-apply
+    plan:
+      - get: selfhydro
+        passed: [terraform-plan]
+      - get: terraform
+        trigger: false
+        passed: [terraform-plan]
+      - put: terraform
+        params:
+          var_files: [selfhydro/db/infra/prod.tfvars]
+          terraform_source: selfhydro/db/infra
+          env_name: prod
+          plan_run: true

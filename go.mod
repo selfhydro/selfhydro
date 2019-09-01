@@ -3,6 +3,7 @@ module github.com/selfhydro/selfhydro
 go 1.12
 
 require (
+	github.com/aws/aws-sdk-go v1.23.9
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/google/go-cmp v0.3.0 // indirect
