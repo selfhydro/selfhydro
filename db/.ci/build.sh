@@ -2,6 +2,9 @@
 
 set -e -x
 
+apt-get update
+apt-get install zip -y
+
 VERSION=$(cat version/version)
 
 cd ./selfhydro/db/

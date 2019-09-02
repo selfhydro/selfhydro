@@ -74,7 +74,7 @@ jobs:
       - get: version
         params: {bump: patch}
       - task: build
-        file: /selfhydro/db/.ci/build.yml
+        file: selfhydro/db/.ci/build.yml
       - put: release
         params:
           file: release/selfhydro-state-db-release-*
