@@ -1,5 +1,5 @@
 provider "aws" {
-  region = "us-east-2"
+  region = "ap-southeast-2"
 }
 
 resource "aws_cloudwatch_event_rule" "once_a_day" {
