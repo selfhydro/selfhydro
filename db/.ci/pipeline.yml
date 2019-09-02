@@ -1,5 +1,10 @@
 ---
 resource_types:
+  - name: google-cloud-storage
+    type: docker-image
+    source:
+      repository: frodenas/gcs-resource
+
   - name: terraform
     type: docker-image
     source:
@@ -46,24 +51,13 @@ resources:
         AWS_ACCESS_KEY_ID: ((aws_access.key))
         AWS_SECRET_ACCESS_KEY: ((aws_secret.key))
 
-  - name: gcs-artifact-bucket
-    type: google-cloud-storage
+  - name: release
+    type: s3
     source:
-      bucket: selfhydro-build-artifacts
-      regexp: selfhydro-state-db/release-(.*).tar
-      json_key: |
-        {
-          "type": "service_account",
-          "project_id": "selfhydro-197504",
-          "private_key_id": "((gcs-service_account.private_key_id))",
-          "private_key": "((gcs-service_account.private_key))",
-          "client_email": "((gcs-service_account.client_email))",
-          "client_id": "((gcs-service_account.client_id))",
-          "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-          "token_uri": "https://oauth2.googleapis.com/token",
-          "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-          "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/concourse-deployment%40selfhydro-197504.iam.gserviceaccount.com"
-        }
+      bucket: selfhydro-releases
+      regexp: selfhydro-state-db/release-(.*).zip
+      access_key_id: ((aws_access.key))
+      secret_access_key: ((aws_secret.key))
 
 jobs:
   - name: test
@@ -81,10 +75,10 @@ jobs:
         params: {bump: patch}
       - task: build
         file: /selfhydro/db/.ci/build.yml
-      - put: gcs-artifact-bucket
+      - put: release
         params:
           file: release/selfhydro-state-db-release-*
-          predefined_acl: projectPrivate
+          acl: private
       - put: version
         params: {file: version/version}
   - name: terraform-plan
@@ -92,12 +86,15 @@ jobs:
       - get: selfhydro
         trigger: true
         passed: [build]
+      - get: version
       - put: terraform
         params:
           var_files: [selfhydro/db/infra/prod.tfvars]
           terraform_source: selfhydro/db/infra
           env_name: prod
           plan_only: true
+          env:
+            version: version/version
   - name: terraform-apply
     plan:
       - get: selfhydro
