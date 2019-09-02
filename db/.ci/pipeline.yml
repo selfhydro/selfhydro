@@ -56,7 +56,7 @@ resources:
     source:
       region_name: ap-southeast-2
       bucket: selfhydro-releases
-      regexp: selfhydro-state-db/release-(.*).zip
+      regexp: selfhydro-state-db/selfhydro-state-db-release-(.*).zip
       access_key_id: ((aws_access.key))
       secret_access_key: ((aws_secret.key))
 
