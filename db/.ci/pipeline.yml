@@ -41,8 +41,6 @@ resources:
     type: terraform
     source:
       backend_type: gcs
-      vars:
-        credentials: ((gcpServiceAccount.json))
       backend_config:
         bucket: selfhydro-infra-state
         prefix: selfhydro-state-db
@@ -88,14 +86,12 @@ jobs:
         trigger: true
         passed: [build]
       - get: version
-        passed: [terraform-plan]
       - put: terraform
         params:
-          var_files: [selfhydro/db/infra/prod.tfvars]
           terraform_source: selfhydro/db/infra
           env_name: prod
           plan_only: true
-          env:
+          vars:
             lamdba-version: version/version
   - name: terraform-apply
     plan:
@@ -105,12 +101,10 @@ jobs:
         trigger: false
         passed: [terraform-plan]
       - get: version
-        passed: [terraform-plan]
       - put: terraform
         params:
-          var_files: [selfhydro/db/infra/prod.tfvars]
           terraform_source: selfhydro/db/infra
           env_name: prod
           plan_run: true
-          env:
+          vars:
             lamdba-version: version/version
