@@ -88,6 +88,7 @@ jobs:
         trigger: true
         passed: [build]
       - get: version
+        passed: [terraform-plan]
       - put: terraform
         params:
           var_files: [selfhydro/db/infra/prod.tfvars]
@@ -95,7 +96,7 @@ jobs:
           env_name: prod
           plan_only: true
           env:
-            version: version/version
+            lamdba-version: version/version
   - name: terraform-apply
     plan:
       - get: selfhydro
@@ -103,9 +104,13 @@ jobs:
       - get: terraform
         trigger: false
         passed: [terraform-plan]
+      - get: version
+        passed: [terraform-plan]
       - put: terraform
         params:
           var_files: [selfhydro/db/infra/prod.tfvars]
           terraform_source: selfhydro/db/infra
           env_name: prod
           plan_run: true
+          env:
+            lamdba-version: version/version
