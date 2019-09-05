@@ -35,7 +35,7 @@ data "template_file" "iam_for_lambda" {
 
 resource "aws_iam_role" "iam_for_lambda" {
   name    =   "iam_for_lambda"
-  policy  =   "${data.template_file.iam_for_lambda.rendered}"
+  assume_role_policy  =   "${data.template_file.iam_for_lambda.rendered}"
 }
 
 resource "aws_lambda_function" "create_dynamo_db_tables" {
