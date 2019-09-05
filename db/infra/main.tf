@@ -1,6 +1,8 @@
 provider "aws" {
-  region = "ap-southeast-2"
+  region = "${var.region}"
 }
+
+data "aws_caller_identity" "current" {}
 
 resource "aws_cloudwatch_event_rule" "once_a_day" {
     name = "once_a_day"
@@ -22,28 +24,18 @@ resource "aws_lambda_permission" "allow_cloudwatch_to_call_create_dynamo_db_tabl
     source_arn = "${aws_cloudwatch_event_rule.once_a_day.arn}"
 }
 
-resource "aws_iam_role" "iam_for_lambda" {
-  name = "iam_for_lambda"
+data "template_file" "iam_for_lambda" {
+  template = "${file("lambda_policy.json.tpl")}"
 
-  assume_role_policy = <<EOF
-{
-	"Version": "2012-10-17",
-	"Statement": [{
-			"Effect": "Allow",
-			"Action": [
-				"dynamodb:BatchGetItem",
-				"dynamodb:GetItem",
-				"dynamodb:Query",
-				"dynamodb:Scan",
-				"dynamodb:BatchWriteItem",
-				"dynamodb:PutItem",
-				"dynamodb:UpdateItem"
-			],
-			"Resource": "*"
-		}
-	]
+  vars = {
+    dynamodb_resource = "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:*"
+    log_resource     = "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:*"
+  }
 }
-EOF
+
+resource "aws_iam_role" "iam_for_lambda" {
+  name    =   "iam_for_lambda"
+  policy  =   "${data.template_file.iam_for_lambda.rendered}"
 }
 
 resource "aws_lambda_function" "create_dynamo_db_tables" {
