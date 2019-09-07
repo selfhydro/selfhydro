@@ -38,6 +38,16 @@ data "aws_iam_policy_document" "iam_for_lambda" {
 
   statement {
     actions = [
+      "sts:assumeRole"
+    ]
+
+    principal = [
+      type = "Service"
+      identifiers = [*]
+    ]
+  }
+  statement {
+    actions = [
       "dynamodb:*"
     ]
 
