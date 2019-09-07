@@ -24,18 +24,32 @@ resource "aws_lambda_permission" "allow_cloudwatch_to_call_create_dynamo_db_tabl
     source_arn = "${aws_cloudwatch_event_rule.once_a_day.arn}"
 }
 
-data "template_file" "iam_for_lambda" {
-  template = "${file("lambda_policy.json.tpl")}"
+data "aws_iam_policy_document" "iam_for_lambda" {
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
 
-  vars = {
-    dynamodb_resource = "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:*"
-    log_resource     = "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:*"
+    resources = [
+      "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "dynamodb:*"
+    ]
+
+    resources = [
+      "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:*"
+    ]
   }
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name    =   "iam_for_lambda"
-  assume_role_policy  =   "${data.template_file.iam_for_lambda.rendered}"
+  name    = "iam_for_lambda"
+  assume_role_policy  = "${data.aws_iam_policy_document.iam_for_lambda.json}"
 }
 
 resource "aws_lambda_function" "create_dynamo_db_tables" {
