@@ -55,6 +55,10 @@ func getTableStructure(tableName string) *dynamodb.CreateTableInput {
 				AttributeName: aws.String("SystemID"),
 				AttributeType: aws.String("S"),
 			},
+			{
+				AttributeName: aws.String("AmbientTemperature"),
+				AttributeType: aws.String("N"),
+			},
 		},
 		KeySchema: []*dynamodb.KeySchemaElement{
 			{
