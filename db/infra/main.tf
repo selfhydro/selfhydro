@@ -82,7 +82,7 @@ data "aws_iam_policy_document" "dynamodb-group-lambda" {
 
 resource "aws_lambda_function" "create_dynamo_db_tables" {
   s3_bucket     = "selfhydro-releases"
-  s3_key        = "selfhydro-state-db/selfhydro-state-db-release.tar"
+  s3_key        = "selfhydro-state-db/selfhydro-state-db-release.zip"
   function_name = "selfhydroStateTableCreater"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
   handler       = "dynamoDBTableCreater.CreateTable"
