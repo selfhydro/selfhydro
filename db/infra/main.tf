@@ -27,17 +27,6 @@ resource "aws_lambda_permission" "allow_cloudwatch_to_call_create_dynamo_db_tabl
 data "aws_iam_policy_document" "iam_for_lambda" {
   statement {
     actions = [
-      "logs:CreateLogStream",
-      "logs:PutLogEvents"
-    ]
-
-    resources = [
-      "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:*"
-    ]
-  }
-
-  statement {
-    actions = [
       "sts:assumeRole"
     ]
 
@@ -45,15 +34,6 @@ data "aws_iam_policy_document" "iam_for_lambda" {
       type = "Service"
       identifiers = ["*"]
     }
-  }
-  statement {
-    actions = [
-      "dynamodb:*"
-    ]
-
-    resources = [
-      "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:*"
-    ]
   }
 }
 
