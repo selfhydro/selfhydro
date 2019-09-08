@@ -75,7 +75,7 @@ data "aws_iam_policy_document" "dynamodb-group-lambda" {
     ]
 
     resources = [
-      "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:*"",
+      "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:*",
     ]
   }
 }
