@@ -27,7 +27,7 @@ resource "aws_lambda_permission" "allow_cloudwatch_to_call_create_dynamo_db_tabl
 data "aws_iam_policy_document" "iam_for_lambda" {
   statement {
     actions = [
-      "sts:assumeRole"
+      "sts:AssumeRole"
     ]
 
     principals {
