@@ -42,9 +42,47 @@ resource "aws_iam_role" "iam_for_lambda" {
   assume_role_policy  = "${data.aws_iam_policy_document.iam_for_lambda.json}"
 }
 
+resource "aws_iam_role_policy" "lambda-cloudwatch-log-group" {
+  name = "db-cloudwatch-log-group"
+  role = "${aws_iam_role.iam_for_lambda.name}"
+  policy = "${data.aws_iam_policy_document.cloudwatch-log-group-lambda.json}"
+}
+
+data "aws_iam_policy_document" "cloudwatch-log-group-lambda" {
+  statement {
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+
+    resources = [
+      "arn:aws:logs:::*",
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "lambda-dynamodb-group" {
+  name = "state-dynamodb-group"
+  role = "${aws_iam_role.iam_for_lambda.name}"
+  policy = "${data.aws_iam_policy_document.dynamodb-group-lambda.json}"
+}
+
+data "aws_iam_policy_document" "dynamodb-group-lambda" {
+  statement {
+    actions = [
+      "dynamodb:*"
+    ]
+
+    resources = [
+      "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:*"",
+    ]
+  }
+}
+
 resource "aws_lambda_function" "create_dynamo_db_tables" {
   s3_bucket     = "selfhydro-releases"
-  s3_key        = "selfhydro-state-db/selfhydro-state-db-release-${var.lamdba-version}.tar"
+  s3_key        = "selfhydro-state-db/selfhydro-state-db-release.tar"
   function_name = "selfhydroStateTableCreater"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
   handler       = "dynamoDBTableCreater.CreateTable"

@@ -76,7 +76,7 @@ jobs:
         file: selfhydro/db/.ci/build.yml
       - put: release
         params:
-          file: release/selfhydro-state-db-release-*
+          file: release/selfhydro-state-db-release.zip
           acl: private
       - put: version
         params: {file: version/version}
@@ -85,26 +85,20 @@ jobs:
       - get: selfhydro
         trigger: true
         passed: [build]
-      - get: version
       - put: terraform
         params:
           terraform_source: selfhydro/db/infra
           env_name: prod
           plan_only: true
-          vars:
-            lamdba-version: version/version
   - name: terraform-apply
     plan:
       - get: selfhydro
         passed: [terraform-plan]
       - get: terraform
-        trigger: false
+        trigger: true
         passed: [terraform-plan]
-      - get: version
       - put: terraform
         params:
           terraform_source: selfhydro/db/infra
           env_name: prod
           plan_run: true
-          vars:
-            lamdba-version: version/version
