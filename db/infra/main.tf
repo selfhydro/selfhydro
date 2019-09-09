@@ -42,7 +42,7 @@ resource "aws_iam_role" "iam_for_lambda" {
   assume_role_policy  = "${data.aws_iam_policy_document.iam_for_lambda.json}"
 }
 
-resource "aws_iam_role_policy" "lambda-cloudwatch-log-group" {
+resource "aws_iam_policy" "lambda-cloudwatch-log-group" {
   name = "db-cloudwatch-log-group"
   path = "/"
   policy = "${data.aws_iam_policy_document.cloudwatch-log-group-lambda.json}"
