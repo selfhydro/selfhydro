@@ -67,10 +67,14 @@ data "aws_iam_policy_document" "cloudwatch-log-group-lambda" {
   }
 }
 
-resource "aws_iam_role_policy" "lambda-dynamodb-group" {
+resource "aws_iam_policy" "lambda-dynamodb-group" {
   name = "state-dynamodb-group"
-  role = "${aws_iam_role.iam_for_lambda.name}"
   policy = "${data.aws_iam_policy_document.dynamodb-group-lambda.json}"
+}
+
+resource "aws_iam_role_policy_attachment" "lambda-dynamodb" {
+  role = "${aws_iam_role.iam_for_lambda.name}"
+  policy_arn = "${aws_iam_policy.lambda-dynamodb-group.arn}"
 }
 
 data "aws_iam_policy_document" "dynamodb-group-lambda" {
