@@ -44,8 +44,13 @@ resource "aws_iam_role" "iam_for_lambda" {
 
 resource "aws_iam_role_policy" "lambda-cloudwatch-log-group" {
   name = "db-cloudwatch-log-group"
-  role = "${aws_iam_role.iam_for_lambda.name}"
+  path = "/"
   policy = "${data.aws_iam_policy_document.cloudwatch-log-group-lambda.json}"
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_logs" {
+  role = "${aws_iam_role.iam_for_lambda.name}"
+  policy_arn = "${aws_iam_policy.lambda-cloudwatch-log-group.arn}"
 }
 
 data "aws_iam_policy_document" "cloudwatch-log-group-lambda" {

@@ -93,10 +93,11 @@ jobs:
   - name: terraform-apply
     plan:
       - get: selfhydro
-        passed: [terraform-plan]
-      - get: terraform
         trigger: true
         passed: [terraform-plan]
+      - get: terraform
+        passed: [terraform-plan]
+        trigger: true
       - put: terraform
         params:
           terraform_source: selfhydro/db/infra
