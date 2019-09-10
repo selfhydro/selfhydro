@@ -8,7 +8,7 @@ apt-get install zip -y
 VERSION=$(cat version/version)
 
 cd ./selfhydro/db/
-GOOS=linux go build -o dynamoDBTableCreater
+GOOS=linux go build -v -ldflags '-d -s -w' -o dynamoDBTableCreater
 
 
 zip selfhydro-state-db-release.zip dynamoDBTableCreater
