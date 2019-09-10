@@ -101,7 +101,7 @@ resource "aws_lambda_function" "create_dynamo_db_tables" {
   role          = "${aws_iam_role.iam_for_lambda.arn}"
   handler       = "dynamoDBTableCreater"
   runtime       = "go1.x"
-  source_code_hash = filebase64sha256("${data.aws_s3_bucket_object.lambda-file.body}")
+  source_code_hash = filebase64sha256("../../../${var.function-local-directory}")
 
   environment {
     variables = {
