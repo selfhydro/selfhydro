@@ -11,5 +11,5 @@ cd ./selfhydro/db/
 GOOS=linux go build -o stateTableCreater
 
 
-zip selfhydro-state-db-release.zip stateTableCreater
+zip selfhydro-state-db-release.zip dynamoDBTableCreater
 mv selfhydro-state-db-release.zip ../../release
