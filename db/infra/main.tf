@@ -89,6 +89,11 @@ data "aws_iam_policy_document" "dynamodb-group-lambda" {
   }
 }
 
+data "aws_s3_bucket_object" "lambda-file" {
+  bucket = "selfhydro-releases"
+  key    = "selfhydro-state-db/selfhydro-state-db-release.zip"
+}
+
 resource "aws_lambda_function" "create_dynamo_db_tables" {
   s3_bucket     = "selfhydro-releases"
   s3_key        = "selfhydro-state-db/selfhydro-state-db-release.zip"
@@ -96,7 +101,7 @@ resource "aws_lambda_function" "create_dynamo_db_tables" {
   role          = "${aws_iam_role.iam_for_lambda.arn}"
   handler       = "dynamoDBTableCreater"
   runtime       = "go1.x"
-  source_code_hash = filebase64sha256("selfhydro-state-db/selfhydro-state-db-release.zip")
+  source_code_hash = filebase64sha256("${data.aws_s3_bucket_object.lambda-file.body}")
 
   environment {
     variables = {
