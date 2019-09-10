@@ -1,7 +1,7 @@
 fileignoreconfig:
-- filename: go.sum
-  checksum: 0ad6280fcdb3fb6defe08091e69fd4fd2ac8cf7e0be3fc0bf1ec595bb92baacd
-  ignore_detectors: []
 - filename: db/.ci/pipeline.yml
   checksum: c34983148f0f33e7e0753185743f23b55f8f982f7cd4dda55482436d7eccbf7f
+  ignore_detectors: []
+- filename: go.sum
+  checksum: 280d7a47da90ef6bbc282b8366343884f6cb6e7548af6190c4483689f20aaedc
   ignore_detectors: []
