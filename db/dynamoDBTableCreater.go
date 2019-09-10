@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
-func CreateTable() {
+func main() {
 	session := createSession()
 	createNewTable(session)
 }
