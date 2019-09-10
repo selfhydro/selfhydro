@@ -9,7 +9,7 @@ VERSION=$(cat version/version)
 
 cd ./selfhydro/db/
 GOOS=linux go build -v -ldflags '-d -s -w' -o dynamoDBTableCreater dynamoDBTableCreater.go
-
+chmod +x dynamoDBTableCreater
 
 zip selfhydro-state-db-release.zip dynamoDBTableCreater
 mv selfhydro-state-db-release.zip ../../release
