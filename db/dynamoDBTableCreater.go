@@ -54,7 +54,7 @@ func getTableStructure(tableName string) *dynamodb.CreateTableInput {
 		AttributeDefinitions: []*dynamodb.AttributeDefinition{
 			{
 				AttributeName: aws.String("Date"),
-				AttributeType: aws.String("N"),
+				AttributeType: aws.String("S"),
 			},
 			{
 				AttributeName: aws.String("SystemID"),
