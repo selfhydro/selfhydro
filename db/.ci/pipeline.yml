@@ -93,12 +93,13 @@ jobs:
           env_name: prod
           plan_only: true
           vars:
-            function-local-directory: "release/selfhydro-state-db/selfhydro-state-db-release.zip"
+            function-local-directory: "release/selfhydro-state-db-release.zip"
   - name: terraform-apply
     plan:
       - get: selfhydro
         trigger: true
         passed: [terraform-plan]
+      - get: release
       - get: terraform
         passed: [terraform-plan]
         trigger: true
