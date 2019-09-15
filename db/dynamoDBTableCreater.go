@@ -21,7 +21,7 @@ func createTable() {
 }
 
 func createNewTable(svc *dynamodb.DynamoDB) {
-	tableName := getTableName(time.Now())
+	tableName := getTableName(time.Now().Add(time.Hour * 24))
 
 	input := getTableStructure(tableName)
 

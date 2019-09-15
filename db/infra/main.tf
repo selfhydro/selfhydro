@@ -62,7 +62,7 @@ data "aws_iam_policy_document" "cloudwatch-log-group-lambda" {
     ]
 
     resources = [
-      "arn:aws:logs:::*",
+      "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:*",
     ]
   }
 }
