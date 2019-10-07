@@ -64,11 +64,11 @@ func getTableStructure(tableName string) *dynamodb.CreateTableInput {
 		KeySchema: []*dynamodb.KeySchemaElement{
 			{
 				AttributeName: aws.String("Date"),
-				KeyType:       aws.String("HASH"),
+				KeyType:       aws.String("RANGE"),
 			},
 			{
 				AttributeName: aws.String("SystemID"),
-				KeyType:       aws.String("RANGE"),
+				KeyType:       aws.String("HASH"),
 			},
 		},
 		ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
