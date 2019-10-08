@@ -7,7 +7,7 @@ data "aws_caller_identity" "current" {}
 resource "aws_cloudwatch_event_rule" "once_a_day" {
     name = "once_a_day"
     description = "Fires every 24 hours"
-    schedule_expression = "cron(45 23 * * ? *)"
+    schedule_expression = "cron(45 23 1 * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "create_dynamo_db_tables_once_a_day" {
