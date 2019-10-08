@@ -80,31 +80,16 @@ jobs:
           acl: private
       - put: version
         params: {file: version/version}
-  - name: terraform-plan
+  - name: deploy
     plan:
       - get: selfhydro
         trigger: true
         passed: [build]
-      - get: release
-        passed: [build]
-      - put: terraform
-        params:
-          terraform_source: selfhydro/db/infra
-          env_name: prod
-          plan_only: true
-          vars:
-            function-local-directory: "release/selfhydro-state-db-release.zip"
-  - name: terraform-apply
-    plan:
-      - get: selfhydro
-        trigger: true
-        passed: [terraform-plan]
       - get: release
       - get: terraform
-        passed: [terraform-plan]
-        trigger: true
       - put: terraform
         params:
           terraform_source: selfhydro/db/infra
           env_name: prod
-          plan_run: true
+          vars:
+            function-local-directory: "release/selfhydro-state-db-release.zip"
