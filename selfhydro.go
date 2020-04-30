@@ -28,11 +28,8 @@ type selfhydro struct {
 	waterTemperature            sensors.MQTTTopic
 	waterElectricalConductivity sensors.MQTTTopic
 	waterLevel                  WaterLevelMeasurer
-	waterPump                   Actuator
-	growLight                   Actuator
 	waterPumpLastOnTime         time.Time
 	lowWaterLevelReadings       int
-	airPump                     Actuator
 	airPumpOnDuration           time.Duration
 	airPumpFrequency            time.Duration
 	localMQTT                   mqtt.MQTTComms
@@ -56,18 +53,12 @@ const (
 	WATER_LEVEL_TOPIC = "/sensors/water_level"
 )
 
-func (sh *selfhydro) Setup(waterPump, airPump, growLight Actuator) error {
+func (sh *selfhydro) Setup() error {
 	sh.waterLevel = &WaterLevel{}
 	sh.ambientTemperature = &sensors.AmbientTemperature{}
 	sh.ambientHumidity = &sensors.AmbientHumidity{}
 	sh.waterTemperature = &sensors.WaterTemperature{}
 	sh.waterElectricalConductivity = &sensors.WaterElectricalConductivity{}
-	sh.waterPump = waterPump
-	sh.waterPump.Setup()
-	sh.airPump = airPump
-	sh.airPump.Setup()
-	sh.growLight = growLight
-	sh.growLight.Setup()
 	sh.localMQTT = mqtt.NewLocalMQTT(mqtt.CLIENT_ID, "")
 	sh.externalMQTT = &mqtt.GCPMQTTComms{}
 	sh.airPumpFrequency = AIR_PUMP_FREQUENCY
@@ -106,14 +97,7 @@ func (sh *selfhydro) Start() error {
 	sh.setupExternalMQTTComms()
 	sh.SubscribeToWaterLevel()
 	sh.runStatePublisherCycle()
-	sh.RunWaterPump()
-	sh.runAirPump()
-	sh.runGrowLights()
 	return nil
-}
-
-func (sh *selfhydro) StopSystem() {
-
 }
 
 func (sh selfhydro) SubscribeToWaterLevel() error {
@@ -122,87 +106,6 @@ func (sh selfhydro) SubscribeToWaterLevel() error {
 		return err
 	}
 	return nil
-}
-
-func (sh *selfhydro) runGrowLights() {
-	turnOnTime, _ := time.Parse("15:04:05", "06:00:00")
-	turnOffTime, _ := time.Parse("15:04:05", "18:30:00")
-	go func() {
-		for {
-			sh.changeGrowLightState(turnOnTime, turnOffTime)
-		}
-	}()
-}
-
-func (sh selfhydro) changeGrowLightState(turnOnTime time.Time, turnOffTime time.Time) {
-	if !sh.growLight.GetState() && betweenTime(turnOnTime, turnOffTime) {
-		log.Printf("Turning on GROW LEDS")
-		sh.growLight.TurnOn()
-	} else if sh.growLight.GetState() && betweenTime(turnOffTime, turnOnTime.Add(time.Hour*24)) {
-		log.Printf("Turning off GROW LEDS")
-		sh.growLight.TurnOff()
-	}
-
-}
-func betweenTime(startTime time.Time, endTime time.Time) bool {
-	currentTimeString := time.Now().Format("15:04:05")
-	currentTime, _ := time.Parse("15:04:05", currentTimeString)
-	if currentTime.After(startTime) && currentTime.Before(endTime) {
-		return true
-	}
-	return false
-}
-
-func (sh *selfhydro) RunWaterPump() {
-	go func() {
-		for {
-			sh.checkWaterLevel()
-		}
-	}()
-}
-
-func (sh selfhydro) runAirPump() {
-	go func() {
-		for {
-			sh.runAirPumpCycle()
-			time.Sleep(sh.airPumpFrequency)
-		}
-	}()
-}
-
-func (sh selfhydro) runAirPumpCycle() {
-	log.Print("turning on air pumps")
-	sh.airPump.TurnOn()
-	time.AfterFunc(sh.airPumpOnDuration, func() {
-		log.Print("turning off air pumps")
-		sh.airPump.TurnOff()
-	})
-}
-
-func (sh *selfhydro) checkWaterLevel() {
-	var turnOn = false
-	var lastOnTimeTooRecently = time.Now().Sub(sh.waterPumpLastOnTime) <= MinWaterPumpOffPeriod && sh.waterPumpLastOnTime != time.Time{}
-	var currentWaterLevel = sh.waterLevel.GetWaterLevelFeed()
-	if currentWaterLevel > WaterMinLevel && !lastOnTimeTooRecently {
-		sh.lowWaterLevelReadings++
-		log.Printf("received low water reading: %f", currentWaterLevel)
-	} else {
-		sh.lowWaterLevelReadings = 0
-	}
-	if sh.lowWaterLevelReadings > MIN_LOW_WATER_READINGS {
-		turnOn = true
-	}
-	if turnOn {
-		log.Print("turning on water pump")
-		log.Printf("water level %f", currentWaterLevel)
-		sh.waterPump.TurnOn()
-		sh.waterPumpLastOnTime = time.Now()
-		sh.lowWaterLevelReadings = 0
-	} else if currentWaterLevel < WATER_MAX_LEVEL && sh.waterPump.GetState() {
-		log.Print("turning off water pump")
-		log.Printf("water level %f", currentWaterLevel)
-		sh.waterPump.TurnOff()
-	}
 }
 
 func (sh *selfhydro) waterLevelHandler(client mqttPaho.Client, message mqttPaho.Message) {

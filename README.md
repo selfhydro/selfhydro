@@ -57,6 +57,8 @@ bash <(curl -L https://github.com/resin-io/resin-wifi-connect/raw/master/scripts
    + `sudo modprobe w1-gpio`
    + `sudo modprobe w1-therm`
 
+### Mosquite MQTT Broker
+```docker run -it -p 1883:1883 -p 9001:9001 --restart always -d eclipse-mosquitto```
 ### Roadmap:
 - Config file for pins being used on Raspberry Pi
 - Refactor all sensors into sensor directory
