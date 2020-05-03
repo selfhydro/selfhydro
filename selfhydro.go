@@ -5,10 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
-	mqttPaho "github.com/eclipse/paho.mqtt.golang"
 	mqtt "github.com/selfhydro/selfhydro/mqtt"
 	"github.com/selfhydro/selfhydro/sensors"
 )
@@ -80,29 +78,10 @@ func (sh *selfhydro) Start() error {
 	sh.ambientTemperature.Subscribe(sh.localMQTT)
 	sh.ambientHumidity.Subscribe(sh.localMQTT)
 	sh.waterTemperature.Subscribe(sh.localMQTT)
-	sh.waterElectricalConductivity.Subscribe(sh.localMQTT)
 	sh.setupExternalMQTTComms()
-	sh.SubscribeToWaterLevel()
+	log.Println("all setup and subscribed...... going to start publishing")
 	sh.runStatePublisherCycle()
 	return nil
-}
-
-func (sh selfhydro) SubscribeToWaterLevel() error {
-	if err := sh.localMQTT.SubscribeToTopic(WATER_LEVEL_TOPIC, sh.waterLevelHandler); err != nil {
-		log.Print(err.Error())
-		return err
-	}
-	return nil
-}
-
-func (sh *selfhydro) waterLevelHandler(client mqttPaho.Client, message mqttPaho.Message) {
-	waterLevel := string(message.Payload()[:])
-	waterLevelFloat, err := strconv.ParseFloat(waterLevel, 32)
-	if err != nil {
-		log.Print("error converting payload to float")
-		return
-	}
-	sh.waterLevel.SetWaterLevel(float32(waterLevelFloat))
 }
 
 func (sh *selfhydro) runStatePublisherCycle() {

@@ -119,6 +119,9 @@ func (mqtt *GCPMQTTComms) authenticateDevice() error {
 	opts.SetUsername("unused")
 
 	mqtt.client = MQTT.NewClient(opts)
+	log.Println("created new mqtt client")
+	log.Println("going to try and connect")
+
 	if token := mqtt.client.Connect(); token.Wait() && token.Error() != nil {
 		if token.Error().Error() == "" {
 
@@ -127,7 +130,7 @@ func (mqtt *GCPMQTTComms) authenticateDevice() error {
 			return token.Error()
 		}
 	}
-
+	log.Println("connected to gcp mqtt")
 	return nil
 }
 
