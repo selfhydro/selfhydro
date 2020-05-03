@@ -74,10 +74,22 @@ func (sh *selfhydro) Start() error {
 	if !sh.setup {
 		return errors.New("must setup selfhydro before starting (use Setup())")
 	}
-	sh.localMQTT.ConnectDevice()
-	sh.ambientTemperature.Subscribe(sh.localMQTT)
-	sh.ambientHumidity.Subscribe(sh.localMQTT)
-	sh.waterTemperature.Subscribe(sh.localMQTT)
+	err := sh.localMQTT.ConnectDevice()
+	if err != nil {
+		return err
+	}
+	err = sh.ambientTemperature.Subscribe(sh.localMQTT)
+	if err != nil {
+		return err
+	}
+	err = sh.ambientHumidity.Subscribe(sh.localMQTT)
+	if err != nil {
+		return err
+	}
+	err = sh.waterTemperature.Subscribe(sh.localMQTT)
+	if err != nil {
+		return err
+	}
 	sh.setupExternalMQTTComms()
 	log.Println("all setup and subscribed...... going to start publishing")
 	sh.runStatePublisherCycle()

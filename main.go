@@ -36,7 +36,10 @@ func main() {
 	sh.Setup()
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs)
-	sh.Start()
+	err = sh.Start()
+	if err != nil {
+		log.Fatal(err)
+	}
 	handleExit(<-sigs)
 }
 

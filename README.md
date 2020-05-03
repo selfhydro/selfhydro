@@ -38,7 +38,7 @@ To add the config file for communication with GCP, run the following step:
 
 ### Installing Selfhydro up as a service
 
-1. ``cp selfhydro.serivce /etc/systemd/system/selfhydro.service``
+1. ``cp selfhydro.service /etc/systemd/system/selfhydro.service``
 2. ``sudo systemctl enable selfhydro.service``
 
 ### Wifi-Connect
@@ -59,6 +59,7 @@ bash <(curl -L https://github.com/resin-io/resin-wifi-connect/raw/master/scripts
 
 ### Mosquite MQTT Broker
 ```docker run -it -p 1883:1883 -p 9001:9001 --restart always -d eclipse-mosquitto```
+
 ### Roadmap:
 - Config file for pins being used on Raspberry Pi
 - Refactor all sensors into sensor directory

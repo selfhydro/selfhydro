@@ -37,6 +37,7 @@ func (lmqtt *LocalMQTT) ConnectDevice() error {
 		log.Print(token.Error())
 		return token.Error()
 	}
+	log.Println("local mqtt setup")
 	return nil
 }
 

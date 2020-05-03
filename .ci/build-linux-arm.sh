@@ -7,7 +7,7 @@ GO_ENV=(
 )
 
 GO_CROSS_ENV=(
-    GOOS=linux
+  GOOS=linux
 	GOARCH=arm
 	GOARM=7
 	CGO_ENABLED=1
