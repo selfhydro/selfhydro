@@ -90,7 +90,7 @@ func (mqtt *GCPMQTTComms) SubscribeToTopic(topic string, callback MQTT.MessageHa
 }
 
 func (mqtt *GCPMQTTComms) loadMQTTConfig() {
-	file, err := ioutil.ReadFile("/selfhydro/config/googleCloudIoTConfig.json")
+	file, err := ioutil.ReadFile("./config/googleCloudIoTConfig.json")
 	if err != nil {
 		log.Printf("Could not find config file for Google Core IoT connection")
 		log.Print(err)
@@ -154,7 +154,7 @@ func createJWTToken(projectId string) (string, error) {
 		"aud": projectId,
 	})
 
-	file, err := os.Open("/selfhydro/rsa_private.pem") // For read access.
+	file, err := os.Open("./rsa_private.pem") // For read access.
 	if err != nil {
 		log.Fatal(err)
 	}

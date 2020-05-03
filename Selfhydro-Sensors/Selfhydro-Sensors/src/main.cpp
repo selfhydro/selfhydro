@@ -19,7 +19,7 @@ ECMeter ecMeter = ECMeter();
 const char* ssid = "NETGEAR59";
 const char* wifi_password = "calmink680";
 
-const char* mqtt_server = "selfhydro-base";
+const char* mqtt_server = "selfhydro-base.local";
 const char* mqtt_ambient_temperature_topic = "/state/ambient_temperature";
 const char* mqtt_ambient_humidity_topic = "/state/ambient_humidity";
 const char* mqtt_water_temperature_topic = "/state/water_temperature";

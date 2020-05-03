@@ -30,22 +30,11 @@ type selfhydro struct {
 	waterLevel                  WaterLevelMeasurer
 	waterPumpLastOnTime         time.Time
 	lowWaterLevelReadings       int
-	airPumpOnDuration           time.Duration
-	airPumpFrequency            time.Duration
 	localMQTT                   mqtt.MQTTComms
 	externalMQTT                mqtt.MQTTComms
 	setup                       bool
 }
 
-const (
-	WATER_PUMP_PIN = 18
-)
-
-var WaterMinLevel float32 = 95
-var WATER_MAX_LEVEL float32 = 65
-var AIR_PUMP_ON_DURATION = time.Minute * 30
-var AIR_PUMP_FREQUENCY = time.Minute * 60
-var MinWaterPumpOffPeriod = time.Hour * 24
 var MIN_LOW_WATER_READINGS = 3
 var waitTimeTillReconnectAgain = time.Second * 5
 
@@ -61,8 +50,6 @@ func (sh *selfhydro) Setup() error {
 	sh.waterElectricalConductivity = &sensors.WaterElectricalConductivity{}
 	sh.localMQTT = mqtt.NewLocalMQTT(mqtt.CLIENT_ID, "")
 	sh.externalMQTT = &mqtt.GCPMQTTComms{}
-	sh.airPumpFrequency = AIR_PUMP_FREQUENCY
-	sh.airPumpOnDuration = AIR_PUMP_ON_DURATION
 	sh.setup = true
 	return nil
 }
