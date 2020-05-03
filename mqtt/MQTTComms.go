@@ -104,7 +104,10 @@ func (mqtt *GCPMQTTComms) loadMQTTConfig() {
 
 func (mqtt *GCPMQTTComms) authenticateDevice() error {
 
-	tokenString, _ := createJWTToken(mqtt.mqttDetails.ProjectID)
+	tokenString, err := createJWTToken(mqtt.mqttDetails.ProjectID)
+	if err != nil {
+		return err
+	}
 
 	opts := MQTT.NewClientOptions().AddBroker("ssl://mqtt.googleapis.com:8883")
 
@@ -120,7 +123,6 @@ func (mqtt *GCPMQTTComms) authenticateDevice() error {
 		if token.Error().Error() == "" {
 
 		} else {
-
 			log.Print(token.Error())
 			return token.Error()
 		}
@@ -148,6 +150,7 @@ func (mqtt *GCPMQTTComms) PublishMessage(topic string, message string) {
 }
 
 func createJWTToken(projectId string) (string, error) {
+	log.Println("creating jwt token")
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
 		"iat": time.Now().Unix(),
 		"exp": time.Now().Add(time.Hour * JWTEXPIRYINHOURS).Unix(),
@@ -159,10 +162,20 @@ func createJWTToken(projectId string) (string, error) {
 		log.Fatal(err)
 	}
 
-	key, _ := ioutil.ReadFile(file.Name())
+	key, err := ioutil.ReadFile(file.Name())
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	rsaPrivateKey, _ := jwt.ParseRSAPrivateKeyFromPEM(key)
+	rsaPrivateKey, err := jwt.ParseRSAPrivateKeyFromPEM(key)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	tokenString, err := token.SignedString(rsaPrivateKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	return tokenString, err
 }
