@@ -29,7 +29,7 @@ const char* mqtt_pH_topic = "/state/pH";
 const char* mqtt_username = "";
 const char* mqtt_password = "";
 
-#define durationDeepSleep  900 // 15min 
+#define durationDeepSleep  5 // 15min 
 
 #ifdef AMBIENT_TEMP
 const char* clientID = "Ambient Humidity and Temperature and Water Temp Sensor";

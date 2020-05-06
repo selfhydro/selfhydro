@@ -94,19 +94,21 @@ func (sh *selfhydro) Start() error {
 
 func (sh *selfhydro) runStatePublisherCycle() {
 	go func() {
-		time.Sleep(time.Minute * 30)
+		time.Sleep(time.Second * 10)
 		for {
 			sh.publishState()
-			time.Sleep(time.Hour)
+			time.Sleep(time.Minute)
 		}
 	}()
 }
 
 func (sh *selfhydro) publishState() {
+	log.Println("publishing state")
 	message, err := sh.createStateMessage()
 	if err != nil {
 		log.Printf("error creating sensor message: %s", err)
 	}
+	log.Print("created message to send:");log.Print(message)
 	sh.externalMQTT.PublishMessage("/devices/"+sh.externalMQTT.GetDeviceID()+"/events", message)
 }
 

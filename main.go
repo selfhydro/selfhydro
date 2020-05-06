@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -31,28 +32,27 @@ func main() {
 	defer f.Close()
 	log.SetOutput(f)
 	log.Println("Starting up SelfHydro")
-
+	SetupCloseHandler()
 	sh := selfhydro{}
 	sh.Setup()
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs)
 	err = sh.Start()
 	if err != nil {
 		log.Fatal(err)
 	}
-	handleExit(<-sigs)
+	select {}
+}
+
+func SetupCloseHandler() {
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		fmt.Println("\r- Ctrl+C pressed in Terminal")
+		os.Exit(0)
+	}()
 }
 
 func panicHandler(output string) {
 	log.Printf("The child panicked:\n\n%s\n", output)
 	os.Exit(1)
-}
-
-func handleExit(signal os.Signal) {
-	if signal != syscall.SIGPIPE && signal != syscall.SIGURG {
-		log.Println("Exiting program...")
-		log.Println("RECEIVED SIGNAL: ", signal)
-
-		os.Exit(0)
-	}
 }
