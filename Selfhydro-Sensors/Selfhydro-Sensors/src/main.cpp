@@ -29,8 +29,10 @@ const char* mqtt_pH_topic = "/state/pH";
 const char* mqtt_username = "";
 const char* mqtt_password = "";
 
+#define durationDeepSleep  900 // 15min 
+
 #ifdef AMBIENT_TEMP
-const char* clientID = "Ambient Temperature and Humidity Sensor";
+const char* clientID = "Ambient Humidity and Temperature and Water Temp Sensor";
 #elif EC_METER
 const char* clientID = "EC Meter";
 #endif
@@ -53,6 +55,80 @@ void waterTemperatureCallback(char* topic, byte* payload, unsigned int length) {
   StaticJsonDocument<capacity> waterTemperatureJSON;
   deserializeJson(waterTemperatureJSON, payload);
   waterTemperature = waterTemperatureJSON["temperature"].as<float>();
+}
+
+float getWaterTemp() {
+    byte i;
+    byte present = 0;
+    byte type_s;
+    byte data[12];
+    byte addr[8];
+    float celsius = 0.0;
+  
+    if ( !ds.search(addr)) 
+    {
+      ds.reset_search();
+      delay(250);
+      return celsius;
+    }
+  
+  
+    if (OneWire::crc8(addr, 7) != addr[7]) 
+    {
+        Serial.println("CRC is not valid!");
+        return celsius;
+    }
+    Serial.println();
+  
+    // the first ROM byte indicates which chip
+    switch (addr[0]) 
+    {
+      case 0x10:
+        type_s = 1;
+        break;
+      case 0x28:
+        type_s = 0;
+        break;
+      case 0x22:
+        type_s = 0;
+        break;
+      default:
+        Serial.println("Device is not a DS18x20 family device.");
+        return celsius;
+    } 
+  
+    ds.reset();
+    ds.select(addr);
+    ds.write(0x44, 1);        // start conversion, with parasite power on at the end  
+    delay(1000);
+    present = ds.reset();
+    ds.select(addr);    
+    ds.write(0xBE);         // Read Scratchpad
+  
+    for ( i = 0; i < 9; i++) 
+    {           
+      data[i] = ds.read();
+    }
+  
+    // Convert the data to actual temperature
+    int16_t rawTemperature = (data[1] << 8) | data[0];
+    if (type_s) {
+      rawTemperature = rawTemperature << 3; // 9 bit resolution default
+      if (data[7] == 0x10) 
+      {
+        rawTemperature = (rawTemperature & 0xFFF0) + 12 - data[6];
+      }
+    } 
+    else 
+    {
+      byte cfg = (data[4] & 0x60);
+      if (cfg == 0x00) rawTemperature = rawTemperature & ~7;  // 9 bit resolution, 93.75 ms
+      else if (cfg == 0x20) rawTemperature = rawTemperature & ~3; // 10 bit res, 187.5 ms
+      else if (cfg == 0x40) rawTemperature = rawTemperature & ~1; // 11 bit res, 375 ms
+  
+    }
+    float waterTemperatureCelcius = (float)rawTemperature / 16.0;
+    return waterTemperatureCelcius;
 }
 
 void reconnect() {
@@ -119,10 +195,6 @@ void setup() {
 
   #ifdef AMBIENT_TEMP
     setupAmbientTempAndHumidity();
-  #endif
-
-  #ifdef WATER_TEMP
-
   #endif
 
   #ifdef WATER_LEVEL
@@ -194,114 +266,35 @@ void loop() {
   #endif
 
   #ifdef WATER_TEMP
-    byte i;
-    byte present = 0;
-    byte type_s;
-    byte data[12];
-    byte addr[8];
-    float celsius, fahrenheit;
-  
-    if ( !ds.search(addr)) 
-    {
-      ds.reset_search();
-      delay(250);
-      return;
-    }
-  
-  
-    if (OneWire::crc8(addr, 7) != addr[7]) 
-    {
-        Serial.println("CRC is not valid!");
-        return;
-    }
-    Serial.println();
-  
-    // the first ROM byte indicates which chip
-    switch (addr[0]) 
-    {
-      case 0x10:
-        type_s = 1;
-        break;
-      case 0x28:
-        type_s = 0;
-        break;
-      case 0x22:
-        type_s = 0;
-        break;
-      default:
-        Serial.println("Device is not a DS18x20 family device.");
-        return;
-    } 
-  
-    ds.reset();
-    ds.select(addr);
-    ds.write(0x44, 1);        // start conversion, with parasite power on at the end  
-    delay(1000);
-    present = ds.reset();
-    ds.select(addr);    
-    ds.write(0xBE);         // Read Scratchpad
-  
-    for ( i = 0; i < 9; i++) 
-    {           
-      data[i] = ds.read();
-    }
-  
-    // Convert the data to actual temperature
-    int16_t rawTemperature = (data[1] << 8) | data[0];
-    if (type_s) {
-      rawTemperature = rawTemperature << 3; // 9 bit resolution default
-      if (data[7] == 0x10) 
-      {
-        rawTemperature = (rawTemperature & 0xFFF0) + 12 - data[6];
-      }
-    } 
-    else 
-    {
-      byte cfg = (data[4] & 0x60);
-      if (cfg == 0x00) rawTemperature = rawTemperature & ~7;  // 9 bit resolution, 93.75 ms
-      else if (cfg == 0x20) rawTemperature = rawTemperature & ~3; // 10 bit res, 187.5 ms
-      else if (cfg == 0x40) rawTemperature = rawTemperature & ~1; // 11 bit res, 375 ms
-  
-    }
-    float waterTemperatureCelcius = (float)rawTemperature / 16.0;
-    Serial.print("  Temperature = ");
-    Serial.print(celsius);
-    Serial.print(" Celsius, ");
 
-    const int capacity = JSON_OBJECT_SIZE(3);
-    StaticJsonDocument<capacity> waterTemperatureJson;
-    waterTemperatureJson["temperature"] = waterTemperatureCelcius;
-    char phCStr[128];
-    serializeJson(waterTemperatureJson, phCStr);
-    if (client.publish(mqtt_water_temperature_topic, phCStr)) {
-      Serial.println("Temperature measured and message sent");
-    } else {
-      Serial.println("Message failed to send via mqtt");
-      reconnect();
-      client.publish(mqtt_ambient_temperature_topic, phCStr);
-    }
   #endif
 
   #ifdef AMBIENT_TEMP
     float humidity = sensor.readHumidity();
     float temperature = sensor.readTemperature();
+    float waterTemperature = getWaterTemp();
 
     Serial.print("Humidity:    ");
     Serial.print(humidity, 2);
     Serial.print("\tTemperature: ");
     Serial.println(temperature, 2);
+    Serial.print("\tWater Temperature: ");
+    Serial.println(waterTemperature, 2);
+
 
     const int capacity = JSON_OBJECT_SIZE(3);
     StaticJsonDocument<capacity> ambientTemperatureJson;
     StaticJsonDocument<capacity> ambientHumidityJson;
+    StaticJsonDocument<capacity> waterTemperatureJson;
     ambientHumidityJson["humidity"] = humidity;
     ambientTemperatureJson["temperature"] = temperature;
-
+    waterTemperatureJson["temperature"] = waterTemperature;
     char ambientTemperatureCStr[128];
     char ambientHumidityCStr[128];
-
+    char waterTemperatureCStr[128];
     serializeJson(ambientTemperatureJson, ambientTemperatureCStr);
     serializeJson(ambientHumidityJson, ambientHumidityCStr);
+    serializeJson(waterTemperatureJson, waterTemperatureCStr);
 
     if (client.publish(mqtt_ambient_temperature_topic, ambientTemperatureCStr)) {
       Serial.println("Temperature measured and message sent");
@@ -317,6 +310,14 @@ void loop() {
       Serial.println("Message failed to send via mqtt");
       reconnect();
       client.publish(mqtt_ambient_humidity_topic, ambientHumidityCStr);
+    }
+
+    if (client.publish(mqtt_water_temperature_topic, waterTemperatureCStr)) {
+      Serial.println("Water temp mesured and message sent");
+    } else {
+      Serial.println("Message failed to send via mqtt");
+      reconnect();
+      client.publish(mqtt_water_temperature_topic, waterTemperatureCStr);
     }
   #endif
 
@@ -337,5 +338,5 @@ void loop() {
     }
   #endif
 
-  delay(5000);
+    ESP.deepSleep(durationDeepSleep * 1000000);
 }

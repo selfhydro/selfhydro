@@ -36,10 +36,6 @@ type selfhydro struct {
 var MIN_LOW_WATER_READINGS = 3
 var waitTimeTillReconnectAgain = time.Second * 5
 
-const (
-	WATER_LEVEL_TOPIC = "/sensors/water_level"
-)
-
 func (sh *selfhydro) Setup() error {
 	sh.waterLevel = &WaterLevel{}
 	sh.ambientTemperature = &sensors.AmbientTemperature{}

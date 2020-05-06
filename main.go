@@ -49,7 +49,7 @@ func panicHandler(output string) {
 }
 
 func handleExit(signal os.Signal) {
-	if signal != syscall.SIGPIPE {
+	if signal != syscall.SIGPIPE && signal != syscall.SIGURG {
 		log.Println("Exiting program...")
 		log.Println("RECEIVED SIGNAL: ", signal)
 

@@ -3,11 +3,12 @@ Description=Selfhydro service
 Requires=network.target
 
 [Service]
-ExecStart=/selfhydro/selfhydro
-WorkingDirectory=/selfhydro
+ExecStart=/home/base/selfhydro/selfhydro
+WorkingDirectory=/home/base/selfhydro
 StandardOutput=inherit
 StandardError=inherit
 Restart=always
+User=base
 
 [Install]
 WantedBy=default.target
