@@ -94,10 +94,10 @@ func (sh *selfhydro) Start() error {
 
 func (sh *selfhydro) runStatePublisherCycle() {
 	go func() {
-		time.Sleep(time.Second * 10)
+		time.Sleep(time.Minute * 15)
 		for {
 			sh.publishState()
-			time.Sleep(time.Minute)
+			time.Sleep(time.Minute * 15)
 		}
 	}()
 }
