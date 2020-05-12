@@ -117,8 +117,8 @@ func (sh *selfhydro) createStateMessage() (string, error) {
 	humidity := sh.ambientHumidity.GetLatestData()
 	waterTemperature := sh.waterTemperature.GetLatestData()
 	waterElectricalConductivity := sh.waterElectricalConductivity.GetLatestData()
-	time := time.Now()
-	m := StateMessage{temperature, humidity, waterTemperature, waterElectricalConductivity, time.Format("20060102150405")}
+	time := time.Now().Format(time.RFC3339)
+	m := StateMessage{temperature, humidity, waterTemperature, waterElectricalConductivity, time}
 	jsonMsg, err := json.Marshal(m)
 	return string(jsonMsg), err
 }

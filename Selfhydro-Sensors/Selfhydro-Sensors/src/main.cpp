@@ -23,6 +23,7 @@ const char* mqtt_server = "selfhydro-base.local";
 const char* mqtt_ambient_temperature_topic = "/state/ambient_temperature";
 const char* mqtt_ambient_humidity_topic = "/state/ambient_humidity";
 const char* mqtt_water_temperature_topic = "/state/water_temperature";
+const char* mqtt_battery_voltage_topic = "/state/battery_voltage";
 const char* mqtt_water_level_topic = "/state/water_level";
 const char* mqtt_water_ec_topic = "/state/water_ec";
 const char* mqtt_pH_topic = "/state/pH";
@@ -41,6 +42,18 @@ WiFiClient wifiClient;
 PubSubClient client(mqtt_server, 1883, wifiClient);
 
 float waterTemperature = 0.0;
+
+float getBatteryVoltage() {
+  int rawVolatge = analogRead(A0);
+  Serial.println(rawVolatge);
+  float voltage = rawVolatge / 1023.0;
+  Serial.println(voltage);
+
+  voltage = voltage * 45/13;
+  Serial.println(voltage);
+
+  return voltage;
+}
 
 void waterTemperatureCallback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived [");
@@ -179,7 +192,7 @@ void setup() {
   while (! Serial) {
     delay(1);
   }
-
+  pinMode(A0, INPUT);
   Serial.print("Connecting to ");
   Serial.println(ssid);
 
@@ -273,6 +286,7 @@ void loop() {
     float humidity = sensor.readHumidity();
     float temperature = sensor.readTemperature();
     float waterTemperature = getWaterTemp();
+    float batteryVolate = getBatteryVoltage();
 
     Serial.print("Humidity:    ");
     Serial.print(humidity, 2);
@@ -280,21 +294,27 @@ void loop() {
     Serial.println(temperature, 2);
     Serial.print("\tWater Temperature: ");
     Serial.println(waterTemperature, 2);
-
+    Serial.print("\tBattery Voltage: ");
+    Serial.println(batteryVolate, 2);
 
     const int capacity = JSON_OBJECT_SIZE(3);
     StaticJsonDocument<capacity> ambientTemperatureJson;
     StaticJsonDocument<capacity> ambientHumidityJson;
     StaticJsonDocument<capacity> waterTemperatureJson;
+    StaticJsonDocument<capacity> batteryVoltageJson;
+
     ambientHumidityJson["humidity"] = humidity;
     ambientTemperatureJson["temperature"] = temperature;
     waterTemperatureJson["temperature"] = waterTemperature;
+    batteryVoltageJson["voltage"] = batteryVolate;
     char ambientTemperatureCStr[128];
     char ambientHumidityCStr[128];
     char waterTemperatureCStr[128];
+    char batteryVoltageCStr[128];
     serializeJson(ambientTemperatureJson, ambientTemperatureCStr);
     serializeJson(ambientHumidityJson, ambientHumidityCStr);
     serializeJson(waterTemperatureJson, waterTemperatureCStr);
+    serializeJson(batteryVoltageJson, batteryVoltageCStr);
 
     if (client.publish(mqtt_ambient_temperature_topic, ambientTemperatureCStr)) {
       Serial.println("Temperature measured and message sent");
@@ -319,6 +339,14 @@ void loop() {
       reconnect();
       client.publish(mqtt_water_temperature_topic, waterTemperatureCStr);
     }
+
+    if (client.publish(mqtt_battery_voltage_topic, batteryVoltageCStr)) {
+      Serial.println("Battery voltage mesured and message sent");
+    } else {
+      Serial.println("Message failed to send via mqtt");
+      reconnect();
+      client.publish(mqtt_battery_voltage_topic, batteryVoltageCStr);
+    }
   #endif
 
   #ifdef PH_SENSOR
@@ -337,7 +365,17 @@ void loop() {
       client.publish(mqtt_pH_topic, phCStr);
     }
   #endif
-   delay(5);
+    delay(40);
+    Serial.println("INFO: Closing the MQTT connection");
+    client.disconnect();
 
+    Serial.println("INFO: Closing the Wifi connection");
+    WiFi.disconnect();
+
+     while (client.connected() || (WiFi.status() == WL_CONNECTED))
+    {
+      Serial.println("Waiting for shutdown before sleeping");
+      delay(10);
+    }
     ESP.deepSleep(durationDeepSleep * 1000000);
 }
